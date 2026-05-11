@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -513,3 +514,5 @@ export default function Appointments() {
     </motion.div>
   );
 }
+
+Appointments.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

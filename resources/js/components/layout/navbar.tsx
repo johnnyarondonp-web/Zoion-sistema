@@ -82,6 +82,7 @@ export function Navbar() {
   const navItems = isAdmin ? adminNavItems : clientNavItems;
   const roleLabel = isAdmin ? 'Admin' : 'Cliente';
   const roleBadgeVariant = isAdmin ? 'default' : 'secondary';
+  const profileHref = isAdmin ? '/admin/profile' : '/client/profile';
   const isActive = (href: string) => url.startsWith(href) && href !== '/';
   const isExactActive = (href: string) => url === href;
 
@@ -116,7 +117,7 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           {/* Logo */}
           <button
-            onClick={() => router.visit(isAuthenticated ? '/client/pets' : '/')}
+            onClick={() => router.visit(isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/client/pets') : '/')}
             className="flex items-center gap-2 transition-opacity hover:opacity-80 group"
           >
             <motion.div
@@ -210,7 +211,7 @@ export function Navbar() {
                 <DropdownMenuContent align="end" className="w-56">
                   {/* Solo Mi Perfil y Cerrar Sesión */}
                   <DropdownMenuItem
-                    onClick={() => handleNavClick('/client/profile')}
+                    onClick={() => handleNavClick(profileHref)}
                     className="cursor-pointer"
                   >
                     <User className="mr-2 h-4 w-4" />
@@ -290,7 +291,7 @@ export function Navbar() {
                     {/* Solo Mi Perfil en el menú móvil */}
                     <SheetClose asChild>
                       <button
-                        onClick={() => handleNavClick('/client/profile')}
+                        onClick={() => handleNavClick(profileHref)}
                         className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                       >
                         <User className="h-4 w-4" />

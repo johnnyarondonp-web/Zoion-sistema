@@ -34,9 +34,11 @@ class ServiceController extends Controller
         abort_if($request->user()->role !== 'admin', 403, 'Admin only');
 
         $request->validate([
-            'name'            => 'required|string',
+            'name'            => 'required|string|max:50',
+            'description'     => 'nullable|string|max:300',
             'durationMinutes' => 'required|integer|min:1',
             'price'           => 'required|numeric|min:0',
+            'category'        => 'required|string',
         ]);
 
         $service = Service::create([
@@ -61,6 +63,15 @@ class ServiceController extends Controller
     public function update(Request $request, $id)
     {
         abort_if($request->user()->role !== 'admin', 403, 'Admin only');
+
+        $request->validate([
+            'name'            => 'required|string|max:50',
+            'description'     => 'nullable|string|max:300',
+            'durationMinutes' => 'required|integer|min:1',
+            'price'           => 'required|numeric|min:0',
+            'category'        => 'required|string',
+        ]);
+
         $service = Service::findOrFail($id);
         $service->update([
             'name'             => $request->name ? trim($request->name) : $service->name,

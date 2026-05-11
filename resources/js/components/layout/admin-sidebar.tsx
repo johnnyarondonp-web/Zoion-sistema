@@ -58,10 +58,7 @@ const sidebarSections: SidebarSection[] = [
     title: 'Configuración',
     icon: <Settings2 className="h-3 w-3" />,
     color: 'text-gray-400',
-    items: [
-      { label: 'Mi Perfil', href: '/profile', icon: <UserCircle className="h-4 w-4" />, matchPrefixes: ['/profile'] },
-      { label: 'Nosotros',  href: '/about',   icon: <Info className="h-4 w-4" />,       matchPrefixes: ['/about'] },
-    ],
+    items: [],
   },
   {
     title: 'Sistema',

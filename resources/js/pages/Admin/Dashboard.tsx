@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { useAuth } from '@/hooks/use-auth';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -367,9 +368,9 @@ export default function Dashboard() {
                   ¡Bienvenido, {user?.name || 'Admin'}!
                 </h1>
               </div>
-              <p className="text-emerald-100 mt-2 text-sm sm:text-base capitalize">
+              <div className="text-emerald-100 mt-2 text-sm sm:text-base capitalize">
                 {getSpanishDate()}
-              </p>
+              </div>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-white/10">
               <Clock className="h-5 w-5 text-emerald-200" />
@@ -414,10 +415,10 @@ export default function Dashboard() {
                     <metric.icon className={`h-6 w-6 ${metric.textColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className={`text-lg font-bold ${metric.textColor} leading-tight`}>{metric.value}</p>
-                    <p className={`text-sm ${metric.subTextColor}`}>{metric.label}</p>
+                    <div className={`text-lg font-bold ${metric.textColor} leading-tight`}>{metric.value}</div>
+                    <div className={`text-sm ${metric.subTextColor}`}>{metric.label}</div>
                     {metric.sub && (
-                      <p className="text-xs text-white/70 mt-0.5">{metric.sub}</p>
+                      <div className="text-xs text-white/70 mt-0.5">{metric.sub}</div>
                     )}
                   </div>
                 </div>
@@ -577,7 +578,7 @@ export default function Dashboard() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-center">
                 <CalendarCheck className="h-12 w-12 text-gray-300 dark:text-gray-600 mb-3" />
-                <p className="text-gray-500 dark:text-gray-400">No hay citas registradas</p>
+                <div className="text-gray-500 dark:text-gray-400">No hay citas registradas</div>
               </div>
             )}
           </CardContent>
@@ -586,3 +587,5 @@ export default function Dashboard() {
     </motion.div>
   );
 }
+
+Dashboard.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

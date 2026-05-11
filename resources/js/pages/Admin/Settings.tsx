@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -643,3 +644,5 @@ export default function Settings() {
     </motion.div>
   );
 }
+
+Settings.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

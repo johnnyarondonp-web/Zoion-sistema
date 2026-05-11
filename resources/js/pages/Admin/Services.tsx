@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -476,3 +477,5 @@ export default function Services() {
     </div>
   );
 }
+
+Services.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

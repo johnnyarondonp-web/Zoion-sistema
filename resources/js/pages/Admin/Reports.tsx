@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import AdminLayout from '@/components/layout/AdminLayout';
 import {
   DollarSign,
   Calendar,
@@ -433,3 +434,5 @@ export default function Reports() {
     </motion.div>
   );
 }
+
+Reports.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

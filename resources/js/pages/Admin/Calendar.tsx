@@ -2,6 +2,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -336,3 +337,5 @@ export default function Calendar() {
     </motion.div>
   );
 }
+
+Calendar.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

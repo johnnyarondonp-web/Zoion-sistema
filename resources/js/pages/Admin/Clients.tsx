@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { router } from '@inertiajs/react';
 import { Card, CardContent } from '@/components/ui/card';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,7 +30,7 @@ interface ClientData {
   email: string;
   phone: string | null;
   createdAt: string;
-  _count: {
+  _count?: {
     pets: number;
     appointments: number;
   };
@@ -134,8 +135,8 @@ export default function Clients() {
       });
       const data = await res.json();
       if (data.success) {
-        setClients((prev) => (append ? [...prev, ...data.data] : data.data));
-        setPagination(data.pagination);
+        setClients((prev) => (append ? [...prev, ...(data.data.clients ?? [])] : (data.data.clients ?? [])));
+        setPagination(data.data.pagination ?? {});
       }
     } catch {
       // silent
@@ -174,8 +175,8 @@ export default function Clients() {
       client.name,
       client.email,
       client.phone || '',
-      String(client._count.pets),
-      String(client._count.appointments),
+      String(client._count?.pets ?? 0),
+      String(client._count?.appointments ?? 0),
       new Date(client.createdAt).toLocaleDateString('es-ES'),
     ]);
 
@@ -349,11 +350,11 @@ export default function Clients() {
                     <div className="flex items-center gap-2 mt-3.5">
                       <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50 dark:bg-emerald-950/30 dark:text-emerald-300 gap-1 text-xs">
                         <Heart className="h-3 w-3" />
-                        {client._count.pets} {client._count.pets === 1 ? 'mascota' : 'mascotas'}
+                        {client._count?.pets ?? 0} {(client._count?.pets ?? 0) === 1 ? 'mascota' : 'mascotas'}
                       </Badge>
                       <Badge variant="secondary" className="bg-teal-50 text-teal-700 hover:bg-teal-50 dark:bg-teal-950/30 dark:text-teal-300 gap-1 text-xs">
                         <Calendar className="h-3 w-3" />
-                        {client._count.appointments} {client._count.appointments === 1 ? 'cita' : 'citas'}
+                        {client._count?.appointments ?? 0} {(client._count?.appointments ?? 0) === 1 ? 'cita' : 'citas'}
                       </Badge>
                     </div>
 
@@ -463,13 +464,13 @@ export default function Clients() {
                       <td className="px-4 py-3 text-center">
                         <Badge className="bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300 text-xs gap-1">
                           <Heart className="h-3 w-3" />
-                          {client._count.pets}
+                          {client._count?.pets ?? 0}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <Badge className="bg-teal-50 text-teal-700 dark:bg-teal-950/30 dark:text-teal-300 text-xs gap-1">
                           <Calendar className="h-3 w-3" />
-                          {client._count.appointments}
+                          {client._count?.appointments ?? 0}
                         </Badge>
                       </td>
                       <td className="px-4 py-3">
@@ -549,3 +550,5 @@ export default function Clients() {
     </motion.div>
   );
 }
+
+Clients.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

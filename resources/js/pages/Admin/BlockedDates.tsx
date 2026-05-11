@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +102,13 @@ export default function BlockedDates() {
       const data = await res.json();
       if (data.success) {
         toast.success('Fecha bloqueada agregada');
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (selectedDate.getTime() === today.getTime()) {
+          toast.info('Las citas programadas para hoy han sido canceladas automáticamente.');
+        }
+
         setSelectedDate(undefined);
         setReason('');
         fetchBlockedDates();
@@ -182,6 +190,11 @@ export default function BlockedDates() {
                 mode="single"
                 selected={selectedDate}
                 onSelect={setSelectedDate}
+                disabled={(date) => {
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  return date < today;
+                }}
                 modifiers={{
                   blocked: (date) => {
                     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -386,3 +399,5 @@ export default function BlockedDates() {
     </motion.div>
   );
 }
+
+BlockedDates.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

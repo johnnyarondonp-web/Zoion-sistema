@@ -7,13 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ClientLayout from '@/components/layout/ClientLayout';
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Plus, Search, Filter, X } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
@@ -65,19 +58,6 @@ const speciesLabels: Record<string, string> = {
   otro: 'Otro',
 };
 
-const speciesAccentColors: Record<string, string> = {
-  perro: 'from-amber-400 to-amber-500',
-  gato: 'from-purple-400 to-purple-500',
-  ave: 'from-sky-400 to-sky-500',
-  reptil: 'from-lime-400 to-lime-500',
-  conejo: 'from-pink-400 to-pink-500',
-  hámster: 'from-orange-400 to-orange-500',
-  hamster: 'from-orange-400 to-orange-500',
-  pez: 'from-cyan-400 to-cyan-500',
-  serpiente: 'from-emerald-400 to-emerald-500',
-  otro: 'from-gray-400 to-gray-500',
-};
-
 const container: Variants = {
   hidden: { opacity: 0 },
   visible: {
@@ -103,7 +83,6 @@ export default function Pets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [speciesFilter, setSpeciesFilter] = useState<string>('all');
 
   useEffect(() => {
     fetchPets();
@@ -134,26 +113,14 @@ export default function Pets() {
           (pet.breed && pet.breed.toLowerCase().includes(q))
       );
     }
-
-    if (speciesFilter && speciesFilter !== 'all') {
-      result = result.filter((pet) => pet.species.toLowerCase() === speciesFilter);
-    }
-
     return result;
-  }, [pets, search, speciesFilter]);
-
-  // Get unique species from pets for the filter
-  const availableSpecies = useMemo(() => {
-    const speciesSet = new Set(pets.map((p) => p.species.toLowerCase()));
-    return Array.from(speciesSet).sort();
-  }, [pets]);
+  }, [pets, search]);
 
   const clearFilters = () => {
     setSearch('');
-    setSpeciesFilter('all');
   };
 
-  const hasActiveFilters = search.trim() !== '' || speciesFilter !== 'all';
+  const hasActiveFilters = search.trim() !== '';
 
   if (loading) {
     return (
@@ -162,15 +129,13 @@ export default function Pets() {
           <Skeleton className="h-8 w-40" />
           <Skeleton className="h-10 w-36" />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i} className="overflow-hidden">
-              <div className="flex items-center gap-4 p-4">
-                <Skeleton className="h-16 w-16 rounded-xl" />
-                <div className="flex-1 space-y-2">
-                  <Skeleton className="h-5 w-28" />
-                  <Skeleton className="h-4 w-20" />
-                </div>
+        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden border-gray-200 dark:border-gray-700">
+              <Skeleton className="aspect-square w-full rounded-t-xl" />
+              <div className="p-3 space-y-2">
+                <Skeleton className="h-5 w-2/3" />
+                <Skeleton className="h-4 w-1/2" />
               </div>
             </Card>
           ))}
@@ -211,7 +176,7 @@ export default function Pets() {
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {/* Search */}
-              <div className="relative sm:col-span-2 lg:col-span-2">
+              <div className="relative sm:col-span-2 lg:col-span-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   value={search}
@@ -228,21 +193,6 @@ export default function Pets() {
                   </button>
                 )}
               </div>
-
-              {/* Species Filter */}
-              <Select value={speciesFilter} onValueChange={setSpeciesFilter}>
-                <SelectTrigger className="h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-                  <SelectValue placeholder="Especie" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las especies</SelectItem>
-                  {availableSpecies.map((sp) => (
-                    <SelectItem key={sp} value={sp}>
-                      {speciesEmojis[sp] || '🐾'} {speciesLabels[sp] || sp}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
 
               {/* Results count */}
               <div className="flex items-center h-9 px-3">
@@ -331,67 +281,63 @@ export default function Pets() {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+          className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
         >
           {filteredPets.map((pet) => {
             const sp = pet.species.toLowerCase();
             const emoji = speciesEmojis[sp] || speciesEmojis.otro;
-            const color = speciesColors[sp] || speciesColors.otro;
             const label = speciesLabels[sp] || pet.species;
-            const accent = speciesAccentColors[sp] || speciesAccentColors.otro;
 
             return (
               <motion.div key={pet.id} variants={cardVariants} layout>
                 <motion.div
                   whileHover={{ y: -2 }}
                   transition={{ duration: 0.2 }}
+                  className="h-full"
                 >
                   <Card
-                    className="cursor-pointer border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg transition-all duration-300 overflow-hidden group"
+                    className="cursor-pointer border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-lg transition-all duration-300 overflow-hidden group h-full flex flex-col"
                     onClick={() => router.visit(`/client/pets/${pet.id}`)}
                   >
-                    {/* Top gradient accent line */}
-                    <div className={`h-1 bg-gradient-to-r ${accent}`} />
-                    <CardContent className="p-4 pt-3">
-                      <div className="flex items-center gap-4">
-                        {/* Photo or Emoji Icon */}
-                        {pet.photo ? (
-                          <div className="h-16 w-16 rounded-xl overflow-hidden flex-shrink-0 ring-2 ring-gray-100 dark:ring-gray-700 group-hover:ring-emerald-200 dark:group-hover:ring-emerald-700 transition-all duration-300">
-                            <img
-                              src={pet.photo}
-                              alt={pet.name}
-                              className="h-full w-full object-cover"
-                            />
+                    {/* Foto ocupa todo el ancho arriba */}
+                    <div className="aspect-square w-full overflow-hidden rounded-t-xl bg-gray-100 dark:bg-gray-800 flex-shrink-0">
+                      {pet.photo 
+                        ? (
+                          <img 
+                            src={pet.photo} 
+                            alt={pet.name}
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                          />
+                        )
+                        : (
+                          <div className="h-full w-full flex items-center justify-center">
+                            <span className="text-5xl">{emoji}</span>
                           </div>
-                        ) : (
-                          <div className={`flex h-16 w-16 items-center justify-center rounded-xl flex-shrink-0 border ${color} transition-all duration-300 group-hover:scale-105`}>
-                            <span className="text-2xl">{emoji}</span>
-                          </div>
-                        )}
+                        )
+                      }
+                    </div>
 
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">{pet.name}</h3>
-                            <Badge
-                              variant={pet.isActive ? 'default' : 'secondary'}
-                              className={
-                                pet.isActive
-                                  ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 text-xs'
-                                  : 'bg-gray-100 text-gray-500 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 text-xs'
-                              }
-                            >
-                              {pet.isActive ? 'Activa' : 'Inactiva'}
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                            <span className="inline-flex items-center gap-1">
-                              <span className="text-xs">{emoji}</span>
-                              {label}
-                            </span>
-                            {pet.breed ? ` · ${pet.breed}` : ''}
+                    {/* Info abajo */}
+                    <CardContent className="p-3 flex-1">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold truncate text-gray-900 dark:text-gray-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-300 transition-colors">
+                            {pet.name}
+                          </h3>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+                            {emoji} {label}{pet.breed ? ` · ${pet.breed}` : ''}
                           </p>
                         </div>
+                        <Badge
+                          variant={pet.isActive ? 'default' : 'secondary'}
+                          className={
+                            pet.isActive
+                              ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/30 dark:text-emerald-300 text-[10px] px-1.5 h-5 flex-shrink-0 border-none'
+                              : 'bg-gray-100 text-gray-500 hover:bg-gray-100 dark:bg-gray-800 dark:text-gray-400 text-[10px] px-1.5 h-5 flex-shrink-0 border-none'
+                          }
+                        >
+                          {pet.isActive ? 'Activa' : 'Inactiva'}
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
@@ -404,4 +350,5 @@ export default function Pets() {
     </div>
   );
 }
+
 Pets.layout = (page: React.ReactNode) => <ClientLayout>{page}</ClientLayout>;

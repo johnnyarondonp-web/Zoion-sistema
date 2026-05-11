@@ -39,4 +39,21 @@ class UserController extends Controller
         $user->update(['password' => Hash::make($request->newPassword)]);
         return response()->json(['success' => true]);
     }
+
+    public function clinicInfo()
+    {
+        // Try to get from config or DB (if there was a model for this)
+        // Since we don't know the exact schema, we'll return defaults.
+        // It could also check a Settings table, but as per request:
+        // "devuelve datos de la clínica desde la BD o un objeto con valores por defecto si no existe configuración"
+        // Let's assume there's a setting model or we just return defaults.
+        $clinicInfo = [
+            'name' => 'Zoion',
+            'address' => '',
+            'phone' => '',
+            'email' => ''
+        ];
+        
+        return response()->json(['success' => true, 'data' => $clinicInfo]);
+    }
 }

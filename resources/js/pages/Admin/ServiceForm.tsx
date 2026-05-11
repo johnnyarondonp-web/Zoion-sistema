@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Stethoscope } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 
@@ -27,17 +28,18 @@ interface FormData {
 
 interface FormErrors {
   name?: string;
+  description?: string;
+  category?: string;
   durationMinutes?: string;
   price?: string;
 }
 
 const categoryOptions = [
-  { value: '', label: 'Sin categoría' },
-  { value: 'consulta', label: '🩺 Consulta' },
-  { value: 'cirugia', label: ' Cirugía' },
-  { value: 'estetica', label: '✂️ Estética' },
-  { value: 'diagnostico', label: '🔬 Diagnóstico' },
-  { value: 'prevencion', label: '🛡️ Prevención' },
+  { value: 'consulta',    label: 'Consulta' },
+  { value: 'cirugia',     label: 'Cirugía' },
+  { value: 'estetica',    label: 'Estética' },
+  { value: 'diagnostico', label: 'Diagnóstico' },
+  { value: 'prevencion',  label: 'Prevención' },
 ];
 
 // Helper para CSRF token (Laravel)
@@ -51,7 +53,7 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
     description: '',
     durationMinutes: '',
     price: '',
-    category: '',
+    category: 'consulta',
     isActive: true,
   });
   const [errors, setErrors] = useState<FormErrors>({});
@@ -97,6 +99,9 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     if (!form.name.trim()) newErrors.name = 'El nombre es requerido';
+    else if (form.name.trim().length > 50) newErrors.name = 'El nombre no puede exceder 50 caracteres';
+    if (form.description.length > 300) newErrors.description = 'La descripción no puede exceder 300 caracteres';
+    if (!form.category) newErrors.category = 'La categoría es requerida';
     if (!form.durationMinutes || isNaN(Number(form.durationMinutes)) || Number(form.durationMinutes) <= 0) {
       newErrors.durationMinutes = 'La duración debe ser un número positivo';
     }
@@ -173,25 +178,25 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
       transition={{ duration: 0.3 }}
       className="space-y-6"
     >
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => router.visit('/admin/services')}
-          className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Volver
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {mode === 'create' ? 'Nuevo Servicio' : 'Editar Servicio'}
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-            {mode === 'create' ? 'Registra un nuevo servicio en la clínica' : 'Modifica los datos del servicio'}
-          </p>
+      {/* Header premium */}
+      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-800 to-teal-700 p-6 text-white shadow-lg">
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
+            <Stethoscope className="h-7 w-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">
+              {mode === 'create' ? 'Nuevo Servicio' : 'Editar Servicio'}
+            </h1>
+            <p className="text-emerald-100 text-sm mt-0.5">
+              {mode === 'create' ? 'Registra un nuevo servicio en la clínica' : 'Modifica los datos del servicio'}
+            </p>
+          </div>
         </div>
+        <Button variant="ghost" size="sm" onClick={() => router.visit('/admin/services')}
+          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/10">
+          <ArrowLeft className="h-4 w-4 mr-1" /> Volver
+        </Button>
       </div>
 
       {/* Form */}
@@ -210,6 +215,7 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
               </Label>
               <Input
                 id="name"
+                maxLength={50}
                 value={form.name}
                 onChange={(e) => {
                   setForm((f) => ({ ...f, name: e.target.value }));
@@ -218,7 +224,10 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
                 placeholder="Ej: Consulta general"
                 className={errors.name ? 'border-red-300 focus-visible:ring-red-300' : ''}
               />
-              {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
+              <div className="flex justify-between mt-1">
+                <p className="text-sm text-red-600">{errors.name || ''}</p>
+                <p className="text-xs text-gray-400">{form.name.length}/50</p>
+              </div>
             </div>
 
             {/* Description */}
@@ -228,31 +237,47 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
               </Label>
               <Textarea
                 id="description"
+                maxLength={300}
                 value={form.description}
-                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, description: e.target.value }));
+                  if (errors.description) setErrors((err) => ({ ...err, description: undefined }));
+                }}
                 placeholder="Describe el servicio..."
                 rows={3}
+                className={errors.description ? 'border-red-300 focus-visible:ring-red-300' : ''}
               />
+              <div className="flex justify-between mt-1">
+                <p className="text-sm text-red-600">{errors.description || ''}</p>
+                <p className="text-xs text-gray-400">{form.description.length}/300</p>
+              </div>
             </div>
 
             {/* Category */}
             <div className="space-y-2">
               <Label htmlFor="category" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Categoría
+                Categoría <span className="text-red-500">*</span>
               </Label>
               <select
                 id="category"
                 value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                onChange={(e) => {
+                  setForm((f) => ({ ...f, category: e.target.value }));
+                  if (errors.category) setErrors((err) => ({ ...err, category: undefined }));
+                }}
+                className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.category ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
               >
                 {categoryOptions.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
-                Selecciona la categoría para organizar los servicios
-              </p>
+              {errors.category ? (
+                <p className="text-sm text-red-600 mt-1">{errors.category}</p>
+              ) : (
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Selecciona la categoría para organizar los servicios
+                </p>
+              )}
             </div>
 
             {/* Duration & Price */}
@@ -334,3 +359,5 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
     </motion.div>
   );
 }
+
+ServiceForm.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

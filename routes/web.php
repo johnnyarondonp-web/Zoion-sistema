@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ClinicalNoteController;
 use App\Http\Controllers\AppointmentMessageController;
 use App\Http\Controllers\AdminClientController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\UploadController;
@@ -74,10 +75,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── API: Servicios ───────────────────────────────────────────────────
     Route::get('/api/services',                     [ServiceController::class, 'index']);
-    Route::post('/api/services',                    [ServiceController::class, 'store']);
     Route::get('/api/services/{id}',                [ServiceController::class, 'show']);
-    Route::patch('/api/services/{id}',              [ServiceController::class, 'update']);
-    Route::delete('/api/services/{id}',             [ServiceController::class, 'destroy']);
 
     // ── API: Citas ───────────────────────────────────────────────────────
     Route::get('/api/appointments',                 [AppointmentController::class, 'index']);
@@ -119,14 +117,28 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── Vistas admin ─────────────────────────────────────────────────────
     Route::get('/admin/dashboard',     fn () => Inertia::render('Admin/Dashboard'));
+    Route::get('/admin/profile',       fn () => Inertia::render('Client/Profile'));
     Route::get('/admin/appointments',  fn () => Inertia::render('Admin/Appointments'));
     Route::get('/admin/clients',       fn () => Inertia::render('Admin/Clients'));
+    Route::get('/admin/clients/{id}',  fn () => Inertia::render('Admin/ClientDetail', ['clientId' => request()->route('id')]));
     Route::get('/admin/services',      fn () => Inertia::render('Admin/Services'));
+    Route::get('/admin/services/new',  fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'create']));
+    Route::get('/admin/services/{id}/edit', fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'edit', 'serviceId' => request()->route('id')]));
     Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'));
     Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'));
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
     Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'));
+
+    // ── API Admin: Dashboard & Reports ───────────────────────────────────
+    Route::get('/api/dashboard', [DashboardController::class, 'index']);
+    Route::get('/api/reports', [DashboardController::class, 'reports']);
+    Route::get('/api/user/clinic-info', [UserController::class, 'clinicInfo']);
+
+    // ── API Admin: Servicios ─────────────────────────────────────────────
+    Route::post('/api/services',                    [ServiceController::class, 'store']);
+    Route::patch('/api/services/{id}',              [ServiceController::class, 'update']);
+    Route::delete('/api/services/{id}',             [ServiceController::class, 'destroy']);
 
     // ── API Admin: Clientes ──────────────────────────────────────────────
     Route::get('/api/admin/clients',         [AdminClientController::class, 'index']);

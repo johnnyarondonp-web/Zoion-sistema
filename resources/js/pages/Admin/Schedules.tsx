@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -235,14 +236,6 @@ export default function Schedules() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configura los horarios de atención de la clínica</p>
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
-        >
-          <Save className="h-4 w-4 mr-2" />
-          {saving ? 'Guardando...' : 'Guardar Cambios'}
-        </Button>
       </div>
 
       {/* Weekly Overview Cards */}
@@ -407,3 +400,5 @@ export default function Schedules() {
     </motion.div>
   );
 }
+
+Schedules.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

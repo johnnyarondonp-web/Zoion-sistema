@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { router, usePage } from '@inertiajs/react';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -134,20 +135,20 @@ const speciesLabels: Record<string, string> = {
 };
 
 interface Props {
-  id: string;
+  clientId: string;
 }
 
-export default function ClientDetail({ id }: Props) {
+export default function ClientDetail({ clientId }: Props) {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (id) fetchClient();
-  }, [id]);
+    if (clientId) fetchClient();
+  }, [clientId]);
 
   const fetchClient = async () => {
     try {
-      const res = await fetch(`/api/admin/clients/${id}`);
+      const res = await fetch(`/api/admin/clients/${clientId}`);
       const data = await res.json();
       if (data.success) {
         setClient(data.data);
@@ -515,3 +516,5 @@ export default function ClientDetail({ id }: Props) {
     </motion.div>
   );
 }
+
+ClientDetail.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;
