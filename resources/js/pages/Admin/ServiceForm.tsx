@@ -48,6 +48,7 @@ const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.ge
 export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
   const [loading, setLoading] = useState(mode === 'edit');
   const [submitting, setSubmitting] = useState(false);
+  const [durationType, setDurationType] = useState<'minutes' | 'hours'>('minutes');
   const [form, setForm] = useState<FormData>({
     name: '',
     description: '',
@@ -76,10 +77,13 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
       const data = await res.json();
       if (data.success) {
         const s = data.data;
+        const totalMin = Number(s.durationMinutes);
+        const type = totalMin >= 60 && totalMin % 60 === 0 ? 'hours' : 'minutes';
+        setDurationType(type);
         setForm({
           name: s.name,
           description: s.description || '',
-          durationMinutes: String(s.durationMinutes),
+          durationMinutes: String(type === 'hours' ? totalMin / 60 : totalMin),
           price: String(s.price),
           category: s.category || '',
           isActive: s.isActive,
@@ -102,11 +106,18 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
     else if (form.name.trim().length > 50) newErrors.name = 'El nombre no puede exceder 50 caracteres';
     if (form.description.length > 300) newErrors.description = 'La descripción no puede exceder 300 caracteres';
     if (!form.category) newErrors.category = 'La categoría es requerida';
-    if (!form.durationMinutes || isNaN(Number(form.durationMinutes)) || Number(form.durationMinutes) <= 0) {
-      newErrors.durationMinutes = 'La duración debe ser un número positivo';
+    
+    const duration = Number(form.durationMinutes);
+    if (!form.durationMinutes || isNaN(duration) || duration < 1) {
+      newErrors.durationMinutes = 'Duración inválida';
+    } else if (durationType === 'minutes' && duration > 59) {
+      newErrors.durationMinutes = 'Mínimo 1 min y Máximo 59 min';
+    } else if (durationType === 'hours' && duration > 6) {
+      newErrors.durationMinutes = 'Mínimo 1 hora y Máximo 6 horas';
     }
-    if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 0) {
-      newErrors.price = 'El precio debe ser un número no negativo';
+
+    if (!form.price || isNaN(Number(form.price)) || Number(form.price) < 1 || Number(form.price) > 10000) {
+      newErrors.price = 'El precio debe ser entre $1.00 y $10,000.00';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -121,14 +132,14 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || null,
-        durationMinutes: Number(form.durationMinutes),
+        durationMinutes: durationType === 'hours' ? Number(form.durationMinutes) * 60 : Number(form.durationMinutes),
         price: Number(parseFloat(form.price).toFixed(2)),
         category: form.category || null,
         isActive: form.isActive,
       };
 
       const url = mode === 'create' ? '/api/services' : `/api/services/${serviceId}`;
-      const method = mode === 'create' ? 'POST' : 'PUT';
+      const method = mode === 'create' ? 'POST' : 'PATCH';
 
       const res = await fetch(url, {
         method,
@@ -284,21 +295,50 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="duration" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Duración (minutos) <span className="text-red-500">*</span>
+                  Duración <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="duration"
-                  type="number"
-                  min="1"
-                  value={form.durationMinutes}
-                  onChange={(e) => {
-                    setForm((f) => ({ ...f, durationMinutes: e.target.value }));
-                    if (errors.durationMinutes) setErrors((err) => ({ ...err, durationMinutes: undefined }));
-                  }}
-                  placeholder="30"
-                  className={errors.durationMinutes ? 'border-red-300 focus-visible:ring-red-300' : ''}
-                />
-                {errors.durationMinutes && <p className="text-sm text-red-600">{errors.durationMinutes}</p>}
+                <div className="flex gap-2">
+                  <Input
+                    id="duration"
+                    type="number"
+                    min="1"
+                    max={durationType === 'minutes' ? 59 : 6}
+                    value={form.durationMinutes}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, durationMinutes: e.target.value }));
+                      if (errors.durationMinutes) setErrors((err) => ({ ...err, durationMinutes: undefined }));
+                    }}
+                    onBlur={(e) => {
+                      let val = Number(e.target.value);
+                      const max = durationType === 'minutes' ? 59 : 6;
+                      if (isNaN(val) || val < 1) val = 1;
+                      if (val > max) val = max;
+                      setForm((f) => ({ ...f, durationMinutes: String(Math.round(val)) }));
+                    }}
+                    placeholder={durationType === 'minutes' ? 'Ej: 30' : 'Ej: 1'}
+                    className={`flex-1 ${errors.durationMinutes ? 'border-red-300 focus-visible:ring-red-300' : ''}`}
+                  />
+                  <select
+                    value={durationType}
+                    onChange={(e) => {
+                      const newType = e.target.value as 'minutes' | 'hours';
+                      setDurationType(newType);
+                      setForm(f => ({ ...f, durationMinutes: '1' }));
+                      setErrors(err => ({ ...err, durationMinutes: undefined }));
+                    }}
+                    className="flex h-10 w-28 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="minutes">Minutos</option>
+                    <option value="hours">Horas</option>
+                  </select>
+                </div>
+                {errors.durationMinutes ? (
+                  <p className="text-sm text-red-600">{errors.durationMinutes}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                    {durationType === 'minutes' ? 'Mínimo 1 min — Máximo 59 min' : 'Mínimo 1 hora — Máximo 6 horas'}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -308,17 +348,28 @@ export default function ServiceForm({ mode, serviceId }: ServiceFormProps) {
                 <Input
                   id="price"
                   type="number"
-                  min="0"
+                  min="1"
+                  max="10000"
                   step="0.01"
                   value={form.price}
                   onChange={(e) => {
                     setForm((f) => ({ ...f, price: e.target.value }));
                     if (errors.price) setErrors((err) => ({ ...err, price: undefined }));
                   }}
+                  onBlur={(e) => {
+                    let val = parseFloat(e.target.value);
+                    if (isNaN(val) || val < 1) val = 1;
+                    if (val > 10000) val = 10000;
+                    setForm((f) => ({ ...f, price: val.toFixed(2) }));
+                  }}
                   placeholder="0.00"
                   className={errors.price ? 'border-red-300 focus-visible:ring-red-300' : ''}
                 />
-                {errors.price && <p className="text-sm text-red-600">{errors.price}</p>}
+                {errors.price ? (
+                  <p className="text-sm text-red-600">{errors.price}</p>
+                ) : (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Mín $1.00 — Máx $10,000.00</p>
+                )}
               </div>
             </div>
 

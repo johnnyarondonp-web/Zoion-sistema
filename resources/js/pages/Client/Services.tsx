@@ -311,7 +311,7 @@ export default function Services() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-sm">
                         <DollarSign className="h-3.5 w-3.5" />
-                        {service.price.toFixed(2)}
+                        {Number(service.price).toFixed(2)}
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                         <Clock className="h-3.5 w-3.5" />
@@ -411,7 +411,7 @@ export default function Services() {
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold">
                             <DollarSign className="h-3 w-3" />
-                            {service.price.toFixed(2)}
+                            {Number(service.price).toFixed(2)}
                           </span>
                         </td>
                         <td className="px-4 py-3">

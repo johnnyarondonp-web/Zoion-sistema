@@ -73,7 +73,7 @@ function ChartTooltip({ active, payload, label }: {
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color || '#10b981' }} className="font-semibold">
             {p.name}: {typeof p.value === 'number' && p.name.toLowerCase().includes('revenue')
-              ? `$${p.value.toFixed(2)}` 
+              ? `$${Number(p.value).toFixed(2)}` 
               : p.value}
           </p>
         ))}
@@ -221,7 +221,7 @@ export default function Reports() {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Ingresos totales</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${summary.totalRevenue.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${Number(summary.totalRevenue).toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -377,7 +377,7 @@ export default function Reports() {
                           <span className="font-medium text-gray-900 dark:text-gray-100 truncate mr-2">{svc.name}</span>
                           <div className="flex items-center gap-3 flex-shrink-0">
                             <span className="text-xs text-gray-500 dark:text-gray-400">{svc.count} citas</span>
-                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">${svc.revenue.toFixed(2)}</span>
+                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">${Number(svc.revenue).toFixed(2)}</span>
                           </div>
                         </div>
                         <div className="h-2 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">

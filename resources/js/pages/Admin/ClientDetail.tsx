@@ -312,7 +312,7 @@ export default function ClientDetail({ clientId }: Props) {
                 </div>
                 <div>
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total gastado</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${client.totalSpent.toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${Number(client.totalSpent).toFixed(2)}</p>
                 </div>
               </div>
             </CardContent>
@@ -449,7 +449,7 @@ export default function ClientDetail({ clientId }: Props) {
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.startTime} - {apt.endTime}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.pet.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.service.name}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">${apt.service.price.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</td>
                         <td className="px-4 py-3">
                           <Badge className={`${statusColors[apt.status]} gap-1 text-xs`}>
                             {statusIcons[apt.status]}
@@ -475,7 +475,7 @@ export default function ClientDetail({ clientId }: Props) {
                     </div>
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                       <span>{apt.startTime} - {apt.endTime}</span>
-                      <span className="font-medium text-emerald-600 dark:text-emerald-400">${apt.service.price.toFixed(2)}</span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">
                       {apt.service.name} · <span className="text-gray-400 dark:text-gray-500">{apt.pet.name}</span>
@@ -506,7 +506,7 @@ export default function ClientDetail({ clientId }: Props) {
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   <span className="font-semibold text-gray-900 dark:text-gray-100">{completedAppointments.length}</span>{' '}
                   {completedAppointments.length === 1 ? 'cita completada' : 'citas completadas'} con un total de{' '}
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">${client.totalSpent.toFixed(2)}</span>
+                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">${Number(client.totalSpent).toFixed(2)}</span>
                 </p>
               </div>
             </CardContent>

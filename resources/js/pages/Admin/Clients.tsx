@@ -109,6 +109,7 @@ export default function Clients() {
   const [clients, setClients] = useState<ClientData[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'todos' | 'activos' | 'leads' | 'archivados'>('todos');
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [viewMode, setViewMode] = useState<'cards' | 'table'>('cards');
@@ -117,13 +118,14 @@ export default function Clients() {
 
   const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-  const fetchClients = useCallback(async (searchTerm: string, page: number = 1, append: boolean = false) => {
+  const fetchClients = useCallback(async (searchTerm: string, filterType: string, page: number = 1, append: boolean = false) => {
     if (page === 1 && !append) setLoading(true);
     else setLoadingMore(true);
 
     try {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
+      if (filterType !== 'todos') params.set('filter', filterType);
       params.set('page', page.toString());
 
       const res = await fetch(`/api/admin/clients?${params.toString()}`, {
@@ -147,20 +149,25 @@ export default function Clients() {
   }, []);
 
   useEffect(() => {
-    fetchClients('');
+    fetchClients('', 'todos');
   }, [fetchClients]);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      fetchClients(value, 1, false);
+      fetchClients(value, filter, 1, false);
     }, 300);
+  };
+
+  const handleFilterChange = (newFilter: 'todos' | 'activos' | 'leads' | 'archivados') => {
+    setFilter(newFilter);
+    fetchClients(search, newFilter, 1, false);
   };
 
   const handleLoadMore = () => {
     if (pagination && pagination.page < pagination.totalPages) {
-      fetchClients(search, pagination.page + 1, true);
+      fetchClients(search, filter, pagination.page + 1, true);
     }
   };
 
@@ -267,7 +274,7 @@ export default function Clients() {
               />
               {search && (
                 <button
-                  onClick={() => { setSearch(''); fetchClients('', 1, false); }}
+                  onClick={() => { setSearch(''); fetchClients('', filter, 1, false); }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <X className="h-4 w-4" />
@@ -300,6 +307,52 @@ export default function Clients() {
               <span className="sm:hidden">CSV</span>
             </Button>
           </div>
+        </div>
+
+        {/* Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 mt-4 scrollbar-thin">
+          <button
+            onClick={() => handleFilterChange('todos')}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+              filter === 'todos'
+                ? 'bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900 shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            Todos
+          </button>
+          <button
+            onClick={() => handleFilterChange('activos')}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+              filter === 'activos'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-200 dark:shadow-emerald-900/30'
+                : 'bg-white dark:bg-gray-800 text-gray-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 dark:text-gray-400 dark:hover:bg-emerald-900/20 dark:hover:text-emerald-400 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            <Heart className="h-3.5 w-3.5" />
+            Activos
+          </button>
+          <button
+            onClick={() => handleFilterChange('leads')}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+              filter === 'leads'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-200 dark:shadow-blue-900/30'
+                : 'bg-white dark:bg-gray-800 text-gray-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 dark:text-gray-400 dark:hover:bg-blue-900/20 dark:hover:text-blue-400 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            <Users className="h-3.5 w-3.5" />
+            Leads / Potenciales
+          </button>
+          <button
+            onClick={() => handleFilterChange('archivados')}
+            className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 flex items-center gap-1.5 ${
+              filter === 'archivados'
+                ? 'bg-gray-600 text-white shadow-md'
+                : 'bg-white dark:bg-gray-800 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700'
+            }`}
+          >
+            Archivados
+          </button>
         </div>
       </motion.div>
 
@@ -334,6 +387,11 @@ export default function Clients() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{client.name}</h3>
+                        {(client._count?.pets ?? 0) === 0 && (
+                          <Badge variant="outline" className="mt-1 border-orange-200 text-orange-600 bg-orange-50 dark:border-orange-900/50 dark:bg-orange-900/20 dark:text-orange-400 text-[10px] px-1.5 py-0.5 font-medium tracking-wide shadow-sm">
+                            Sin mascotas registradas
+                          </Badge>
+                        )}
                         <div className="flex items-center gap-1.5 mt-1 text-gray-500 dark:text-gray-400">
                           <Mail className="h-3.5 w-3.5 shrink-0" />
                           <span className="text-xs truncate">{client.email}</span>
@@ -444,7 +502,12 @@ export default function Clients() {
                           <div className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br ${getAvatarColor(client.name)} text-white font-semibold text-xs shrink-0 shadow-sm ring-2 ring-white dark:ring-gray-800`}>
                             {getInitials(client.name)}
                           </div>
-                          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{client.name}</span>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">{client.name}</span>
+                            {(client._count?.pets ?? 0) === 0 && (
+                              <span className="text-[10px] font-medium text-orange-600 dark:text-orange-400 mt-0.5">Sin mascotas registradas</span>
+                            )}
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -537,10 +600,10 @@ export default function Clients() {
               {search && (
                 <Button
                   variant="outline"
-                  onClick={() => { setSearch(''); fetchClients('', 1, false); }}
+                  onClick={() => { setSearch(''); handleFilterChange('todos'); }}
                   className="mt-4 border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-300 dark:hover:bg-emerald-950/30"
                 >
-                  Limpiar búsqueda
+                  Limpiar filtros
                 </Button>
               )}
             </CardContent>

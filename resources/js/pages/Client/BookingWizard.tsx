@@ -124,7 +124,7 @@ function getServiceIcon(name: string): React.ReactNode {
 }
 
 function formatPrice(price: number): string {
-  return `$${price.toFixed(2)}`;
+  return `$${Number(price).toFixed(2)}`;
 }
 
 function formatDuration(minutes: number): string {

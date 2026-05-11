@@ -24,6 +24,28 @@ class AdminClientController extends Controller
             });
         }
 
+        $filter = $request->query('filter', 'todos');
+        $thirtyDaysAgo = now()->subDays(30);
+
+        if ($filter === 'archivados') {
+            $query->doesntHave('pets')
+                  ->doesntHave('appointments')
+                  ->where('created_at', '<', $thirtyDaysAgo);
+        } else {
+            // Excluir archivados de las vistas principales
+            $query->where(function($q) use ($thirtyDaysAgo) {
+                $q->has('pets')
+                  ->orHas('appointments')
+                  ->orWhere('created_at', '>=', $thirtyDaysAgo);
+            });
+
+            if ($filter === 'activos') {
+                $query->has('pets');
+            } elseif ($filter === 'leads') {
+                $query->doesntHave('pets')->doesntHave('appointments');
+            }
+        }
+
         $page  = (int) $request->query('page', 1);
         $limit = (int) $request->query('limit', 15);
 
@@ -32,6 +54,22 @@ class AdminClientController extends Controller
             ->skip(($page - 1) * $limit)
             ->take($limit)
             ->get(['id', 'name', 'email', 'phone', 'created_at', 'role']);
+
+        // Mapear a formato compatible con frontend
+        $clients = $clients->map(function ($client) {
+            return [
+                'id'        => $client->id,
+                'name'      => $client->name,
+                'email'     => $client->email,
+                'phone'     => $client->phone,
+                'createdAt' => $client->created_at,
+                'role'      => $client->role,
+                '_count'    => [
+                    'pets'         => $client->pets_count,
+                    'appointments' => $client->appointments_count,
+                ],
+            ];
+        });
 
         return response()->json([
             'success' => true,
@@ -53,6 +91,7 @@ class AdminClientController extends Controller
     public function show($id)
     {
         $client = User::where('role', 'client')
+            ->withCount(['pets', 'appointments'])
             ->with([
                 'pets',
                 'appointments' => function ($q) {
@@ -63,9 +102,21 @@ class AdminClientController extends Controller
             ])
             ->findOrFail($id);
 
+        $client->totalSpent = Appointment::where('user_id', $id)
+            ->where('status', 'completed')
+            ->join('services', 'appointments.service_id', '=', 'services.id')
+            ->sum('services.price');
+
+        $data = $client->toArray();
+        $data['createdAt'] = $client->created_at;
+        $data['_count'] = [
+            'pets'         => $client->pets_count ?? 0,
+            'appointments' => $client->appointments_count ?? 0,
+        ];
+
         return response()->json([
             'success' => true,
-            'data'    => $client,
+            'data'    => $data,
         ]);
     }
 

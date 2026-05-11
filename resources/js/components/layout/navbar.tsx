@@ -54,7 +54,7 @@ const adminNavItems: NavItem[] = [
 
 const publicNavItems: { label: string; href: string }[] = [
   { label: 'Inicio', href: '/' },
-
+  { label: 'Nosotros', href: '/about' },
 ];
 
 export function Navbar() {
@@ -205,11 +205,9 @@ export function Navbar() {
                     <span className="max-w-[120px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                       {user.name || 'Usuario'}
                     </span>
-                    {/* Badge eliminado */}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
-                  {/* Solo Mi Perfil y Cerrar Sesión */}
                   <DropdownMenuItem
                     onClick={() => handleNavClick(profileHref)}
                     className="cursor-pointer"
@@ -281,14 +279,12 @@ export function Navbar() {
                       <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate max-w-[150px]">
                         {user.name || 'Usuario'}
                       </span>
-                      {/* Badge eliminado en móvil también */}
                     </div>
                   </div>
 
                   <Separator />
 
                   <nav className="flex flex-col gap-1">
-                    {/* Solo Mi Perfil en el menú móvil */}
                     <SheetClose asChild>
                       <button
                         onClick={() => handleNavClick(profileHref)}
@@ -314,8 +310,6 @@ export function Navbar() {
                     {theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro'}
                   </button>
 
-
-
                   <Separator />
 
                   <button
@@ -328,12 +322,29 @@ export function Navbar() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-3 px-4 pt-2">
+                  {/* Inicio y Nosotros — siempre visibles para no autenticados */}
                   <button
                     onClick={() => handleNavClick('/')}
-                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 dark:text-gray-300 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      url === '/'
+                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
                   >
                     <PawPrint className="h-4 w-4" />
                     Inicio
+                  </button>
+
+                  <button
+                    onClick={() => handleNavClick('/about')}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      url === '/about'
+                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <Info className="h-4 w-4" />
+                    Nosotros
                   </button>
 
                   <button

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { router } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import {
@@ -17,13 +17,28 @@ import { Navbar } from '@/components/layout/navbar';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const cookies = document.cookie.split(';').map(c => c.trim());
+    const rememberCookie = cookies.find(c => c.startsWith('remember_session='));
+    if (rememberCookie) setRemember(true);
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
+
+    if (remember) {
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 30);
+      document.cookie = `remember_session=true; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    } else {
+      document.cookie = 'remember_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+    }
 
     router.post(
       '/login',
@@ -118,6 +133,19 @@ export default function Login() {
                         disabled={isLoading}
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="remember"
+                      checked={remember}
+                      onChange={(e) => setRemember(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <label htmlFor="remember" className="text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
+                      Recordarme
+                    </label>
                   </div>
 
                   <Button

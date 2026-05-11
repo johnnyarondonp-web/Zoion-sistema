@@ -117,7 +117,7 @@ const formatTime = (time: string): string => {
   return `${hour12}:${m.toString().padStart(2, '0')} ${period}`;
 };
 
-const formatPrice = (price: number): string => `$${price.toFixed(2)}`;
+const formatPrice = (price: number): string => `$${Number(price).toFixed(2)}`;
 
 const formatDateTime = (isoStr: string): string => {
   const date = new Date(isoStr);

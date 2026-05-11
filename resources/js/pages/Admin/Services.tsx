@@ -125,6 +125,7 @@ export default function Services() {
           'X-Requested-With': 'XMLHttpRequest',
           'X-CSRF-TOKEN': getCsrfToken(),
         },
+        body: JSON.stringify({ isActive: !service.isActive }),
       });
       const data = await res.json();
       if (data.success) {
@@ -272,10 +273,9 @@ export default function Services() {
                 transition={{ type: 'spring', stiffness: 300, damping: 20 }}
               >
                 <Card className="border-gray-200 dark:border-gray-700 overflow-hidden relative group hover:shadow-lg transition-shadow duration-300">
-                  {/* Top gradient line */}
-                  <div className={`h-1 bg-gradient-to-r ${catInfo.gradient}`} />
+
                   {!service.isActive && (
-                    <div className="absolute inset-0 bg-gray-50/60 dark:bg-gray-900/40 z-10" />
+                    <div className="absolute inset-0 bg-gray-50/60 dark:bg-gray-900/40 z-10 pointer-events-none" />
                   )}
 
                   {/* Popular badge */}
@@ -313,7 +313,7 @@ export default function Services() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-sm">
                         <DollarSign className="h-3.5 w-3.5" />
-                        {service.price.toFixed(2)}
+                        {Number(service.price).toFixed(2)}
                       </div>
                       <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
                         <Clock className="h-3.5 w-3.5" />
@@ -413,7 +413,7 @@ export default function Services() {
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold">
                             <DollarSign className="h-3 w-3" />
-                            {service.price.toFixed(2)}
+                            {Number(service.price).toFixed(2)}
                           </span>
                         </td>
                         <td className="px-4 py-3">
