@@ -134,12 +134,17 @@ class AdminClientController extends Controller
                 'startTime' => $a->start_time,
                 'endTime'   => $a->end_time,
                 'status'    => $a->status,
-                'service'   => [
+                'service' => $a->service ? [
                     'name'  => $a->service->name,
                     'price' => $a->service->price,
+                ] : [
+                    'name'  => 'Servicio eliminado',
+                    'price' => 0,
                 ],
-                'pet'       => [
+                'pet'     => $a->pet ? [
                     'name'  => $a->pet->name,
+                ] : [
+                    'name'  => 'Mascota eliminada',
                 ],
             ]),
         ];

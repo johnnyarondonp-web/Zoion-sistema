@@ -12,6 +12,45 @@ use Illuminate\Support\Str;
 
 class AppointmentController extends Controller
 {
+    private function hasCapacityFor(string $serviceId, string $date, string $startTime, string $endTime): bool
+    {
+        $doctorIds = \Illuminate\Support\Facades\DB::table('doctor_services')
+            ->join('doctors', 'doctors.id', '=', 'doctor_services.doctor_id')
+            ->where('doctor_services.service_id', $serviceId)
+            ->where('doctors.is_active', true)
+            ->pluck('doctor_services.doctor_id');
+
+        $totalDoctors = $doctorIds->count();
+
+        if ($totalDoctors > 0) {
+            $busyFromAppts = Appointment::where('date', $date)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereIn('doctor_id', $doctorIds)
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->distinct('doctor_id')
+                ->count('doctor_id');
+
+            $busyFromWalkIns = \App\Models\WalkInAppointment::where('date', $date)
+                ->whereIn('status', ['pending', 'confirmed'])
+                ->whereIn('doctor_id', $doctorIds)
+                ->where('start_time', '<', $endTime)
+                ->where('end_time', '>', $startTime)
+                ->distinct('doctor_id')
+                ->count('doctor_id');
+
+            return ($busyFromAppts + $busyFromWalkIns) < $totalDoctors;
+        }
+
+        $overlap = Appointment::where('date', $date)
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->where('start_time', '<', $endTime)
+            ->where('end_time', '>', $startTime)
+            ->exists();
+
+        return !$overlap;
+    }
+
     private function timeToMinutes(string $time): int
     {
         [$h, $m] = explode(':', $time);
@@ -138,14 +177,9 @@ class AppointmentController extends Controller
 
         $endTime = $this->minutesToTime($this->timeToMinutes($request->startTime) + $service->duration_minutes);
 
-        // Verificar solapamiento
-        $overlap = Appointment::where('date', $request->date)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $request->startTime)
-            ->exists();
-
-        if ($overlap) return response()->json(['success' => false, 'error' => 'Este horario coincide con otra cita existente'], 409);
+        if (!$this->hasCapacityFor($request->serviceId, $request->date, $request->startTime, $endTime)) {
+            return response()->json(['success' => false, 'error' => 'Este horario coincide con otra cita existente'], 409);
+        }
 
         // Verificar fechas bloqueadas
         if (BlockedDate::where('date', $request->date)->exists()) {
@@ -339,14 +373,30 @@ class AppointmentController extends Controller
         // Solo el administrador y recepcionista pueden cambiar estado y datos de pago
         if (in_array($user->role, ['admin', 'receptionist'])) {
             $allowedFields[] = 'status';
-            $allowedFields[] = 'clinical_notes';
             $allowedFields[] = 'payment_method';
             $allowedFields[] = 'payment_status';
             $allowedFields[] = 'payment_amount';
         }
 
+        // Capturar el status ANTES del update — después de update() getOriginal() ya devuelve el nuevo valor
+        $originalStatus = $appointment->status;
+
         // Actualizar solo los campos permitidos
         $appointment->update($request->only($allowedFields));
+
+        if ($request->has('status') && $request->status !== $originalStatus) {
+            $history = is_string($appointment->status_history)
+                ? json_decode($appointment->status_history, true)
+                : $appointment->status_history;
+            $history = is_array($history) ? $history : [];
+
+            $appointment->update([
+                'status_history' => array_merge(
+                    $history,
+                    [['status' => $request->status, 'date' => now()->toISOString()]]
+                ),
+            ]);
+        }
 
         // Manejar campos de pago en camelCase que vienen del frontend
         if ($request->has('paymentMethod')) $appointment->update(['payment_method' => $request->paymentMethod]);

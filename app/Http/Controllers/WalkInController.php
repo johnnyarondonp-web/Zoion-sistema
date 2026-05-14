@@ -83,6 +83,7 @@ class WalkInController extends Controller
             'petName'       => 'required|string|max:255',
             'petSpecies'    => 'required|string|max:100',
             'petBreed'      => 'nullable|string|max:100',
+            'petBirthDate'  => 'nullable|date|before:today',
             'petWeight'     => 'nullable|numeric|min:0.01|max:150',
             'serviceId'     => 'required|string|exists:services,id',
             'startTime'     => 'required|date_format:H:i',
@@ -181,8 +182,9 @@ class WalkInController extends Controller
         }
 
         $result = DB::transaction(function () use ($data, $service, $today, $endTime, $assignedDoctorId) {
-            // Reusar cliente si ya existe con ese teléfono (evitar duplicados)
-            $client = WalkInClient::firstOrCreate(
+            // updateOrCreate para que los datos (incluyendo pet_birth_date) se guarden
+            // aunque el cliente ya exista con ese teléfono
+            $client = WalkInClient::updateOrCreate(
                 ['phone' => $data['phone']],
                 [
                     'owner_name'  => $data['ownerName'],
@@ -190,6 +192,7 @@ class WalkInController extends Controller
                     'pet_name'    => $data['petName'],
                     'pet_species' => $data['petSpecies'],
                     'pet_breed'   => $data['petBreed'] ?? null,
+                    'pet_birth_date' => $data['petBirthDate'] ?? null,
                     'pet_weight'  => $data['petWeight'] ?? null,
                 ]
             );

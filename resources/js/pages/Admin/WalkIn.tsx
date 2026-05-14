@@ -67,6 +67,25 @@ const WEIGHT_LIMITS: Record<string, { min: number; max: number }> = {
   reptil: { min: 0.05, max: 150 },
 };
 
+const SPECIES_AGE_LIMITS: Record<string, { minYears: number; maxYears: number }> = {
+  perro:  { minYears: 0, maxYears: 20  },
+  gato:   { minYears: 0, maxYears: 25  },
+  conejo: { minYears: 0, maxYears: 12  },
+  ave:    { minYears: 0, maxYears: 80  },
+  reptil: { minYears: 0, maxYears: 50  },
+};
+
+function getDateLimits(species: string): { min: string; max: string } {
+  const today = new Date();
+  const max = today.toISOString().split('T')[0];
+  const limits = SPECIES_AGE_LIMITS[species];
+  const maxYears = limits ? limits.maxYears : 30;
+  const minDate = new Date(today);
+  minDate.setFullYear(minDate.getFullYear() - maxYears);
+  const min = minDate.toISOString().split('T')[0];
+  return { min, max };
+}
+
 function getCurrentTimeString(): string {
   const now = new Date();
   return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
@@ -86,6 +105,7 @@ export default function WalkIn() {
   const [petName, setPetName] = useState('');
   const [petSpecies, setPetSpecies] = useState('');
   const [petBreed, setPetBreed] = useState('');
+  const [petBirthDate, setPetBirthDate] = useState('');
   const [petWeight, setPetWeight] = useState('');
   const [petMixBreed, setPetMixBreed] = useState('');
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -142,6 +162,13 @@ export default function WalkIn() {
       errors.petSpecies = 'La especie es obligatoria';
     }
 
+    if (petBirthDate && petSpecies) {
+      const { min, max } = getDateLimits(petSpecies);
+      if (petBirthDate < min || petBirthDate > max) {
+        errors.petBirthDate = 'La fecha no es válida para esta especie';
+      }
+    }
+
     if (petWeight && petSpecies) {
       const w = parseFloat(petWeight);
       const limits = WEIGHT_LIMITS[petSpecies];
@@ -185,6 +212,7 @@ export default function WalkIn() {
           petBreed: petBreed === 'Mestizo' && petMixBreed.trim()
             ? `Mestizo (${petMixBreed.trim()})`
             : petBreed,
+          petBirthDate: petBirthDate || null,
           petWeight: petWeight ? parseFloat(petWeight) : null,
           serviceId,
           startTime,
@@ -198,7 +226,7 @@ export default function WalkIn() {
         setHistory(prev => [data.data, ...prev]);
         // Reset form
         setPhone(''); setOwnerName(''); setEmail(''); setPetName(''); setPetSpecies(''); setPetBreed('');
-        setPetWeight(''); setPetMixBreed(''); setFormErrors({});
+        setPetBirthDate(''); setPetWeight(''); setPetMixBreed(''); setFormErrors({});
         setServiceId(''); setStartTime(''); setClientFound(null);
       } else {
         toast.error(data.error || 'Error al registrar');
@@ -299,7 +327,7 @@ export default function WalkIn() {
                 </Select>
                 {formErrors.petSpecies && <p className="text-xs text-red-500 mt-1">{formErrors.petSpecies}</p>}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1">
                 <Label className="text-xs text-gray-600 dark:text-gray-400">Raza</Label>
                 <Select
                   value={petBreed}
@@ -315,6 +343,21 @@ export default function WalkIn() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="col-span-1">
+                <Label className="text-xs text-gray-600 dark:text-gray-400">Fecha de nacimiento (opcional)</Label>
+                <Input
+                  type="date"
+                  value={petBirthDate}
+                  min={petSpecies ? getDateLimits(petSpecies).min : undefined}
+                  max={petSpecies ? getDateLimits(petSpecies).max : undefined}
+                  onChange={e => setPetBirthDate(e.target.value)}
+                  disabled={!petSpecies}
+                  className="mt-1"
+                />
+                {formErrors.petBirthDate && <p className="text-xs text-red-500 mt-1">{formErrors.petBirthDate}</p>}
+              </div>
+              <div className="col-span-2">
                 {petBreed === 'Mestizo' && (petSpecies === 'perro' || petSpecies === 'gato' || petSpecies === 'conejo') && (
                   <Input
                     value={petMixBreed}

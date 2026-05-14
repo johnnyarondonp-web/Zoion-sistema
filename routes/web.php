@@ -14,7 +14,8 @@ use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\WalkInController;
-use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\NotificationController as ApiNotificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\UploadController;
 use Illuminate\Support\Facades\Route;
@@ -50,7 +51,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pets/{id}/edit',                     fn () => Inertia::render('Client/PetForm', ['mode' => 'edit', 'petId' => request()->route('id')]));
         Route::get('/appointments',                       fn () => Inertia::render('Client/Appointments'));
         Route::get('/appointments/new',                   fn () => Inertia::render('Client/BookingWizard'));
-        Route::get('/appointments/{id}',                  fn () => Inertia::render('Client/AppointmentDetail'));
+        Route::get('/appointments/{id}',                  fn () => Inertia::render('Client/AppointmentDetail', [
+            'appointmentId' => request()->route('id'),
+        ]));
         Route::get('/appointments/reschedule/{id}',       fn () => Inertia::render('Client/Reschedule'));
         Route::get('/profile',                            fn () => Inertia::render('Client/Profile'));
         Route::get('/services',                           fn () => Inertia::render('Client/Services'));
@@ -104,8 +107,8 @@ Route::middleware(['auth'])->group(function () {
 
     // ── API: Notificaciones ──────────────────────────────────────────────
     Route::get('/api/notifications',                         [NotificationController::class, 'index']);
-    Route::post('/api/notifications/{id}/read',              [NotificationController::class, 'markAsRead']);
-    Route::post('/api/notifications/read-all',               [NotificationController::class, 'markAllAsRead']);
+    Route::post('/api/notifications/{id}/read',              [ApiNotificationController::class, 'markAsRead']);
+    Route::post('/api/notifications/read-all',               [ApiNotificationController::class, 'markAllAsRead']);
 
     // ── API: Perfil de usuario ───────────────────────────────────────────
     Route::get('/api/user/profile',                          [UserController::class, 'profile']);

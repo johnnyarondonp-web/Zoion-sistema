@@ -10,7 +10,7 @@ return new class extends Migration {
         Schema::create('appointments', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('user_id');
-            $table->string('pet_id');
+            $table->string('pet_id')->nullable();
             $table->string('service_id');
             $table->string('date');
             $table->string('start_time');
@@ -26,7 +26,7 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->foreign('user_id')->references('id')->on('users');
-            $table->foreign('pet_id')->references('id')->on('pets');
+            $table->foreign('pet_id')->references('id')->on('pets')->onDelete('set null');
             $table->foreign('service_id')->references('id')->on('services');
         });
     }

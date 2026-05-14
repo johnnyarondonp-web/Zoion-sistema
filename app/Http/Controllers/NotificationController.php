@@ -29,6 +29,8 @@ class NotificationController extends Controller
                     'title'   => 'Cita pendiente de confirmación',
                     'message' => "{$apt->pet->name} ({$apt->user->name}) - {$apt->date} {$apt->start_time}",
                     'date'    => $apt->created_at,
+                    'read'      => false,
+                    'timestamp' => now()->toISOString(),
                     'data'    => ['appointmentId' => $apt->id],
                 ];
             }
@@ -48,11 +50,19 @@ class NotificationController extends Controller
                     'title'   => 'Cita próxima',
                     'message' => "{$apt->pet->name} - {$apt->service->name} el {$apt->date} a las {$apt->start_time}",
                     'date'    => $apt->created_at,
+                    'read'      => false,
+                    'timestamp' => now()->toISOString(),
                     'data'    => ['appointmentId' => $apt->id],
                 ];
             }
         }
 
-        return response()->json(['success' => true, 'data' => $notifications]);
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'notifications' => $notifications,
+                'unreadCount'   => count($notifications),
+            ],
+        ]);
     }
 }

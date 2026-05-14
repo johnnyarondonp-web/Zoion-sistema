@@ -4,7 +4,7 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'appointment' | 'reminder' | 'welcome' | 'system';
+  type: 'pending_appointment' | 'upcoming_appointment' | 'new_appointment' | 'appointment_confirmed' | 'appointment' | 'reminder' | 'welcome' | 'system';
   read: boolean;
   timestamp: string;
 }

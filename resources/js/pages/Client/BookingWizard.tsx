@@ -365,6 +365,7 @@ export default function BookingWizard() {
 
   const handleSubmit = async () => {
     if (!selectedServiceId || !selectedPetId || !selectedDate || !selectedTime) return;
+    if (submitting) return;
     setSubmitting(true);
     try {
       const dateStr = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`;
@@ -380,8 +381,21 @@ export default function BookingWizard() {
           paymentMethod: selectedPaymentMethod || null,
         }),
       });
+
+      if (!res.ok) {
+        if (res.status === 409) {
+          toast.error('Este horario ya fue reservado o coincide con otra cita.');
+        } else if (res.status === 400) {
+          const errData = await res.json().catch(() => null);
+          toast.error(errData?.error || 'Error al procesar la cita.');
+        } else {
+          toast.error('Error del servidor al agendar la cita.');
+        }
+        return;
+      }
+
       const data = await res.json();
-      if (data.success) {
+      if (res.status === 201 && data.success) {
         toast.success('¡Cita agendada exitosamente!');
         setConfirmedAppointment({
           service: selectedService?.name || '',
