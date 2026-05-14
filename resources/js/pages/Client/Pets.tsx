@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ClientLayout from '@/components/layout/ClientLayout';
 
-import { Plus, Search, Filter, X } from 'lucide-react';
+import { Plus, Search, Filter, X, PawPrint } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface Pet {
@@ -19,18 +19,6 @@ interface Pet {
   isActive: boolean;
 }
 
-const speciesEmojis: Record<string, string> = {
-  perro: '🐕',
-  gato: '🐈',
-  ave: '🐦',
-  reptil: '🦎',
-  conejo: '🐰',
-  hámster: '🐹',
-  hamster: '🐹',
-  pez: '🐠',
-  serpiente: '🐍',
-  otro: '🐾',
-};
 
 const speciesColors: Record<string, string> = {
   perro: 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400 border-amber-200/60 dark:border-amber-800/40',
@@ -223,18 +211,18 @@ export default function Pets() {
               className="relative"
             >
               <div className="flex h-32 w-32 items-center justify-center rounded-3xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-950/40 dark:to-teal-950/30 border border-emerald-200/50 dark:border-emerald-800/30 shadow-xl shadow-emerald-100/50 dark:shadow-emerald-950/30">
-                <span className="text-5xl">🐾</span>
+                <PawPrint className="h-12 w-12 text-emerald-600 dark:text-emerald-400" />
               </div>
             </motion.div>
             {/* Decorative small circles */}
             <div className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-amber-200 dark:bg-amber-800/40 flex items-center justify-center text-xs">
-              🐕
+              <PawPrint className="h-3 w-3 text-amber-600 dark:text-amber-400" />
             </div>
             <div className="absolute -bottom-1 -left-3 h-6 w-6 rounded-full bg-purple-200 dark:bg-purple-800/40 flex items-center justify-center text-xs">
-              🐈
+              <PawPrint className="h-3 w-3 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="absolute top-1/2 -right-5 h-5 w-5 rounded-full bg-sky-200 dark:bg-sky-800/40 flex items-center justify-center text-[10px]">
-              🐦
+              <PawPrint className="h-2 w-2 text-sky-600 dark:text-sky-400" />
             </div>
           </div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No tienes mascotas registradas</h2>
@@ -285,7 +273,6 @@ export default function Pets() {
         >
           {filteredPets.map((pet) => {
             const sp = pet.species.toLowerCase();
-            const emoji = speciesEmojis[sp] || speciesEmojis.otro;
             const label = speciesLabels[sp] || pet.species;
 
             return (
@@ -311,7 +298,7 @@ export default function Pets() {
                         )
                         : (
                           <div className="h-full w-full flex items-center justify-center">
-                            <span className="text-5xl">{emoji}</span>
+                            <PawPrint className="h-10 w-10 text-gray-400" />
                           </div>
                         )
                       }
@@ -325,7 +312,7 @@ export default function Pets() {
                             {pet.name}
                           </h3>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
-                            {emoji} {label}{pet.breed ? ` · ${pet.breed}` : ''}
+                            {label}{pet.breed ? ` · ${pet.breed}` : ''}
                           </p>
                         </div>
                         <Badge

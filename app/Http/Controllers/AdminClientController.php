@@ -107,11 +107,41 @@ class AdminClientController extends Controller
             ->join('services', 'appointments.service_id', '=', 'services.id')
             ->sum('services.price');
 
-        $data = $client->toArray();
-        $data['createdAt'] = $client->created_at;
-        $data['_count'] = [
-            'pets'         => $client->pets_count ?? 0,
-            'appointments' => $client->appointments_count ?? 0,
+        $data = [
+            'id'           => $client->id,
+            'name'         => $client->name,
+            'email'        => $client->email,
+            'phone'        => $client->phone,
+            'role'         => $client->role,
+            'createdAt'    => $client->created_at,
+            'totalSpent'   => $client->totalSpent,
+            '_count'       => [
+                'pets'         => $client->pets_count ?? 0,
+                'appointments' => $client->appointments_count ?? 0,
+            ],
+            'pets'         => $client->pets->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'species'       => $p->species,
+                'breed'         => $p->breed,
+                'photo'         => $p->photo,
+                'isActive'      => $p->is_active,
+                'vaccinations'  => $p->vaccinations,
+            ]),
+            'appointments' => $client->appointments->map(fn($a) => [
+                'id'        => $a->id,
+                'date'      => $a->date,
+                'startTime' => $a->start_time,
+                'endTime'   => $a->end_time,
+                'status'    => $a->status,
+                'service'   => [
+                    'name'  => $a->service->name,
+                    'price' => $a->service->price,
+                ],
+                'pet'       => [
+                    'name'  => $a->pet->name,
+                ],
+            ]),
         ];
 
         return response()->json([

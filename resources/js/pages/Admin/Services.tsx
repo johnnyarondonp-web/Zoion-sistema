@@ -18,9 +18,13 @@ import {
   DollarSign,
   Star,
   Clock,
+  Search,
+  CheckCircle2,
+  XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { formatDuration } from '@/lib/utils';
 
 interface Service {
   id: string;
@@ -315,10 +319,10 @@ export default function Services() {
                         <DollarSign className="h-3.5 w-3.5" />
                         {Number(service.price).toFixed(2)}
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                        <Clock className="h-3.5 w-3.5" />
-                        {service.durationMinutes} min
-                      </div>
+                      <span className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        <Clock className="h-3.5 w-3.5 text-gray-400" />
+                        {formatDuration(service.durationMinutes)}
+                      </span>
                     </div>
 
                     {/* Status + Actions */}
@@ -409,7 +413,9 @@ export default function Services() {
                             {catInfo.emoji} {catInfo.label}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">{service.durationMinutes} min</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                          {formatDuration(service.durationMinutes)}
+                        </td>
                         <td className="px-4 py-3">
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs font-bold">
                             <DollarSign className="h-3 w-3" />

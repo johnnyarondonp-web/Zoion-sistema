@@ -446,7 +446,7 @@ export default function ClientDetail({ clientId }: Props) {
                     {client.appointments.map((apt) => (
                       <tr key={apt.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors">
                         <td className="px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">{formatShortDate(apt.date)}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.startTime} - {apt.endTime}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{formatTime12h(apt.startTime)} - {formatTime12h(apt.endTime)}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.pet.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.service.name}</td>
                         <td className="px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</td>
@@ -474,7 +474,7 @@ export default function ClientDetail({ clientId }: Props) {
                       </Badge>
                     </div>
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                      <span>{apt.startTime} - {apt.endTime}</span>
+                      <span>{formatTime12h(apt.startTime)} - {formatTime12h(apt.endTime)}</span>
                       <span className="font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">

@@ -3,7 +3,7 @@ import { usePage, router } from '@inertiajs/react';
 import {
   LayoutDashboard, Users, Settings2, Clock, Ban, Calendar,
   CalendarDays, UserCircle, Info, BarChart3, Shield,
-  Stethoscope, Activity, Settings,
+  Stethoscope, Activity, Settings, UserPlus,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
@@ -42,8 +42,10 @@ const sidebarSections: SidebarSection[] = [
     icon: <Stethoscope className="h-3 w-3" />,
     color: 'text-sky-500',
     items: [
-      { label: 'Citas',      href: '/admin/appointments', icon: <Calendar className="h-4 w-4" />,    matchPrefixes: ['/admin/appointments'] },
-      { label: 'Calendario', href: '/admin/calendar',     icon: <CalendarDays className="h-4 w-4" />, matchPrefixes: ['/admin/calendar'] },
+      { label: 'Citas',                href: '/admin/appointments', icon: <Calendar className="h-4 w-4" />,    matchPrefixes: ['/admin/appointments'] },
+      { label: 'Calendario',           href: '/admin/calendar',     icon: <CalendarDays className="h-4 w-4" />, matchPrefixes: ['/admin/calendar'] },
+      { label: 'Equipo médico',        href: '/admin/doctors',      icon: <Stethoscope className="h-4 w-4" />, matchPrefixes: ['/admin/doctors'] },
+      { label: 'Atención presencial',  href: '/admin/walk-in',      icon: <UserPlus className="h-4 w-4" />,    matchPrefixes: ['/admin/walk-in'] },
     ],
   },
   {

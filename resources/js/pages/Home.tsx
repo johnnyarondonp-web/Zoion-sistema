@@ -113,11 +113,8 @@ interface AnimatedCounterProps {
 function AnimatedCounter({ value, suffix, duration = 2 }: AnimatedCounterProps) {
   const initialValue = Math.round(value * 0.7);
   const [count, setCount] = useState(initialValue);
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   useEffect(() => {
-    if (!isInView) return;
     let current = initialValue;
     const end = value;
     const totalSteps = 60;
@@ -135,10 +132,10 @@ function AnimatedCounter({ value, suffix, duration = 2 }: AnimatedCounterProps) 
     }, incrementTime);
 
     return () => clearInterval(timer);
-  }, [isInView, value, duration, initialValue]);
+  }, [value, duration, initialValue]);
 
   return (
-    <span ref={ref} className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 sm:text-5xl tabular-nums">
+    <span className="text-4xl font-extrabold text-gray-900 dark:text-gray-100 sm:text-5xl tabular-nums">
       {count}{suffix}
     </span>
   );

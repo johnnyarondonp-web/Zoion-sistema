@@ -26,6 +26,7 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientLayout from '@/components/layout/ClientLayout';
+import { formatDuration } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface AppointmentDetailProps {
@@ -151,7 +152,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
 
   const fetchAppointment = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/client/appointments/${id}`, {
+      const res = await fetch(`/api/appointments/${id}`, {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
       });
       const data = await res.json();
@@ -171,7 +172,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
 
   const fetchMessages = useCallback(async (id: string) => {
     try {
-      const res = await fetch(`/api/client/appointments/${id}/messages`, {
+      const res = await fetch(`/api/appointments/${id}/messages`, {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
       });
       const data = await res.json();
@@ -190,7 +191,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
     if (!appointment || cancelling) return;
     setCancelling(true);
     try {
-      const res = await fetch(`/api/client/appointments/${appointment.id}`, {
+      const res = await fetch(`/api/appointments/${appointment.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         body: JSON.stringify({ status: 'cancelled', cancelReason: cancelReason.trim() || null }),
@@ -215,7 +216,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
     if (!newMessage.trim() || !appointment) return;
     setSendingMessage(true);
     try {
-      const res = await fetch(`/api/client/appointments/${appointment.id}/messages`, {
+      const res = await fetch(`/api/appointments/${appointment.id}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         body: JSON.stringify({ message: newMessage.trim() }),
@@ -241,7 +242,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
     }
     setSubmittingRating(true);
     try {
-      const res = await fetch(`/api/client/appointments/${appointment.id}/rating`, {
+      const res = await fetch(`/api/appointments/${appointment.id}/rating`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
         body: JSON.stringify({ rating: ratingValue, review: reviewText.trim() || undefined }),
@@ -363,7 +364,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-500 dark:text-gray-400">Duración</span>
-                    <span className="text-gray-700 dark:text-gray-300">{appointment.service.durationMinutes} min</span>
+                    <span className="text-gray-700 dark:text-gray-300">{formatDuration(appointment.service.durationMinutes)}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between text-base font-semibold">

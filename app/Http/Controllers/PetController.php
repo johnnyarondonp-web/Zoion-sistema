@@ -11,10 +11,33 @@ class PetController extends Controller
 {
     public function index(Request $request)
     {
-        $pets = Pet::where('user_id', $request->user()->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return response()->json(['success' => true, 'data' => $pets]);
+        $user  = $request->user();
+        $query = Pet::orderBy('created_at', 'desc');
+
+        // El staff puede ver mascotas de otro usuario directamente, necesario para
+        // que el admin pueda agendar citas en nombre de un cliente.
+        if (in_array($user->role, ['admin', 'receptionist']) && $request->userId) {
+            $query->where('user_id', $request->userId);
+        } else {
+            $query->where('user_id', $user->id);
+        }
+
+        return response()->json([
+            'success' => true, 
+            'data'    => $query->get()->map(fn($p) => [
+                'id'            => $p->id,
+                'name'          => $p->name,
+                'species'       => $p->species,
+                'breed'         => $p->breed,
+                'birthdate'     => $p->birthdate,
+                'weight'        => $p->weight,
+                'photo'         => $p->photo,
+                'notes'         => $p->notes,
+                'isActive'      => $p->is_active,
+                'weightHistory' => $p->weight_history,
+                'vaccinations'  => $p->vaccinations,
+            ])
+        ]);
     }
 
     public function store(Request $request)
@@ -45,7 +68,22 @@ class PetController extends Controller
     public function show(Request $request, $id)
     {
         $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
-        return response()->json(['success' => true, 'data' => $pet]);
+        return response()->json([
+            'success' => true, 
+            'data' => [
+                'id'            => $pet->id,
+                'name'          => $pet->name,
+                'species'       => $pet->species,
+                'breed'         => $pet->breed,
+                'birthdate'     => $pet->birthdate,
+                'weight'        => $pet->weight,
+                'photo'         => $pet->photo,
+                'notes'         => $pet->notes,
+                'isActive'      => $pet->is_active,
+                'weightHistory' => $pet->weight_history,
+                'vaccinations'  => $pet->vaccinations,
+            ]
+        ]);
     }
 
     public function update(Request $request, $id)

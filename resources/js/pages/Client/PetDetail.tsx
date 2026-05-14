@@ -135,16 +135,7 @@ const speciesIcons: Record<string, React.ReactNode> = {
   otro: <HelpCircle className="h-6 w-6" />,
 };
 
-const speciesEmojis: Record<string, string> = {
-  perro: '🐕',
-  gato: '🐈',
-  ave: '🐦',
-  reptil: '🦎',
-  conejo: '🐰',
-  hámster: '🐹',
-  pez: '🐠',
-  otro: '🐾',
-};
+
 
 const speciesGradients: Record<string, string> = {
   perro: 'from-amber-500 to-orange-500',
@@ -405,10 +396,9 @@ export default function PetDetail() {
     finally { setSavingVacc(false); }
   };
 
-  // ✅ CAMBIO 1: La función se mantiene, solo se eliminó el botón del JSX
   const handleShareProfile = () => {
     if (!pet) return;
-    const shareText = `${speciesEmojis[pet.species.toLowerCase()] || '🐾'} ${pet.name} — ${speciesLabels[pet.species.toLowerCase()] || pet.species}${pet.breed ? `, ${pet.breed}` : ''}\nEdad: ${calculateAge(pet.birthdate)}\nPeso: ${pet.weight != null ? `${pet.weight} kg` : '—'}\nVacunas: ${vaccinations.length}\n— Compartido desde Zoion Vet`;
+    const shareText = `${pet.name} — ${speciesLabels[pet.species.toLowerCase()] || pet.species}${pet.breed ? `, ${pet.breed}` : ''}\nEdad: ${calculateAge(pet.birthdate)}\nPeso: ${pet.weight != null ? `${pet.weight} kg` : '—'}\nVacunas: ${vaccinations.length}\n— Compartido desde Zoion Vet`;
     navigator.clipboard.writeText(shareText).then(() => toast.success('Perfil copiado al portapapeles')).catch(() => toast.error('No se pudo copiar al portapapeles'));
   };
 
@@ -436,7 +426,6 @@ export default function PetDetail() {
   const sp = pet.species.toLowerCase();
   const icon = speciesIcons[sp] || speciesIcons.otro;
   const label = speciesLabels[sp] || pet.species;
-  const speciesEmoji = speciesEmojis[sp] || speciesEmojis.otro;
   const trend = getWeightTrend(weightHistory);
   const chartData = weightHistory.map((entry) => ({ ...entry, shortDate: formatShortDate(entry.date) }));
   const TrendIcon = trend.direction === 'up' ? TrendingUp : trend.direction === 'down' ? TrendingDown : Minus;
@@ -458,7 +447,7 @@ export default function PetDetail() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div className="flex items-center gap-3">
-                <span className="text-4xl">{speciesEmoji}</span>
+                <PawPrint className="h-10 w-10 text-white/90" />
                 <div>
                   <h1 className="text-2xl font-bold">{pet.name}</h1>
                   <p className="text-white/80 text-sm">{label}{pet.breed ? ` · ${pet.breed}` : ''}</p>

@@ -90,18 +90,7 @@ function getServiceIcon(serviceName: string) {
   return { icon: <Stethoscope className="h-4 w-4" />, color: 'text-emerald-600 dark:text-emerald-400' };
 }
 
-const speciesEmojis: Record<string, string> = {
-  perro: '🐕',
-  gato: '🐈',
-  ave: '🐦',
-  reptil: '🦎',
-  conejo: '🐰',
-  hámster: '🐹',
-  hamster: '🐹',
-  pez: '🐠',
-  serpiente: '🐍',
-  otro: '🐾',
-};
+
 
 function formatDate(dateStr: string): string {
   try {
@@ -298,7 +287,6 @@ export default function Appointments() {
           {filteredAppointments.map((apt, index) => {
             const st = statusConfig[apt.status] || statusConfig.pending;
             const svc = getServiceIcon(apt.service.name);
-            const petEmoji = speciesEmojis[apt.pet.species.toLowerCase()] || '🐾';
 
             return (
               <motion.div
@@ -330,7 +318,6 @@ export default function Appointments() {
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{apt.service.name}</h3>
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                            <span className="mr-1">{petEmoji}</span>
                             {apt.pet.name} · {formatDate(apt.date)} · {formatTime(apt.startTime)}
                           </p>
                         </div>

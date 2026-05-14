@@ -13,15 +13,23 @@ class Appointment extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'user_id', 'pet_id', 'service_id', 'date', 'start_time',
-        'end_time', 'status', 'status_history', 'notes', 'clinical_notes',
-        'rating', 'review', 'cancelled_at', 'cancel_reason'
+        'id', 'user_id', 'pet_id', 'service_id', 'doctor_id', 'source',
+        'date', 'start_time', 'end_time', 'status', 'status_history',
+        'notes', 'clinical_notes', 'rating', 'review',
+        'cancelled_at', 'cancel_reason',
+        'payment_method', 'payment_status', 'payment_amount', 'paid_at',
     ];
 
     protected $casts = [
         'status_history' => 'array',
-        'cancelled_at' => 'datetime',
+        'cancelled_at'   => 'datetime',
+        'paid_at'        => 'datetime',
+        'payment_amount' => 'decimal:2',
     ];
+
+    public function doctor() {
+        return $this->belongsTo(Doctor::class);
+    }
 
     public function user() {
         return $this->belongsTo(User::class);

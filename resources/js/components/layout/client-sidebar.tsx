@@ -1,6 +1,6 @@
 import { memo } from 'react';
 import { usePage, router } from '@inertiajs/react';
-import { Heart, CalendarPlus, Calendar, Settings2, Info, Siren, Bookmark } from 'lucide-react';
+import { Heart, CalendarPlus, Calendar, Settings2, Info, Siren } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -37,7 +37,6 @@ const sidebarSections: SidebarSection[] = [
     title: 'General',
     items: [
       { label: 'Servicios', href: '/client/services', icon: <Settings2 className="h-4 w-4" />, matchPrefixes: ['/client/services'], exact: true },
-      { label: 'Mis Favoritos', href: '/client/favorites', icon: <Bookmark className="h-4 w-4" />, matchPrefixes: ['/client/favorites'], exact: true },
       { label: 'Emergencias', href: '/client/emergency', icon: <Siren className="h-4 w-4" />, matchPrefixes: ['/client/emergency'] },
     ],
   },

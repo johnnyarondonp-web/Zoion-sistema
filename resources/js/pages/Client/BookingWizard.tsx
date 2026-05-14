@@ -42,6 +42,7 @@ import {
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientLayout from '@/components/layout/ClientLayout';
+import { formatDuration } from '@/lib/utils';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 interface Service {
@@ -125,13 +126,6 @@ function getServiceIcon(name: string): React.ReactNode {
 
 function formatPrice(price: number): string {
   return `$${Number(price).toFixed(2)}`;
-}
-
-function formatDuration(minutes: number): string {
-  if (minutes < 60) return `${minutes} min`;
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return m > 0 ? `${h}h ${m}min` : `${h}h`;
 }
 
 function formatDateLong(date: Date): string {
@@ -220,11 +214,13 @@ export default function BookingWizard() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [notes, setNotes] = useState('');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
 
   const [services, setServices] = useState<Service[]>([]);
   const [pets, setPets] = useState<Pet[]>([]);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
+  const [unavailableDays, setUnavailableDays] = useState<number[]>([]);
 
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingPets, setLoadingPets] = useState(false);
@@ -273,25 +269,29 @@ export default function BookingWizard() {
     }
   }, [currentStep, pets.length]);
 
-  // Fetch blocked dates when step 3
+  // Fetch blocked dates and unavailable weekdays when reaching the date step.
+  // Both are needed before the calendar renders — run in parallel.
   useEffect(() => {
     if (currentStep === 3 && blockedDates.length === 0) {
-      const fetchBlockedDates = async () => {
-        try {
-          const res = await fetch('/api/blocked-dates', {
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-          });
-          const data = await res.json();
-          if (data.success) setBlockedDates(data.data);
-        } catch { /* silent */ }
-      };
-      fetchBlockedDates();
+      const headers = { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() };
+
+      const fetchBlocked = fetch('/api/blocked-dates', { headers })
+        .then(r => r.json())
+        .then(data => { if (data.success) setBlockedDates(data.data); })
+        .catch(() => {});
+
+      const fetchSchedule = fetch('/api/availability/schedule', { headers })
+        .then(r => r.json())
+        .then(data => { if (data.success) setUnavailableDays(data.data.unavailableDays); })
+        .catch(() => {});
+
+      Promise.all([fetchBlocked, fetchSchedule]);
     }
   }, [currentStep, blockedDates.length]);
 
   // Fetch time slots when date is selected
-  const fetchTimeSlots = useCallback(async (date: Date) => {
-    if (!selectedServiceId) return;
+  const fetchTimeSlots = useCallback(async (date: Date): Promise<boolean> => {
+    if (!selectedServiceId) return false;
     setLoadingSlots(true);
     setTimeSlots([]);
     setSelectedTime('');
@@ -301,22 +301,38 @@ export default function BookingWizard() {
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
       });
       const data = await res.json();
-      if (data.success && data.data.available) {
-        setTimeSlots(data.data.slots || []);
+      if (data.success && data.data.available && data.data.slots && data.data.slots.length > 0) {
+        setTimeSlots(data.data.slots);
+        return true;
       } else {
         setTimeSlots([]);
+        return false;
       }
     } catch {
       setTimeSlots([]);
+      return false;
     } finally {
       setLoadingSlots(false);
     }
   }, [selectedServiceId]);
 
-  const handleDateSelect = (date: Date | undefined) => {
+  const handleDateSelect = async (date: Date | undefined) => {
     setSelectedDate(date);
     if (date) {
-      fetchTimeSlots(date);
+      if (isDateBlocked(date)) {
+        // no avanzar, el calendario ya la deshabilitó pero por si acaso
+        return;
+      }
+      toast.loading("Buscando horarios...", { id: "fetching-slots" });
+      const hasSlots = await fetchTimeSlots(date);
+      toast.dismiss("fetching-slots");
+      
+      if (!hasSlots) {
+        toast.error("No hay horarios disponibles para esta fecha.");
+        setSelectedDate(undefined);
+        return;
+      }
+      
       setCurrentStep(4);
       setDirection(1);
     }
@@ -361,6 +377,7 @@ export default function BookingWizard() {
           date: dateStr,
           startTime: selectedTime,
           notes: notes.trim() || null,
+          paymentMethod: selectedPaymentMethod || null,
         }),
       });
       const data = await res.json();
@@ -586,13 +603,35 @@ export default function BookingWizard() {
           mode="single"
           selected={selectedDate}
           onSelect={handleDateSelect}
-          disabled={(date) => isDatePast(date) || isDateBlocked(date)}
+          disabled={(date) =>
+            isDatePast(date) ||
+            isDateBlocked(date) ||
+            unavailableDays.includes(date.getDay())
+          }
           className="rounded-lg border shadow-sm dark:border-gray-700"
-          modifiers={{ blocked: (date) => isDateBlocked(date) }}
+          modifiers={{
+            blocked: (date) => isDateBlocked(date),
+            unavailable: (date) => unavailableDays.includes(date.getDay()),
+          }}
+          modifiersClassNames={{
+            blocked: 'text-red-400 line-through opacity-60 cursor-not-allowed',
+            unavailable: 'text-gray-300 opacity-40 cursor-not-allowed',
+          }}
         />
-        <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
-          Los días bloqueados o pasados aparecen deshabilitados
-        </p>
+        <div className="flex items-center justify-center gap-5 mt-3">
+          <span className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 inline-block" />
+            Fecha pasada
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-300 dark:bg-red-700 inline-block" />
+            No disponible
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
+            <span className="w-2.5 h-2.5 rounded-full bg-gray-200 dark:bg-gray-700 inline-block" />
+            Día no laborable
+          </span>
+        </div>
       </div>
     );
   };
@@ -615,7 +654,11 @@ export default function BookingWizard() {
         ) : timeSlots.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-center">
             <Clock className="h-10 w-10 text-gray-300 mb-3" />
-            <p className="text-gray-500 dark:text-gray-400">No hay horarios disponibles para esta fecha</p>
+            <p className="text-gray-500 dark:text-gray-400">
+              {selectedDate && isDateBlocked(selectedDate)
+                ? 'Esta fecha no está disponible. Selecciona otro día.'
+                : 'No hay horarios disponibles para este día.'}
+            </p>
             <Button
               variant="outline"
               size="sm"
@@ -723,6 +766,38 @@ export default function BookingWizard() {
               </CardContent>
             </Card>
           </motion.div>
+        )}
+
+        {selectedTime && (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              ¿Cómo prefieres pagar?
+            </p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">
+              El pago se realiza en la clínica al momento de la consulta.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: 'cash',     label: 'Efectivo' },
+                { value: 'transfer', label: 'Transferencia' },
+                { value: 'card',     label: 'Tarjeta' },
+                { value: 'pago_movil',    label: 'Pago Móvil' },
+              ].map((m) => (
+                <button
+                  key={m.value}
+                  type="button"
+                  onClick={() => setSelectedPaymentMethod(prev => prev === m.value ? '' : m.value)}
+                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                    selectedPaymentMethod === m.value
+                      ? 'border-emerald-500 bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300'
+                      : 'border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-emerald-300 dark:hover:border-emerald-800'
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     );

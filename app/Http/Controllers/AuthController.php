@@ -32,11 +32,14 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            if ($user->role === 'admin') {
-                return redirect()->intended('/admin/dashboard');
-            }
+            $redirects = [
+                'admin'        => '/admin/dashboard',
+                'receptionist' => '/admin/appointments',
+                'doctor'       => '/doctor/agenda',
+                'client'       => '/client/pets',
+            ];
 
-            return redirect()->intended('/client/pets');
+            return redirect()->intended($redirects[$user->role] ?? '/client/pets');
         }
 
         return back()->withErrors([

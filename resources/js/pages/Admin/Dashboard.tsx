@@ -45,6 +45,7 @@ import {
   CartesianGrid,
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from '@/components/ui/chart';
+import { formatTime12h } from '@/lib/format';
 
 interface DashboardData {
   appointmentsThisMonth: number;
@@ -138,7 +139,7 @@ function getSpanishDate(): string {
 
 function getSpanishTime(): string {
   const now = new Date();
-  return now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+  return now.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 
 const barChartConfig: ChartConfig = {
@@ -387,12 +388,12 @@ export default function Dashboard() {
             <motion.button
               key={action.label}
               onClick={() => router.visit(action.href)}
-              className={`flex items-center gap-2.5 rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${action.bg} ${action.color} border border-transparent hover:shadow-sm active:scale-[0.98]`}
+              className={`flex flex-col items-center justify-center text-center gap-1.5 rounded-xl px-2 min-h-[72px] h-[72px] text-xs sm:text-sm font-medium transition-all duration-200 ${action.bg} ${action.color} border border-transparent hover:shadow-sm active:scale-[0.98]`}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
-              <action.icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{action.label}</span>
+              <action.icon className="h-5 w-5 shrink-0" />
+              <span className="truncate w-full">{action.label}</span>
             </motion.button>
           ))}
         </div>
@@ -558,7 +559,7 @@ export default function Dashboard() {
                         <TableCell className="text-sm">
                           {formatFullDate(apt.date)}
                         </TableCell>
-                        <TableCell className="text-sm text-gray-500 dark:text-gray-400">{apt.startTime} - {apt.endTime}</TableCell>
+                        <TableCell className="text-sm text-gray-500 dark:text-gray-400">{formatTime12h(apt.startTime)} – {formatTime12h(apt.endTime)}</TableCell>
                         <TableCell className="text-sm">{apt.pet.name}</TableCell>
                         <TableCell className="text-sm">{apt.user.name}</TableCell>
                         <TableCell>

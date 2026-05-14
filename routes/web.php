@@ -6,11 +6,14 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\AppointmentController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\BlockedDateController;
+use App\Http\Controllers\AvailabilityController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ClinicalNoteController;
 use App\Http\Controllers\AppointmentMessageController;
 use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\WalkInController;
 use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\UploadController;
@@ -77,12 +80,20 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/services',                     [ServiceController::class, 'index']);
     Route::get('/api/services/{id}',                [ServiceController::class, 'show']);
 
+    // ── API: Fechas bloqueadas (lectura para cliente) ─────────────────────
+    Route::get('/api/blocked-dates',                [BlockedDateController::class, 'index']);
+
+    // ── API: Disponibilidad de horarios ──────────────────────────────────
+    Route::get('/api/availability',                 [AvailabilityController::class, 'index']);
+    Route::get('/api/availability/schedule',        [AvailabilityController::class, 'schedule']);
+
     // ── API: Citas ───────────────────────────────────────────────────────
     Route::get('/api/appointments',                 [AppointmentController::class, 'index']);
     Route::post('/api/appointments',                [AppointmentController::class, 'store']);
     Route::get('/api/appointments/{id}',            [AppointmentController::class, 'show']);
     Route::patch('/api/appointments/{id}',          [AppointmentController::class, 'update']);
     Route::delete('/api/appointments/{id}',         [AppointmentController::class, 'destroy']);
+    Route::post('/api/appointments/{id}/rating',    [AppointmentController::class, 'rate']);
 
     // ── API: Mensajes de citas ───────────────────────────────────────────
     Route::get('/api/appointments/{appointmentId}/messages',  [AppointmentMessageController::class, 'index']);
@@ -118,8 +129,10 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── Vistas admin ─────────────────────────────────────────────────────
     Route::get('/admin/dashboard',     fn () => Inertia::render('Admin/Dashboard'));
     Route::get('/admin/profile',       fn () => Inertia::render('Client/Profile'));
-    Route::get('/admin/appointments',  fn () => Inertia::render('Admin/Appointments'));
-    Route::get('/admin/clients',       fn () => Inertia::render('Admin/Clients'));
+    Route::get('/admin/appointments',               fn () => Inertia::render('Admin/Appointments'));
+    Route::get('/admin/appointments/{id}',          fn () => Inertia::render('Admin/Appointments', ['selectedAppointmentId' => request()->route('id')]));
+    Route::get('/admin/pets',                       fn () => Inertia::render('Admin/Pets'));
+    Route::get('/admin/clients',                    fn () => Inertia::render('Admin/Clients'));
     Route::get('/admin/clients/{id}',  fn () => Inertia::render('Admin/ClientDetail', ['clientId' => request()->route('id')]));
     Route::get('/admin/services',      fn () => Inertia::render('Admin/Services'));
     Route::get('/admin/services/new',  fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'create']));
@@ -151,7 +164,6 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::put('/api/schedules',  [ScheduleController::class, 'update']);
 
     // ── API Admin: Fechas bloqueadas ─────────────────────────────────────
-    Route::get('/api/blocked-dates',          [BlockedDateController::class, 'index']);
     Route::post('/api/blocked-dates',         [BlockedDateController::class, 'store']);
     Route::delete('/api/blocked-dates/{id}',  [BlockedDateController::class, 'destroy']);
 
@@ -159,4 +171,24 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::post('/api/appointments/{appointmentId}/clinical-notes',        [ClinicalNoteController::class, 'store']);
     Route::patch('/api/appointments/{appointmentId}/clinical-notes/{id}',  [ClinicalNoteController::class, 'update']);
     Route::delete('/api/appointments/{appointmentId}/clinical-notes/{id}', [ClinicalNoteController::class, 'destroy']);
+
+    // ── Vista + API Admin: Médicos ────────────────────────────────────────
+    Route::get('/admin/doctors',                          fn () => Inertia::render('Admin/Doctors'));
+    Route::get('/api/admin/doctors',                      [DoctorController::class, 'index']);
+    Route::post('/api/admin/doctors',                     [DoctorController::class, 'store']);
+    Route::patch('/api/admin/doctors/{id}',               [DoctorController::class, 'update']);
+    Route::delete('/api/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
+    Route::patch('/api/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
+
+    // ── Vista + API Admin: Atención presencial (walk-in) ─────────────────
+    Route::get('/admin/walk-in',                          fn () => Inertia::render('Admin/WalkIn'));
+    Route::get('/api/admin/walk-in',                      [WalkInController::class, 'index']);
+    Route::get('/api/admin/walk-in/search',               [WalkInController::class, 'search']);
+    Route::post('/api/admin/walk-in',                     [WalkInController::class, 'store']);
+    Route::patch('/api/admin/walk-in/{id}/payment',       [WalkInController::class, 'confirmPayment']);
+});
+
+// ── Panel del médico (rutas propias, solo role:doctor) ───────────────────────
+Route::middleware(['auth', 'role:doctor'])->group(function () {
+    Route::get('/doctor/agenda', fn () => Inertia::render('Doctor/Agenda'));
 });

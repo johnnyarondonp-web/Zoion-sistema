@@ -19,6 +19,7 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  modifiersClassNames,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
@@ -34,6 +35,7 @@ function Calendar({
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className
       )}
+      modifiersClassNames={modifiersClassNames}
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
