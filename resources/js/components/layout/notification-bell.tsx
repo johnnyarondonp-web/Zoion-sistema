@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Bell, Calendar, Info, Sparkles, ShieldCheck, CheckCheck, MessageCircle } from 'lucide-react';
+import { Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotificationStore, type Notification } from '@/store/notification-store';
 import { Button } from '@/components/ui/button';
@@ -54,10 +55,28 @@ function getNotificationBg(type: Notification['type'], read: boolean) {
 function NotificationItem({
   notification,
   onMarkRead,
+  onClose,
 }: {
   notification: Notification;
   onMarkRead: (id: string) => void;
+  onClose: () => void;
 }) {
+  const handleClick = () => {
+    if (!notification.read) onMarkRead(notification.id);
+    
+    // Redirección inteligente según el tipo
+    const appointmentId = notification.data?.appointment_id;
+    
+    if (appointmentId) {
+      // Si estamos en admin, ir a la ruta de admin. Si no, a la de cliente.
+      const isAdmin = window.location.pathname.startsWith('/admin');
+      const baseRoute = isAdmin ? '/admin/appointments' : '/client/appointments';
+      router.visit(`${baseRoute}/${appointmentId}`);
+    }
+    
+    onClose();
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
@@ -65,7 +84,7 @@ function NotificationItem({
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.2 }}
       className={`flex gap-3 rounded-lg p-3 cursor-pointer transition-colors hover:bg-gray-100/80 dark:hover:bg-gray-800/60 ${getNotificationBg(notification.type, notification.read)}`}
-      onClick={() => { if (!notification.read) onMarkRead(notification.id); }}
+      onClick={handleClick}
     >
       <div className="mt-0.5 shrink-0">
         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
@@ -99,8 +118,8 @@ export function NotificationBell() {
   const [shouldBounce, setShouldBounce] = useState(false);
 
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    fetchNotifications(5);
+    const interval = setInterval(() => fetchNotifications(5), 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -140,63 +159,65 @@ export function NotificationBell() {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0 mr-2">
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-          <div className="flex items-center gap-2">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificaciones</h4>
+      <PopoverContent align="end" className="w-80 p-0 mr-2 overflow-hidden border-gray-200 dark:border-gray-800 shadow-xl">
+        <div className="flex flex-col max-h-[480px]">
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 shrink-0 z-10">
+            <div className="flex items-center gap-2">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Notificaciones</h4>
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 border-none">
+                  {unreadCount}
+                </Badge>
+              )}
+            </div>
             {unreadCount > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                {unreadCount}
-              </Badge>
+              <button
+                onClick={handleMarkAllRead}
+                className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
+              >
+                <CheckCheck className="h-3 w-3" />
+                Marcar todo
+              </button>
             )}
           </div>
-          {unreadCount > 0 && (
-            <button
-              onClick={handleMarkAllRead}
-              className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
-            >
-              <CheckCheck className="h-3 w-3" />
-              Marcar todo como leído
-            </button>
-          )}
-        </div>
 
-        {/* List */}
-        <ScrollArea className="max-h-96">
-          {displayNotifications.length > 0 ? (
-            <div className="flex flex-col p-2">
-              <AnimatePresence mode="popLayout">
-                {displayNotifications.map((n) => (
-                  <NotificationItem key={n.id} notification={n} onMarkRead={markAsRead} />
-                ))}
-              </AnimatePresence>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-8 px-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
-                <Bell className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+          {/* List */}
+          <ScrollArea className="flex-1 min-h-0 overflow-y-auto">
+            {displayNotifications.length > 0 ? (
+              <div className="flex flex-col p-2 gap-1">
+                <AnimatePresence mode="popLayout">
+                  {displayNotifications.map((n) => (
+                    <NotificationItem 
+                      key={n.id} 
+                      notification={n} 
+                      onMarkRead={markAsRead} 
+                      onClose={() => setOpen(false)}
+                    />
+                  ))}
+                </AnimatePresence>
               </div>
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sin notificaciones</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">No tienes notificaciones nuevas</p>
-            </div>
-          )}
-        </ScrollArea>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 px-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 mb-3">
+                  <Bell className="h-5 w-5 text-gray-400 dark:text-gray-500" />
+                </div>
+                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Sin notificaciones</p>
+              </div>
+            )}
+          </ScrollArea>
 
-        {/* Footer */}
-        {hasMore && (
-          <>
-            <Separator />
-            <div className="px-4 py-2.5">
-              <button
-                className="w-full text-center text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
-                onClick={() => setOpen(false)}
-              >
-                Ver todas las notificaciones
-              </button>
-            </div>
-          </>
-        )}
+          {/* Footer */}
+          <div className="relative z-50 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 shrink-0">
+            <Link
+              href="/admin/notifications"
+              className="block w-full text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
+              onClick={() => setOpen(false)}
+            >
+              Ver todas las notificaciones
+            </Link>
+          </div>
+        </div>
       </PopoverContent>
     </Popover>
   );

@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ import {
 } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { sidebarSections } from '@/components/layout/admin-sidebar';
 
 interface NavItem {
   label: string;
@@ -178,7 +180,7 @@ export function Navbar() {
             variant="ghost"
             size="icon"
             onClick={toggleTheme}
-            className="h-9 w-9 hidden md:flex"
+            className="h-9 w-9 hidden lg:flex"
             aria-label="Cambiar tema"
           >
             {theme === 'dark' ? (
@@ -193,7 +195,7 @@ export function Navbar() {
 
           {/* Desktop: Authenticated user menu */}
           {isAuthenticated && user ? (
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2 px-3">
@@ -232,7 +234,7 @@ export function Navbar() {
 
           {/* Desktop: Non-authenticated buttons */}
           {!isAuthenticated && (
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-3">
               <Button
                 variant="ghost"
                 onClick={() => router.visit('/login')}
@@ -251,24 +253,25 @@ export function Navbar() {
 
           {/* Mobile menu */}
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild className="md:hidden">
+            <SheetTrigger asChild className="lg:hidden">
               <Button variant="ghost" size="icon" className="h-10 w-10">
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Abrir menú</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72">
+            <SheetContent side="right" className="w-80 p-0 flex flex-col">
               <SheetHeader>
-                <SheetTitle className="flex items-center gap-2">
+                <SheetTitle className="flex items-center gap-2 px-6 py-4 border-b">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 text-white">
                     <PawPrint className="h-4 w-4" />
                   </div>
                   Zoion
                 </SheetTitle>
               </SheetHeader>
-
-              {isAuthenticated && user ? (
-                <div className="flex flex-col gap-4 px-4 pt-2">
+              
+              <div className="flex-1 overflow-y-auto">
+                {isAuthenticated && user ? (
+                  <div className="flex flex-col gap-4 px-4 pt-2 pb-6">
                   <div className="flex items-center gap-3 rounded-lg bg-gray-50 dark:bg-gray-800 p-3">
                     <Avatar className="h-10 w-10">
                       <AvatarFallback className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-semibold">
@@ -285,6 +288,88 @@ export function Navbar() {
                   <Separator />
 
                   <nav className="flex flex-col gap-1">
+                    {isAdmin ? (
+                      // Menú administrativo completo para móvil
+                      <div className="space-y-4">
+                        {sidebarSections.map((section) => (
+                          <div key={section.title} className="space-y-1">
+                            <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                              {section.title}
+                            </div>
+                            {section.items.map((item) => (
+                              <SheetClose key={item.href} asChild>
+                                <button
+                                  onClick={() => handleNavClick(item.href)}
+                                  className={cn(
+                                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                    url.startsWith(item.href)
+                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                  )}
+                                >
+                                  {item.icon}
+                                  {item.label}
+                                </button>
+                              </SheetClose>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      // Menú para clientes organizado por sección
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                            Mi Panel
+                          </div>
+                          {clientNavItems.map((item) => (
+                            <SheetClose key={item.href} asChild>
+                              <button
+                                onClick={() => handleNavClick(item.href)}
+                                className={cn(
+                                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                  url.startsWith(item.href)
+                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                )}
+                              >
+                                {item.icon}
+                                {item.label}
+                              </button>
+                            </SheetClose>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Separator className="my-2" />
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                        Explorar
+                      </div>
+                      <SheetClose asChild>
+                        <button
+                          onClick={() => handleNavClick('/')}
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <PawPrint className="h-4 w-4" />
+                          Inicio
+                        </button>
+                      </SheetClose>
+                      <SheetClose asChild>
+                        <button
+                          onClick={() => handleNavClick('/about')}
+                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        >
+                          <Info className="h-4 w-4" />
+                          Nosotros
+                        </button>
+                      </SheetClose>
+                    </div>
+                    
+                    <Separator className="my-2" />
+                    
                     <SheetClose asChild>
                       <button
                         onClick={() => handleNavClick(profileHref)}
@@ -375,7 +460,8 @@ export function Navbar() {
                     </Button>
                   </SheetClose>
                 </div>
-              )}
+                )}
+              </div>
             </SheetContent>
           </Sheet>
         </div>

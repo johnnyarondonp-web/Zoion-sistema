@@ -25,7 +25,9 @@ class ServiceController extends Controller
             $query->where('category', $category === 'sin-categoria' ? null : $category);
         }
 
-        $services = $query->orderBy('name')->get()->map(function ($s) {
+        $services = $query->withCount(['doctors' => function ($q) {
+            $q->where('doctors.is_active', true);
+        }])->orderBy('name')->get()->map(function ($s) {
             return [
                 'id'              => $s->id,
                 'name'            => $s->name,
@@ -34,6 +36,7 @@ class ServiceController extends Controller
                 'price'           => $s->price,
                 'category'        => $s->category,
                 'isActive'        => $s->is_active,
+                'hasDoctors'      => $s->doctors_count > 0,
             ];
         });
         return response()->json(['success' => true, 'data' => $services]);
@@ -77,7 +80,10 @@ class ServiceController extends Controller
 
     public function show($id)
     {
-        $service = Service::findOrFail($id);
+        $service = Service::withCount(['doctors' => function ($q) {
+            $q->where('doctors.is_active', true);
+        }])->findOrFail($id);
+        
         return response()->json([
             'success' => true, 
             'data' => [
@@ -88,6 +94,7 @@ class ServiceController extends Controller
                 'price'           => $service->price,
                 'category'        => $service->category,
                 'isActive'        => $service->is_active,
+                'hasDoctors'      => $service->doctors_count > 0,
             ]
         ]);
     }

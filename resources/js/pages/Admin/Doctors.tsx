@@ -37,6 +37,7 @@ interface Service { id: string; name: string; }
 interface Doctor {
   id: string;
   name: string;
+  cedula: string;
   specialty: string | null;
   phone: string | null;
   email: string | null;
@@ -46,7 +47,7 @@ interface Doctor {
   services: Service[];
 }
 
-const emptyForm = { name: '', specialty: '', phone: '', email: '', isActive: true, serviceIds: [] as string[] };
+const emptyForm = { name: '', cedula: '', specialty: '', phone: '', email: '', isActive: true, serviceIds: [] as string[] };
 const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 const headers = (extra = {}) => ({ 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrf(), ...extra });
 
@@ -59,7 +60,7 @@ const SPECIALTIES = [
   'Oftalmología Veterinaria',
 ];
 
-const DOCTOR_NAME_REGEX = /^(Dr\.|Dra\.)?\s?[A-Za-záéíóúÁÉÍÓÚüÜñÑ]+(\s[A-Za-záéíóúÁÉÍÓÚüÜñÑ]+){1,3}$/;
+const DOCTOR_NAME_REGEX = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
 const VENEZUELA_PHONE_REGEX = /^\+58\d{10}$/;
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -72,6 +73,7 @@ export default function Doctors() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Doctor | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const [confirmDeactivate, setConfirmDeactivate] = useState<Doctor | null>(null);
 
@@ -88,7 +90,7 @@ export default function Doctors() {
   const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true); };
   const openEdit = (doc: Doctor) => {
     setEditTarget(doc);
-    setForm({ name: doc.name, specialty: doc.specialty || '', phone: doc.phone || '', email: doc.email || '', isActive: doc.isActive, serviceIds: doc.services.map(s => s.id) });
+    setForm({ name: doc.name, cedula: doc.cedula || '', specialty: doc.specialty || '', phone: doc.phone || '', email: doc.email || '', isActive: doc.isActive, serviceIds: doc.services.map(s => s.id) });
     setModalOpen(true);
   };
 
@@ -97,18 +99,33 @@ export default function Doctors() {
 
     if (!form.name.trim()) {
       errors.push('El nombre es requerido');
-    } else if (form.name.trim().length > 60) {
-      errors.push('El nombre no puede superar 60 caracteres');
+    } else if (form.name.trim().length < 4 || form.name.trim().length > 40) {
+      errors.push('El nombre debe tener entre 4 y 40 caracteres');
     } else if (!DOCTOR_NAME_REGEX.test(form.name.trim())) {
-      errors.push('El nombre debe contener al menos nombre y apellido (solo letras)');
+      errors.push('El nombre solo puede contener letras y espacios');
+    }
+
+    if (!form.cedula) {
+      errors.push('La cédula es requerida');
+    } else {
+      const c = parseInt(form.cedula);
+      if (isNaN(c) || c < 5000000 || c > 33000000) {
+        errors.push('Ingrese una cédula válida entre 5,000,000 y 33,000,000');
+      }
+    }
+
+    if (!form.email) {
+      errors.push('El correo electrónico es requerido');
+    } else if (!EMAIL_REGEX.test(form.email)) {
+      errors.push('El correo electrónico no es válido');
     }
 
     if (form.phone && !VENEZUELA_PHONE_REGEX.test(form.phone)) {
       errors.push('El teléfono debe tener el formato +58 seguido de 10 dígitos');
     }
 
-    if (form.email && !EMAIL_REGEX.test(form.email)) {
-      errors.push('El correo electrónico no es válido');
+    if (form.serviceIds.length === 0) {
+      errors.push('Debe seleccionar al menos un servicio');
     }
 
     if (errors.length > 0) {
@@ -234,7 +251,37 @@ export default function Doctors() {
           <div className="space-y-4 mt-2">
             <div>
               <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Nombre *</Label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Dr. García" className="mt-1" />
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-sm font-semibold text-gray-500">Dr </span>
+                </div>
+                <Input 
+                  value={form.name} 
+                  onChange={e => {
+                    const val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                    setForm(f => ({ ...f, name: val }));
+                  }} 
+                  placeholder="Johnny Rondón" 
+                  className="pl-8" 
+                />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Cédula *</Label>
+              <Input 
+                value={form.cedula} 
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 8);
+                  setForm(f => ({ ...f, cedula: val }));
+                }} 
+                onBlur={() => setTouched(prev => ({ ...prev, cedula: true }))}
+                placeholder="Ej. 12345678" 
+                maxLength={8}
+                className="mt-1" 
+              />
+              {touched.cedula && form.cedula && (parseInt(form.cedula) < 5000000 || parseInt(form.cedula) > 33000000) && (
+                <p className="text-[10px] text-red-500 mt-1">Cédula fuera de rango (5M - 33M)</p>
+              )}
             </div>
             <div>
               <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Especialidad</Label>
@@ -251,7 +298,25 @@ export default function Doctors() {
             </div>
             <div>
               <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Teléfono</Label>
-              <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+584241234567" maxLength={13} className="mt-1" />
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-sm font-semibold text-gray-500">+58</span>
+                </div>
+                <Input 
+                  value={form.phone.replace('+58', '')} 
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setForm(f => ({ ...f, phone: '+58' + val }));
+                  }} 
+                  onBlur={() => setTouched(prev => ({ ...prev, phone: true }))}
+                  placeholder="4241234567" 
+                  maxLength={10}
+                  className="pl-11" 
+                />
+              </div>
+              {touched.phone && form.phone.length > 3 && form.phone.length < 13 && (
+                <p className="text-[10px] text-red-500 mt-1">El número debe tener 10 dígitos después del +58</p>
+              )}
             </div>
             <div>
               <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Correo electrónico</Label>

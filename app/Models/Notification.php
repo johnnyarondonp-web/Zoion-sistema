@@ -18,12 +18,14 @@ class Notification extends Model
         'user_id',
         'title',
         'message',
+        'data',
         'type',
         'read_at',
     ];
 
     protected $casts = [
         'read_at' => 'datetime',
+        'data'    => 'array',
     ];
 
     public function user(): BelongsTo

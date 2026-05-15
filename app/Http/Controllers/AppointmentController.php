@@ -42,13 +42,8 @@ class AppointmentController extends Controller
             return ($busyFromAppts + $busyFromWalkIns) < $totalDoctors;
         }
 
-        $overlap = Appointment::where('date', $date)
-            ->whereIn('status', ['pending', 'confirmed'])
-            ->where('start_time', '<', $endTime)
-            ->where('end_time', '>', $startTime)
-            ->exists();
-
-        return !$overlap;
+        // Si no hay doctores asignados a este servicio, la capacidad es CERO.
+        return false;
     }
 
     private function timeToMinutes(string $time): int
@@ -226,6 +221,9 @@ class AppointmentController extends Controller
 
         if ($availableDoctors->isNotEmpty()) {
             $assignedDoctorId = $availableDoctors->first()->id;
+        } else {
+            // No hay doctores disponibles para este servicio en este momento
+            return response()->json(['success' => false, 'error' => 'No hay médicos disponibles para este servicio en el horario solicitado'], 409);
         }
 
         $source = ($isStaff && $request->userId && $request->userId !== $user->id) ? 'admin_booked' : 'online';
@@ -254,6 +252,7 @@ class AppointmentController extends Controller
                 'title'   => 'Cita agendada por la clínica',
                 'message' => "La clínica ha agendado una cita para {$pet->name} el {$appointment->date} a las {$appointment->start_time}.",
                 'type'    => 'new_appointment',
+                'data'    => ['appointment_id' => $appointment->id],
             ]);
         } else {
             $admins = \App\Models\User::where('role', 'admin')->get();
@@ -263,6 +262,7 @@ class AppointmentController extends Controller
                     'title'   => 'Nueva cita solicitada',
                     'message' => "{$user->name} solicitó una cita para {$pet->name} el {$appointment->date} a las {$appointment->start_time}.",
                     'type'    => 'new_appointment',
+                    'data'    => ['appointment_id' => $appointment->id],
                 ]);
             }
         }
@@ -421,6 +421,7 @@ class AppointmentController extends Controller
                 'title'   => 'Cita confirmada',
                 'message' => "Tu cita ha sido confirmada para el {$appointment->date} a las {$appointment->start_time}.",
                 'type'    => 'appointment_confirmed',
+                'data'    => ['appointment_id' => $appointment->id],
             ]);
         }
 

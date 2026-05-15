@@ -10,21 +10,38 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
+        $limit = $request->get('limit', 30);
+
+        // Pruning: Keep only last 50 notifications for this user
+        $totalCount = Notification::where('user_id', $user->id)->count();
+        if ($totalCount > 50) {
+            $keepIds = Notification::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->take(50)
+                ->pluck('id');
+            
+            Notification::where('user_id', $user->id)
+                ->whereNotIn('id', $keepIds)
+                ->delete();
+        }
 
         $notifications = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->take(30)
+            ->take($limit)
             ->get()
             ->map(fn($n) => [
                 'id'        => $n->id,
                 'type'      => $n->type,
                 'title'     => $n->title,
                 'message'   => $n->message,
+                'data'      => $n->data,
                 'read'      => !is_null($n->read_at),
                 'timestamp' => $n->created_at->toISOString(),
             ]);
 
-        $unreadCount = $notifications->where('read', false)->count();
+        $unreadCount = Notification::where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->count();
 
         return response()->json([
             'success' => true,

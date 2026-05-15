@@ -52,6 +52,7 @@ interface Service {
   durationMinutes: number;
   price: number;
   category: string | null;
+  hasDoctors?: boolean;
 }
 
 interface Pet {
@@ -475,7 +476,7 @@ export default function BookingWizard() {
 
   const canProceed = (): boolean => {
     switch (currentStep) {
-      case 1: return !!selectedServiceId;
+      case 1: return !!selectedServiceId && (selectedService?.hasDoctors ?? true);
       case 2: return !!selectedPetId && isServiceCompatibleWithPet(selectedService, selectedPet);
       case 3: return !!selectedDate && hasAvailableSlots === true;
       case 4: return !!selectedTime;
@@ -542,20 +543,38 @@ export default function BookingWizard() {
 
     const renderServiceCard = (service: Service) => {
       const isSelected = selectedServiceId === service.id;
+      const hasDoctors = service.hasDoctors ?? true;
+
       return (
         <motion.div
           key={service.id}
-          whileHover={{ y: -2, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
+          whileHover={hasDoctors ? { y: -2, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' } : {}}
           transition={{ duration: 0.15 }}
+          className={!hasDoctors ? 'opacity-60 grayscale-[0.5]' : ''}
         >
           <Card
-            className={`cursor-pointer transition-all duration-200 overflow-hidden h-full ${
+            className={`transition-all duration-200 overflow-hidden h-full relative ${
+              hasDoctors ? 'cursor-pointer' : 'cursor-not-allowed opacity-80'
+            } ${
               isSelected
                 ? 'border-emerald-400 ring-2 ring-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/20 dark:border-emerald-600 dark:ring-emerald-800 shadow-md'
                 : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700'
             }`}
-            onClick={() => setSelectedServiceId(service.id)}
+            onClick={() => {
+              if (hasDoctors) {
+                setSelectedServiceId(service.id);
+              } else {
+                toast.error("Este servicio no tiene médicos asignados actualmente.");
+              }
+            }}
           >
+            {!hasDoctors && (
+              <div className="absolute top-2 right-2 z-10">
+                <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200 text-[10px] font-bold uppercase tracking-tight">
+                  Citas no disponibles
+                </Badge>
+              </div>
+            )}
             <CardContent className="p-4">
               <div className="flex items-start gap-3">
                 <div

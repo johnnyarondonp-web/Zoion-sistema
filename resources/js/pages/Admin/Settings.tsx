@@ -366,26 +366,37 @@ export default function Settings() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">No hay horarios configurados</p>
                 ) : (
                   <div className="space-y-2">
-                    {schedules.sort((a, b) => a.dayOfWeek - b.dayOfWeek).map((schedule) => (
-                      <div
-                        key={schedule.dayOfWeek}
-                        className={`flex items-center justify-between p-2.5 rounded-lg border ${
-                          schedule.isAvailable
-                            ? 'border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20'
-                            : 'border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <div className={`h-2.5 w-2.5 rounded-full ${schedule.isAvailable ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {dayLabels[schedule.dayOfWeek]}
+                    {schedules.sort((a, b) => {
+                      const dayA = (a as any).day_of_week ?? a.dayOfWeek;
+                      const dayB = (b as any).day_of_week ?? b.dayOfWeek;
+                      return dayA - dayB;
+                    }).map((schedule) => {
+                      const day = (schedule as any).day_of_week ?? schedule.dayOfWeek;
+                      const open = (schedule as any).open_time ?? schedule.openTime;
+                      const close = (schedule as any).close_time ?? schedule.closeTime;
+                      const available = (schedule as any).is_available ?? schedule.isAvailable;
+                      
+                      return (
+                        <div
+                          key={day}
+                          className={`flex items-center justify-between p-2.5 rounded-lg border ${
+                            available
+                              ? 'border-emerald-100 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20'
+                              : 'border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <div className={`h-2.5 w-2.5 rounded-full ${available ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`} />
+                            <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                              {dayLabels[day]}
+                            </span>
+                          </div>
+                          <span className={`text-sm ${available ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
+                            {available ? `${open} - ${close}` : 'Cerrado'}
                           </span>
                         </div>
-                        <span className={`text-sm ${schedule.isAvailable ? 'text-emerald-700 dark:text-emerald-400 font-medium' : 'text-gray-400 dark:text-gray-500'}`}>
-                          {schedule.isAvailable ? `${schedule.openTime} - ${schedule.closeTime}` : 'Cerrado'}
-                        </span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -590,10 +601,10 @@ export default function Settings() {
                     <Code2 className="h-5 w-5 text-sky-500" />
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Versión</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">2.0.0</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">2.1.0</p>
                     </div>
                   </div>
-                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                  <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none">
                     Estable
                   </Badge>
                 </div>
@@ -606,7 +617,7 @@ export default function Settings() {
                   </p>
                   <div className="flex flex-wrap gap-1.5">
                     {[
-                      { label: 'Laravel 11', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
+                      { label: 'Laravel 13', color: 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400' },
                       { label: 'TypeScript', color: 'bg-sky-50 dark:bg-sky-900/30 text-sky-700 dark:text-sky-400' },
                       { label: 'Tailwind CSS 4', color: 'bg-teal-50 dark:bg-teal-900/30 text-teal-700 dark:text-teal-400' },
                       { label: 'Inertia.js', color: 'bg-violet-50 dark:bg-violet-900/30 text-violet-700 dark:text-violet-400' },

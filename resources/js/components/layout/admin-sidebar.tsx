@@ -24,7 +24,7 @@ interface SidebarSection {
 }
 
 // Estática: no se recrea en cada render
-const sidebarSections: SidebarSection[] = [
+export const sidebarSections: SidebarSection[] = [
   {
     title: 'Gestión',
     icon: <Shield className="h-3 w-3" />,

@@ -127,13 +127,8 @@ class AvailabilityController extends Controller
                 }
                 $isOverlapping = count($busyDoctorIds) >= $totalDoctors;
             } else {
-                $isOverlapping = false;
-                foreach ($allBusySlots as $existing) {
-                    if ($existing->start_time < $slotEnd && $existing->end_time > $slotStart) {
-                        $isOverlapping = true;
-                        break;
-                    }
-                }
+                // Si no hay doctores asignados a este servicio, NINGÚN slot está disponible.
+                $isOverlapping = true;
             }
 
             // No mostrar slots en el pasado si la fecha es hoy (lead time de 2h para clientes)

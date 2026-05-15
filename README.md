@@ -8,7 +8,7 @@ Zoion es una plataforma integral y moderna diseñada para revolucionar la gesti�
 
 ## 🚀 Tecnologías Principales
 
-- **Backend:** Laravel 11 (PHP 8.3+)
+- **Backend:** Laravel 13 (PHP 8.3+)
 - **Frontend:** React 18 con TypeScript
 - **Comunicación:** Inertia.js (SPA sin APIs complejas)
 - **Estilos:** Tailwind CSS con componentes de Shadcn/ui

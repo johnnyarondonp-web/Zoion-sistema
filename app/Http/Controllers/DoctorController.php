@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Doctor;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DoctorController extends Controller
 {
@@ -17,6 +20,7 @@ class DoctorController extends Controller
             ->map(fn ($d) => [
                 'id'                 => $d->id,
                 'name'               => $d->name,
+                'cedula'             => $d->cedula,
                 'specialty'          => $d->specialty,
                 'phone'              => $d->phone,
                 'email'              => $d->email,
@@ -35,24 +39,46 @@ class DoctorController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:255',
-            'specialty'  => 'nullable|string|max:255',
-            'phone'      => 'nullable|string|max:30',
-            'email'      => 'nullable|email|max:150',
-            'photo'      => 'nullable|string',
-            'isActive'   => 'boolean',
-            'serviceIds' => 'nullable|array',
+            'name'         => 'required|string|min:4|max:40|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+            'cedula'       => 'required|integer|between:5000000,33000000|unique:doctors,cedula',
+            'specialty'    => 'nullable|string|max:255',
+            'phone'        => 'nullable|string|max:30',
+            'email'        => 'required|email|max:150|unique:doctors,email|unique:users,email',
+            'photo'        => 'nullable|string',
+            'isActive'     => 'boolean',
+            'serviceIds'   => 'required|array|min:1',
             'serviceIds.*' => 'string|exists:services,id',
+        ], [
+            'name.regex'     => 'El nombre solo puede contener letras y espacios.',
+            'cedula.between' => 'Ingrese una cédula válida entre 5,000,000 y 33,000,000.',
+            'serviceIds.min' => 'Debe seleccionar al menos un servicio.',
         ]);
 
+        // Prefijo Dr si falta
+        if (!preg_match('/^Dr\.?\s+/i', $data['name'])) {
+            $data['name'] = 'Dr ' . trim($data['name']);
+        }
+
         $doctor = DB::transaction(function () use ($data) {
+            // 1. Crear el Usuario para acceso al sistema
+            $user = User::create([
+                'id'       => (string) Str::ulid(),
+                'name'     => $data['name'],
+                'email'    => $data['email'],
+                'password' => Hash::make($data['cedula']), // Cédula como contraseña inicial
+                'role'     => 'doctor',
+            ]);
+
+            // 2. Crear el perfil de Doctor vinculado al usuario
             $doctor = Doctor::create([
                 'name'      => $data['name'],
+                'cedula'    => $data['cedula'],
+                'email'     => $data['email'],
                 'specialty' => $data['specialty'] ?? null,
                 'phone'     => $data['phone'] ?? null,
-                'email'     => $data['email'] ?? null,
                 'photo'     => $data['photo'] ?? null,
                 'is_active' => $data['isActive'] ?? true,
+                'user_id'   => $user->id,
             ]);
 
             if (!empty($data['serviceIds'])) {
@@ -137,6 +163,7 @@ class DoctorController extends Controller
         return [
             'id'        => $doctor->id,
             'name'      => $doctor->name,
+            'cedula'    => $doctor->cedula,
             'specialty' => $doctor->specialty,
             'phone'     => $doctor->phone,
             'email'     => $doctor->email,

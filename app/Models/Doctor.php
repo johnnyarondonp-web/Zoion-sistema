@@ -12,7 +12,10 @@ class Doctor extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['id', 'name', 'specialty', 'phone', 'photo', 'is_active'];
+    protected $fillable = [
+        'id', 'name', 'cedula', 'email', 'specialty', 
+        'phone', 'photo', 'is_active', 'user_id'
+    ];
 
     protected $casts = [
         'is_active' => 'boolean',

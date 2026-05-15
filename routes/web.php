@@ -141,7 +141,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── Vistas admin ─────────────────────────────────────────────────────
     Route::get('/admin/dashboard',     fn () => Inertia::render('Admin/Dashboard'));
-    Route::get('/admin/profile',       fn () => Inertia::render('Client/Profile'));
+    Route::get('/admin/notifications', fn () => Inertia::render('Admin/Notifications'));
+    Route::get('/admin/profile',       fn () => Inertia::render('Admin/Profile'));
     Route::get('/admin/appointments',               fn () => Inertia::render('Admin/Appointments'));
     Route::get('/admin/appointments/{id}',          fn () => Inertia::render('Admin/Appointments', ['selectedAppointmentId' => request()->route('id')]));
     Route::get('/admin/pets',                       fn () => Inertia::render('Admin/Pets'));

@@ -7,12 +7,13 @@ export interface Notification {
   type: 'pending_appointment' | 'upcoming_appointment' | 'new_appointment' | 'appointment_confirmed' | 'appointment' | 'reminder' | 'welcome' | 'system' | 'new_message';
   read: boolean;
   timestamp: string;
+  data?: any;
 }
 
 interface NotificationState {
   notifications: Notification[];
   unreadCount: number;
-  fetchNotifications: () => Promise<void>;
+  fetchNotifications: (limit?: number) => Promise<void>;
   markAsRead: (id: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
 }
@@ -23,9 +24,10 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   notifications: [],
   unreadCount: 0,
 
-  fetchNotifications: async () => {
+  fetchNotifications: async (limit?: number) => {
     try {
-      const res = await fetch('/api/notifications', {
+      const url = limit ? `/api/notifications?limit=${limit}` : '/api/notifications';
+      const res = await fetch(url, {
         headers: {
           'Accept': 'application/json',
           'X-Requested-With': 'XMLHttpRequest',

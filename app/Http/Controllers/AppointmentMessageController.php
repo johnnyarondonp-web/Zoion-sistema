@@ -67,6 +67,7 @@ class AppointmentMessageController extends Controller
                     'title'   => 'Nuevo mensaje de cliente',
                     'message' => "{$user->name} ha enviado un mensaje en la cita.",
                     'type'    => 'new_message',
+                    'data'    => ['appointment_id' => $appointmentId],
                 ]);
             }
         } else {
@@ -75,6 +76,7 @@ class AppointmentMessageController extends Controller
                 'title'   => 'Nuevo mensaje de la clínica',
                 'message' => "La clínica ha respondido a tu cita.",
                 'type'    => 'new_message',
+                'data'    => ['appointment_id' => $appointmentId],
             ]);
         }
 
