@@ -69,9 +69,15 @@ class AppointmentController extends Controller
 
         // Seguridad: Filtrar por usuario si no es admin
         if ($user->role !== 'admin') {
-            $query->where('user_id', $user->id);
+            $query->where('user_id', $user->id)
+                  ->withCount(['messages as unread_messages' => function ($query) {
+                      $query->where('is_read_by_client', false);
+                  }]);
         } else {
-            $query->with(['user:id,name,email,phone']);
+            $query->with(['user:id,name,email,phone'])
+                  ->withCount(['messages as unread_messages' => function ($query) {
+                      $query->where('is_read_by_admin', false);
+                  }]);
         }
 
         // Filtros opcionales
@@ -102,6 +108,7 @@ class AppointmentController extends Controller
             'cancelReason'  => $apt->cancel_reason,
             'rating'        => $apt->rating,
             'review'        => $apt->review,
+            'unreadMessages'=> $apt->unread_messages ?? 0,
             'pet' => $apt->pet ? [
                 'id'      => $apt->pet->id,
                 'name'    => $apt->pet->name,

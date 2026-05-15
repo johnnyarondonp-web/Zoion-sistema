@@ -31,6 +31,7 @@ import {
   Scissors,
   ShieldCheck,
   Activity,
+  MessageCircle,
 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import {
@@ -51,6 +52,7 @@ interface DashboardData {
   appointmentsThisMonth: number;
   appointmentsLastMonth: number;
   mostRequestedService: { serviceId: string; name: string; count: number } | null;
+  unreadMessages: number;
   petsAttendedThisMonth: number;
   upcomingToday: number;
   cancellationRate: number;
@@ -273,14 +275,14 @@ export default function Dashboard() {
       subTextColor: 'text-orange-100',
     },
     {
-      label: 'Servicio más solicitado',
-      value: data.mostRequestedService?.name || 'N/A',
-      icon: Star,
+      label: 'Mensajes sin responder',
+      value: data.unreadMessages,
+      icon: MessageCircle,
       cardBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
       iconBg: 'bg-white/20',
       textColor: 'text-white',
       subTextColor: 'text-violet-100',
-      sub: data.mostRequestedService ? `${data.mostRequestedService.count} citas` : undefined,
+      sub: data.unreadMessages === 1 ? '1 mensaje nuevo' : `${data.unreadMessages} mensajes nuevos`,
     },
   ];
 

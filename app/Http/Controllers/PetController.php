@@ -29,6 +29,7 @@ class PetController extends Controller
                 'name'          => $p->name,
                 'species'       => $p->species,
                 'breed'         => $p->breed,
+                'gender'        => $p->gender,
                 'birthdate'     => $p->birthdate,
                 'weight'        => $p->weight,
                 'photo'         => $p->photo,
@@ -55,6 +56,7 @@ class PetController extends Controller
             'name'      => trim($request->name),
             'species'   => trim($request->species),
             'breed'     => $request->breed ? trim($request->breed) : null,
+            'gender'    => $request->gender ? trim($request->gender) : null,
             'birthdate' => $request->birthdate ?? null,
             'weight'    => $request->weight ? (float) $request->weight : null,
             'photo'     => $photo,
@@ -75,6 +77,7 @@ class PetController extends Controller
                 'name'          => $pet->name,
                 'species'       => $pet->species,
                 'breed'         => $pet->breed,
+                'gender'        => $pet->gender,
                 'birthdate'     => $pet->birthdate,
                 'weight'        => $pet->weight,
                 'photo'         => $pet->photo,
@@ -89,7 +92,7 @@ class PetController extends Controller
     public function update(Request $request, $id)
     {
         $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
-        $data = $request->only(['name', 'species', 'breed', 'birthdate', 'weight', 'notes', 'is_active']);
+        $data = $request->only(['name', 'species', 'breed', 'gender', 'birthdate', 'weight', 'notes', 'is_active']);
 
         if ($request->has('photo')) {
             $data['photo'] = $this->processPhoto($request->photo, $pet->photo);

@@ -101,7 +101,21 @@ class WalkInController extends Controller
         // Verificar horario laboral
         $dayOfWeek = Carbon::parse($today)->dayOfWeek;
         $schedule  = Schedule::where('day_of_week', $dayOfWeek)->first();
-        if (!$schedule || !$schedule->is_available) {
+
+        // Sin horario guardado, aplicar el predeterminado L-V 09:00-18:00.
+        if (!$schedule) {
+            $isWeekday = $dayOfWeek >= 1 && $dayOfWeek <= 5;
+            if (!$isWeekday) {
+                return response()->json(['success' => false, 'error' => 'No hay atención este día'], 400);
+            }
+            $schedule = (object)[
+                'is_available' => true,
+                'open_time'    => '09:00',
+                'close_time'   => '18:00',
+            ];
+        }
+
+        if (!$schedule->is_available) {
             return response()->json(['success' => false, 'error' => 'No hay horario disponible para este día'], 400);
         }
 

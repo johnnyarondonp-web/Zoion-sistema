@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { Bell, Calendar, Info, Sparkles, ShieldCheck, CheckCheck } from 'lucide-react';
+import { Bell, Calendar, Info, Sparkles, ShieldCheck, CheckCheck, MessageCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotificationStore, type Notification } from '@/store/notification-store';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ function getNotificationIcon(type: Notification['type']) {
     case 'appointment': return <Calendar className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />;
     case 'reminder':    return <ShieldCheck className="h-4 w-4 text-amber-600 dark:text-amber-400" />;
     case 'welcome':     return <Sparkles className="h-4 w-4 text-teal-600 dark:text-teal-400" />;
+    case 'new_message': return <MessageCircle className="h-4 w-4 text-violet-600 dark:text-violet-400" />;
     case 'system':      return <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />;
     default:            return <Info className="h-4 w-4 text-gray-600 dark:text-gray-400" />;
   }

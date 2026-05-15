@@ -51,7 +51,7 @@ function getInitials(name: string | null | undefined): string {
 
 export const ClientSidebar = memo(function ClientSidebar() {
   const { url } = usePage();
-  const { user } = useAuth();
+  const { user, unreadMessages } = useAuth();
 
   // Memoizado implícito al ser función pura, evita recreación en cada render
   const isActive = (item: SidebarItem) => {
@@ -129,9 +129,14 @@ export const ClientSidebar = memo(function ClientSidebar() {
                     >
                       {item.icon}
                     </span>
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 relative z-10">
+                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 relative z-10 flex-1 text-left">
                       {item.label}
                     </span>
+                    {item.href === '/client/appointments' && unreadMessages > 0 && (
+                      <span className="relative z-10 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-violet-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-gray-900">
+                        {unreadMessages > 99 ? '99+' : unreadMessages}
+                      </span>
+                    )}
                   </button>
                 );
               })}

@@ -19,6 +19,7 @@ import {
   Scissors,
   ShieldCheck,
   Activity,
+  MessageCircle,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ClientLayout from '@/components/layout/ClientLayout';
@@ -30,6 +31,7 @@ interface Appointment {
   endTime: string;
   status: string;
   notes: string | null;
+  unreadMessages?: number;
   pet: { id: string; name: string; photo: string | null; species: string };
   service: { id: string; name: string; price: number };
 }
@@ -316,6 +318,12 @@ export default function Appointments() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{apt.service.name}</h3>
+                            {apt.unreadMessages && apt.unreadMessages > 0 ? (
+                              <span className="flex items-center gap-0.5 bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 px-1.5 py-0.5 rounded-full text-[10px] font-bold flex-shrink-0">
+                                <MessageCircle className="h-2.5 w-2.5" />
+                                {apt.unreadMessages}
+                              </span>
+                            ) : null}
                           </div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                             {apt.pet.name} · {formatDate(apt.date)} · {formatTime(apt.startTime)}

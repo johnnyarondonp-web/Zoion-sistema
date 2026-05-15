@@ -51,6 +51,7 @@ interface Service {
   description: string | null;
   durationMinutes: number;
   price: number;
+  category: string | null;
 }
 
 interface Pet {
@@ -60,6 +61,7 @@ interface Pet {
   breed: string | null;
   photo: string | null;
   isActive: boolean;
+  gender: string | null;
 }
 
 interface TimeSlot {
@@ -139,6 +141,48 @@ function formatDateLong(date: Date): string {
 
 const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
+const CATEGORY_ORDER = ['consulta', 'cirugia', 'diagnostico', 'prevencion'] as const;
+
+const CATEGORY_LABELS: Record<string, string> = {
+  consulta: 'Consulta',
+  cirugia: 'Cirugía',
+  diagnostico: 'Diagnóstico',
+  prevencion: 'Prevención',
+};
+
+function filterServicesByGender(services: Service[], selectedPet: Pet | undefined): Service[] {
+  if (!selectedPet?.gender) return services;
+
+  const petGender = selectedPet.gender.toLowerCase();
+
+  return services.filter((s) => {
+    const name = s.name.toLowerCase();
+    const isForHembra = /hembra/.test(name);
+    const isForMacho = /macho/.test(name);
+
+    if (!isForHembra && !isForMacho) return true; // servicio genérico, siempre visible
+    if (isForHembra) return petGender === 'hembra';
+    if (isForMacho) return petGender === 'macho';
+    return true;
+  });
+}
+
+function isServiceCompatibleWithPet(service: Service | undefined, pet: Pet | undefined): boolean {
+  if (!service || !pet) return true;
+  if (!pet.gender) return true;
+
+  const name = service.name.toLowerCase();
+  const isForHembra = /hembra/.test(name);
+  const isForMacho  = /macho/.test(name);
+
+  if (!isForHembra && !isForMacho) return true;
+
+  const petGender = pet.gender.toLowerCase();
+  if (isForHembra) return petGender === 'hembra';
+  if (isForMacho)  return petGender === 'macho';
+  return true;
+}
+
 // ─── Step Indicator ──────────────────────────────────────────────────────────
 const steps = [
   { num: 1, label: 'Servicio', icon: Stethoscope },
@@ -213,6 +257,7 @@ export default function BookingWizard() {
   const [selectedPetId, setSelectedPetId] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>('');
+  const [hasAvailableSlots, setHasAvailableSlots] = useState<boolean | null>(null);
   const [notes, setNotes] = useState('');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
 
@@ -318,24 +363,26 @@ export default function BookingWizard() {
 
   const handleDateSelect = async (date: Date | undefined) => {
     setSelectedDate(date);
-    if (date) {
-      if (isDateBlocked(date)) {
-        // no avanzar, el calendario ya la deshabilitó pero por si acaso
-        return;
-      }
-      toast.loading("Buscando horarios...", { id: "fetching-slots" });
-      const hasSlots = await fetchTimeSlots(date);
-      toast.dismiss("fetching-slots");
-      
-      if (!hasSlots) {
-        toast.error("No hay horarios disponibles para esta fecha.");
-        setSelectedDate(undefined);
-        return;
-      }
-      
-      setCurrentStep(4);
-      setDirection(1);
+    setHasAvailableSlots(null); // resetear mientras carga
+
+    if (!date) return;
+
+    if (isDateBlocked(date)) return;
+
+    toast.loading("Buscando horarios...", { id: "fetching-slots" });
+    const hasSlots = await fetchTimeSlots(date);
+    toast.dismiss("fetching-slots");
+
+    if (!hasSlots) {
+      toast.error("No hay horarios disponibles para esta fecha.");
+      setSelectedDate(undefined);
+      setHasAvailableSlots(false);
+      return;
     }
+
+    setHasAvailableSlots(true);
+    setCurrentStep(4);
+    setDirection(1);
   };
 
   const isDateBlocked = (date: Date): boolean => {
@@ -360,6 +407,13 @@ export default function BookingWizard() {
     if (currentStep > 1) {
       setDirection(-1);
       setCurrentStep(currentStep - 1);
+      // Si vuelve al paso de fecha, limpiar la selección para evitar estado inconsistente
+      if (currentStep === 4) {
+        setSelectedDate(undefined);
+        setSelectedTime('');
+        setTimeSlots([]);
+        setHasAvailableSlots(null);
+      }
     }
   };
 
@@ -422,8 +476,8 @@ export default function BookingWizard() {
   const canProceed = (): boolean => {
     switch (currentStep) {
       case 1: return !!selectedServiceId;
-      case 2: return !!selectedPetId;
-      case 3: return !!selectedDate;
+      case 2: return !!selectedPetId && isServiceCompatibleWithPet(selectedService, selectedPet);
+      case 3: return !!selectedDate && hasAvailableSlots === true;
       case 4: return !!selectedTime;
       default: return false;
     }
@@ -466,57 +520,99 @@ export default function BookingWizard() {
       );
     }
 
-    return (
-      <div className="grid gap-3 sm:grid-cols-2">
-        {services.map((service) => {
-          const isSelected = selectedServiceId === service.id;
-          return (
-            <motion.div
-              key={service.id}
-              whileHover={{ y: -2, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
-              transition={{ duration: 0.15 }}
-            >
-              <Card
-                className={`cursor-pointer transition-all duration-200 overflow-hidden h-full ${
-                  isSelected
-                    ? 'border-emerald-400 ring-2 ring-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/20 dark:border-emerald-600 dark:ring-emerald-800 shadow-md'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700'
-                }`}
-                onClick={() => setSelectedServiceId(service.id)}
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${
-                        isSelected ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
-                      }`}
-                    >
-                      {getServiceIcon(service.name)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className={`text-sm font-semibold ${isSelected ? 'text-emerald-800 dark:text-emerald-300' : 'text-gray-900 dark:text-gray-100'}`}>
-                        {service.name}
-                      </h3>
-                      {service.description && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{service.description}</p>
-                      )}
-                      <div className="flex items-center gap-3 mt-2">
-                        <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(service.durationMinutes)}
-                        </span>
-                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
-                          <DollarSign className="h-3 w-3" />
-                          {formatPrice(service.price)}
-                        </span>
-                      </div>
-                    </div>
+    const selectedPet = pets.find((p) => p.id === selectedPetId);
+    const visibleServices = filterServicesByGender(services, selectedPet);
+
+    if (visibleServices.length === 0) {
+      return (
+        <div className="flex flex-col items-center py-12 text-center">
+          <Stethoscope className="h-12 w-12 text-gray-300 mb-3" />
+          <p className="text-gray-500 dark:text-gray-400">No hay servicios disponibles para esta mascota</p>
+        </div>
+      );
+    }
+
+    const grouped = CATEGORY_ORDER.reduce<Record<string, Service[]>>((acc, cat) => {
+      const inCategory = visibleServices.filter((s) => s.category === cat);
+      if (inCategory.length > 0) acc[cat] = inCategory;
+      return acc;
+    }, {});
+
+    const uncategorized = visibleServices.filter((s) => !s.category || !CATEGORY_ORDER.includes(s.category as any));
+
+    const renderServiceCard = (service: Service) => {
+      const isSelected = selectedServiceId === service.id;
+      return (
+        <motion.div
+          key={service.id}
+          whileHover={{ y: -2, boxShadow: '0 8px 25px -5px rgba(0,0,0,0.1)' }}
+          transition={{ duration: 0.15 }}
+        >
+          <Card
+            className={`cursor-pointer transition-all duration-200 overflow-hidden h-full ${
+              isSelected
+                ? 'border-emerald-400 ring-2 ring-emerald-200 bg-emerald-50/30 dark:bg-emerald-950/20 dark:border-emerald-600 dark:ring-emerald-800 shadow-md'
+                : 'border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700'
+            }`}
+            onClick={() => setSelectedServiceId(service.id)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start gap-3">
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${
+                    isSelected ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-50 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                  }`}
+                >
+                  {getServiceIcon(service.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className={`text-sm font-semibold ${isSelected ? 'text-emerald-800 dark:text-emerald-300' : 'text-gray-900 dark:text-gray-100'}`}>
+                    {service.name}
+                  </h3>
+                  {service.description && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{service.description}</p>
+                  )}
+                  <div className="flex items-center gap-3 mt-2">
+                    <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+                      <Clock className="h-3 w-3" />
+                      {formatDuration(service.durationMinutes)}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                      <DollarSign className="h-3 w-3" />
+                      {formatPrice(service.price)}
+                    </span>
                   </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      );
+    };
+
+    return (
+      <div className="space-y-6">
+        {Object.entries(grouped).map(([cat, catServices]) => (
+          <div key={cat}>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3 px-1">
+              {CATEGORY_LABELS[cat] ?? cat}
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {catServices.map(renderServiceCard)}
+            </div>
+          </div>
+        ))}
+
+        {uncategorized.length > 0 && (
+          <div>
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3 px-1">
+              Otros
+            </h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {uncategorized.map(renderServiceCard)}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -559,8 +655,9 @@ export default function BookingWizard() {
     }
 
     return (
-      <div className="grid gap-3 sm:grid-cols-2">
-        {pets.map((pet) => {
+      <div className="space-y-4">
+        <div className="grid gap-3 sm:grid-cols-2">
+          {pets.map((pet) => {
           const isSelected = selectedPetId === pet.id;
           const sp = pet.species.toLowerCase();
           const icon = speciesIcons[sp] || speciesIcons.otro;
@@ -607,6 +704,17 @@ export default function BookingWizard() {
           );
         })}
       </div>
+      
+      {selectedPetId && selectedService && !isServiceCompatibleWithPet(selectedService, selectedPet) && (
+        <div className="flex items-start gap-2 p-3 rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-400 mt-4">
+          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <p>
+            El servicio <strong>{selectedService.name}</strong> no está disponible para{' '}
+            <strong>{selectedPet?.name}</strong>. Vuelve al paso anterior para elegir otro servicio o selecciona otra mascota.
+          </p>
+        </div>
+      )}
+    </div>
     );
   };
 

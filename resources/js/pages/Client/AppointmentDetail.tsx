@@ -176,7 +176,16 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
         headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
       });
       const data = await res.json();
-      if (data.success) setMessages(data.data);
+      if (data.success) {
+        setMessages(data.data);
+        const hasUnread = data.data.some((m: any) => !m.isReadByClient);
+        if (hasUnread) {
+          fetch(`/api/appointments/${id}/messages/read`, {
+            method: 'PATCH',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() }
+          }).catch(() => {});
+        }
+      }
     } catch { /* silent */ }
   }, []);
 

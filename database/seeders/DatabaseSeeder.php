@@ -16,6 +16,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call([
+            AdminUserSeeder::class,
+            ScheduleSeeder::class,
+        ]);
 
         User::factory()->create([
             'id'    => (string) Str::ulid(),

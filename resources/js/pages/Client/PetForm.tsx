@@ -21,6 +21,7 @@ interface FormState {
   name: string;
   species: string;
   breed: string;
+  gender: string;
   birthdate: string;
   weight: string;
   photo: string | null;
@@ -266,6 +267,7 @@ export default function PetForm({ mode, petId }: PetFormProps) {
     name: '',
     species: '',
     breed: '',
+    gender: '',
     birthdate: '',
     weight: '',
     photo: null,
@@ -316,6 +318,7 @@ export default function PetForm({ mode, petId }: PetFormProps) {
           name: pet.name || '',
           species: pet.species || '',
           breed: breed,
+          gender: pet.gender || '',
           birthdate: pet.birthdate || '',
           weight: pet.weight != null ? String(pet.weight) : '',
           photo: pet.photo || null,
@@ -413,6 +416,7 @@ export default function PetForm({ mode, petId }: PetFormProps) {
     }
 
     if (!form.species) newErrors.species = 'La especie es obligatoria';
+    if (!form.gender) newErrors.gender = 'El género es obligatorio';
 
     if (form.birthdate) {
       const { min, max } = getDateLimits(form.species);
@@ -450,6 +454,7 @@ export default function PetForm({ mode, petId }: PetFormProps) {
         name: form.name.trim(),
         species: form.species,
         breed: breed || null,
+        gender: form.gender || null,
         birthdate: form.birthdate || null,
         weight: form.weight ? parseFloat(form.weight) : null,
         photo: form.photo,
@@ -491,8 +496,8 @@ export default function PetForm({ mode, petId }: PetFormProps) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
     if (field === 'species') {
-      setForm((prev) => ({ ...prev, breed: '', mixBreed: '' }));
-      setErrors((prev) => ({ ...prev, breed: undefined, mixBreed: undefined }));
+      setForm((prev) => ({ ...prev, breed: '', mixBreed: '', gender: '' }));
+      setErrors((prev) => ({ ...prev, breed: undefined, mixBreed: undefined, gender: undefined }));
     }
   };
 
@@ -593,6 +598,25 @@ export default function PetForm({ mode, petId }: PetFormProps) {
                 </div>
               )}
             </div>
+
+            {/* Género — aparece después de elegir especie */}
+            {form.species && (
+              <div className="space-y-2">
+                <Label htmlFor="gender" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Género <span className="text-red-500">*</span>
+                </Label>
+                <Select value={form.gender} onValueChange={(v) => updateField('gender', v)}>
+                  <SelectTrigger className={errors.gender ? 'border-red-400' : ''}>
+                    <SelectValue placeholder="Seleccionar género" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="macho">Macho</SelectItem>
+                    <SelectItem value="hembra">Hembra</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.gender && <p className="text-xs text-red-500">{errors.gender}</p>}
+              </div>
+            )}
 
             {/* Mix field for Mestizo */}
             {isMestizo && hasMestizo && (

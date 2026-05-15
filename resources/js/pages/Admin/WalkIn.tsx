@@ -158,6 +158,10 @@ export default function WalkIn() {
       errors.petName = 'Solo letras y un espacio entre palabras (máx. 25 caracteres)';
     }
 
+    if (phone && !/^\+58\d{10}$/.test(phone)) {
+      errors.phone = 'El teléfono debe iniciar con +58 seguido de 10 dígitos';
+    }
+
     if (!petSpecies) {
       errors.petSpecies = 'La especie es obligatoria';
     }
@@ -268,11 +272,29 @@ export default function WalkIn() {
                 <Label className="text-xs text-gray-600 dark:text-gray-400">Teléfono</Label>
                 <Input
                   value={phone}
-                  onChange={e => { setPhone(e.target.value); setClientFound(null); }}
-                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
-                  placeholder="Buscar por teléfono..."
+                  onChange={e => {
+                    // Solo permitir dígitos y el signo + al inicio
+                    let val = e.target.value.replace(/[^\d+]/g, '');
+                    // Bloquear a máximo 13 caracteres (+58 + 10 dígitos)
+                    if (val.length > 13) val = val.slice(0, 13);
+                    setPhone(val);
+                    setClientFound(null);
+                  }}
+                  onKeyDown={e => {
+                    // Bloquear letras y caracteres especiales excepto + (solo al inicio)
+                    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Enter', '+'];
+                    if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                    // El + solo es válido si el campo está vacío
+                    if (e.key === '+' && phone.length > 0) e.preventDefault();
+                    if (e.key === 'Enter') handleSearch();
+                  }}
+                  placeholder="+58 seguido de 10 dígitos"
+                  maxLength={13}
                   className="mt-1"
                 />
+                {formErrors.phone && <p className="text-xs text-red-500 mt-1">{formErrors.phone}</p>}
               </div>
               <Button
                 variant="outline"
@@ -351,7 +373,21 @@ export default function WalkIn() {
                   value={petBirthDate}
                   min={petSpecies ? getDateLimits(petSpecies).min : undefined}
                   max={petSpecies ? getDateLimits(petSpecies).max : undefined}
-                  onChange={e => setPetBirthDate(e.target.value)}
+                  onChange={e => {
+                    const val = e.target.value;
+                    setPetBirthDate(val);
+                    // Validar en tiempo real si ya hay especie seleccionada
+                    if (val && petSpecies) {
+                      const { min, max } = getDateLimits(petSpecies);
+                      if (val < min || val > max) {
+                        setFormErrors(prev => ({ ...prev, petBirthDate: 'La fecha no es válida para esta especie' }));
+                      } else {
+                        setFormErrors(prev => { const next = { ...prev }; delete next.petBirthDate; return next; });
+                      }
+                    } else {
+                      setFormErrors(prev => { const next = { ...prev }; delete next.petBirthDate; return next; });
+                    }
+                  }}
                   disabled={!petSpecies}
                   className="mt-1"
                 />
@@ -377,12 +413,34 @@ export default function WalkIn() {
                   </Label>
                   <Input
                     type="number"
-                    step="0.01"
-                    min={WEIGHT_LIMITS[petSpecies]?.min}
-                    max={WEIGHT_LIMITS[petSpecies]?.max}
+                    step="0.1"
+                    min={petSpecies ? WEIGHT_LIMITS[petSpecies]?.min : 0.01}
+                    max={petSpecies ? WEIGHT_LIMITS[petSpecies]?.max : 999}
                     value={petWeight}
-                    onChange={e => setPetWeight(e.target.value)}
-                    placeholder="Ej. 8.5"
+                    onChange={e => {
+                      let val = e.target.value;
+                      if (val !== '' && petSpecies && WEIGHT_LIMITS[petSpecies]) {
+                        const num = parseFloat(val);
+                        const { min, max } = WEIGHT_LIMITS[petSpecies];
+                        if (!isNaN(num)) {
+                          if (num > max) val = String(max);
+                          // No clampear al mínimo mientras escribe
+                        }
+                      }
+                      setPetWeight(val);
+                    }}
+                    onBlur={e => {
+                      // Al salir del campo, clampear también al mínimo
+                      if (petWeight !== '' && petSpecies && WEIGHT_LIMITS[petSpecies]) {
+                        const num = parseFloat(petWeight);
+                        const { min, max } = WEIGHT_LIMITS[petSpecies];
+                        if (!isNaN(num)) {
+                          if (num < min) setPetWeight(String(min));
+                          if (num > max) setPetWeight(String(max));
+                        }
+                      }
+                    }}
+                    placeholder={petSpecies && WEIGHT_LIMITS[petSpecies] ? `${WEIGHT_LIMITS[petSpecies].min}–${WEIGHT_LIMITS[petSpecies].max} kg` : 'Peso en kg'}
                     className="mt-1"
                   />
                   {formErrors.petWeight && <p className="text-xs text-red-500 mt-1">{formErrors.petWeight}</p>}

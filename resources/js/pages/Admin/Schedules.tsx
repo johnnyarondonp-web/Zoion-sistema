@@ -61,6 +61,20 @@ function timeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
+// Devuelve la fecha real del día de esta semana (domingo como primer día)
+function getDateOfThisWeek(dayOfWeek: number): Date {
+  const today = new Date();
+  const todayDow = today.getDay();
+  const diff = dayOfWeek - todayDow;
+  const result = new Date(today);
+  result.setDate(today.getDate() + diff);
+  return result;
+}
+
+function formatShortDate(date: Date): string {
+  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+}
+
 function minutesToPercentage(minutes: number): number {
   return Math.min(100, Math.max(0, (minutes / (24 * 60)) * 100));
 }
@@ -131,8 +145,14 @@ export default function Schedules() {
       });
       const data = await res.json();
       if (data.success && data.data.length > 0) {
-        const existing = data.data as Schedule[];
-        const scheduleMap = new Map(existing.map((s) => [s.dayOfWeek, s]));
+        // El backend devuelve snake_case — normalizar antes de usar.
+        const normalized = (data.data as any[]).map((s) => ({
+          dayOfWeek: s.day_of_week ?? s.dayOfWeek,
+          openTime:  s.open_time  ?? s.openTime,
+          closeTime: s.close_time ?? s.closeTime,
+          isAvailable: s.is_available ?? s.isAvailable,
+        }));
+        const scheduleMap = new Map(normalized.map((s) => [s.dayOfWeek, s]));
         const merged = defaultSchedule.map((def) => {
           const existing = scheduleMap.get(def.dayOfWeek);
           return existing || def;
@@ -248,6 +268,7 @@ export default function Schedules() {
           {schedules.map((schedule) => {
             const colors = dayColors[schedule.dayOfWeek];
             const isOpen = schedule.isAvailable;
+            const dayDate = getDateOfThisWeek(schedule.dayOfWeek);
 
             return (
               <motion.div
@@ -261,6 +282,9 @@ export default function Schedules() {
               >
                 <p className={`text-xs font-bold ${isOpen ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
                   {dayShortNames[schedule.dayOfWeek]}
+                </p>
+                <p className={`text-[9px] mt-0.5 ${isOpen ? 'text-emerald-500' : 'text-gray-400'}`}>
+                  {formatShortDate(dayDate)}
                 </p>
                 {isOpen ? (
                   <>
@@ -323,7 +347,9 @@ export default function Schedules() {
                   <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 mb-2">
                     <div className="w-28 flex-shrink-0 flex items-center gap-2">
                       <div className={`h-2.5 w-2.5 rounded-full ${schedule.isAvailable ? 'bg-emerald-400' : 'bg-gray-300 dark:bg-gray-600'}`} />
-                      <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">{dayName}</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                        {dayName}
+                      </span>
                     </div>
 
                     <div className="flex items-center gap-2 w-32 flex-shrink-0">

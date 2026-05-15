@@ -37,7 +37,6 @@ interface FormErrors {
 const categoryOptions = [
   { value: 'consulta',    label: 'Consulta' },
   { value: 'cirugia',     label: 'Cirugía' },
-  { value: 'estetica',    label: 'Estética' },
   { value: 'diagnostico', label: 'Diagnóstico' },
   { value: 'prevencion',  label: 'Prevención' },
 ];

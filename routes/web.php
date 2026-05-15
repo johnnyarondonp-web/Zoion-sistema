@@ -14,7 +14,6 @@ use App\Http\Controllers\AdminClientController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\WalkInController;
-use App\Http\Controllers\Api\NotificationController as ApiNotificationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\UploadController;
@@ -89,6 +88,7 @@ Route::middleware(['auth'])->group(function () {
     // ── API: Disponibilidad de horarios ──────────────────────────────────
     Route::get('/api/availability',                 [AvailabilityController::class, 'index']);
     Route::get('/api/availability/schedule',        [AvailabilityController::class, 'schedule']);
+    Route::get('/api/schedules',                    [ScheduleController::class, 'index']);
 
     // ── API: Citas ───────────────────────────────────────────────────────
     Route::get('/api/appointments',                 [AppointmentController::class, 'index']);
@@ -101,14 +101,15 @@ Route::middleware(['auth'])->group(function () {
     // ── API: Mensajes de citas ───────────────────────────────────────────
     Route::get('/api/appointments/{appointmentId}/messages',  [AppointmentMessageController::class, 'index']);
     Route::post('/api/appointments/{appointmentId}/messages', [AppointmentMessageController::class, 'store']);
+    Route::patch('/api/appointments/{appointmentId}/messages/read', [AppointmentMessageController::class, 'markAsRead']);
 
     // ── API: Notas clínicas (lectura para cliente) ───────────────────────
     Route::get('/api/appointments/{appointmentId}/clinical-notes', [ClinicalNoteController::class, 'index']);
 
     // ── API: Notificaciones ──────────────────────────────────────────────
     Route::get('/api/notifications',                         [NotificationController::class, 'index']);
-    Route::post('/api/notifications/{id}/read',              [ApiNotificationController::class, 'markAsRead']);
-    Route::post('/api/notifications/read-all',               [ApiNotificationController::class, 'markAllAsRead']);
+    Route::post('/api/notifications/read-all',               [NotificationController::class, 'markAllAsRead']);
+    Route::post('/api/notifications/{id}/read',              [NotificationController::class, 'markAsRead']);
 
     // ── API: Perfil de usuario ───────────────────────────────────────────
     Route::get('/api/user/profile',                          [UserController::class, 'profile']);
@@ -163,7 +164,6 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::delete('/api/admin/clients/{id}', [AdminClientController::class, 'destroy']);
 
     // ── API Admin: Horarios ──────────────────────────────────────────────
-    Route::get('/api/schedules',  [ScheduleController::class, 'index']);
     Route::put('/api/schedules',  [ScheduleController::class, 'update']);
 
     // ── API Admin: Fechas bloqueadas ─────────────────────────────────────

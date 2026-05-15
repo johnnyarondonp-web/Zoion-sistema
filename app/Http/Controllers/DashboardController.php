@@ -78,6 +78,8 @@ class DashboardController extends Controller
         $cancellationRate = $total_appointments > 0 ? 
             round((Appointment::where('status', 'cancelled')->count() / $total_appointments) * 100, 1) : 0;
 
+        $unreadMessages = \App\Models\AppointmentMessage::where('is_read_by_admin', false)->count();
+
         $mostRequestedServiceQuery = Appointment::selectRaw('service_id, count(*) as count')
             ->groupBy('service_id')
             ->orderByDesc('count')
@@ -132,6 +134,7 @@ class DashboardController extends Controller
                 'appointmentsThisMonth' => $appointmentsThisMonth,
                 'appointmentsLastMonth' => $appointmentsLastMonth,
                 'mostRequestedService' => $mostRequestedService,
+                'unreadMessages' => $unreadMessages,
                 'petsAttendedThisMonth' => Appointment::where('date', 'like', Carbon::now()->format('Y-m') . '-%')
                     ->distinct('pet_id')
                     ->count(),

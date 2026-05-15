@@ -10,7 +10,8 @@ interface AuthUser {
 
 interface PageProps {
   auth: {
-    user: AuthUser | null
+    user: AuthUser | null;
+    unreadMessages: number;
   }
   [key: string]: unknown
 }
@@ -22,5 +23,6 @@ export function useAuth() {
     isAdmin: auth?.user?.role === 'admin',
     isClient: auth?.user?.role === 'client',
     isAuthenticated: !!auth?.user,
+    unreadMessages: auth?.unreadMessages ?? 0,
   }
 }

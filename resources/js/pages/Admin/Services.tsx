@@ -46,12 +46,11 @@ interface CategoryConfig {
 const categoryConfig: Record<string, CategoryConfig> = {
   consulta: { label: 'Consulta', emoji: '🩺', badgeClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400', gradient: 'from-emerald-500 to-teal-500' },
   cirugia: { label: 'Cirugía', emoji: '🔪', badgeClass: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', gradient: 'from-red-500 to-rose-500' },
-  estetica: { label: 'Estética', emoji: '✂️', badgeClass: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400', gradient: 'from-pink-500 to-fuchsia-500' },
   diagnostico: { label: 'Diagnóstico', emoji: '', badgeClass: 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400', gradient: 'from-sky-500 to-blue-500' },
   prevencion: { label: 'Prevención', emoji: '🛡️', badgeClass: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', gradient: 'from-amber-500 to-orange-500' },
 };
 
-const popularKeywords = ['consulta', 'vacuna', 'desparasitación', 'estética'];
+const popularKeywords = ['consulta', 'vacuna', 'desparasitación'];
 
 function getServiceIcon(name: string) {
   const lower = name.toLowerCase();

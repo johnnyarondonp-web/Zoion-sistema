@@ -124,6 +124,7 @@ class AdminClientController extends Controller
                 'name'          => $p->name,
                 'species'       => $p->species,
                 'breed'         => $p->breed,
+                'gender'        => $p->gender,
                 'photo'         => $p->photo,
                 'isActive'      => $p->is_active,
                 'vaccinations'  => $p->vaccinations,

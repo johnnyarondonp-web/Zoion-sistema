@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Appointment;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 
 class NotificationController extends Controller
@@ -10,59 +10,54 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $today = now()->format('Y-m-d');
-        $in7Days = now()->addDays(7)->format('Y-m-d');
-        $notifications = [];
 
-        if ($user->role === 'admin') {
-            // Citas pendientes de confirmar
-            $pending = Appointment::with(['pet', 'user:id,name'])
-                ->where('status', 'pending')
-                ->where('date', '>=', $today)
-                ->orderBy('date')->orderBy('start_time')
-                ->take(10)->get();
+        $notifications = Notification::where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->take(30)
+            ->get()
+            ->map(fn($n) => [
+                'id'        => $n->id,
+                'type'      => $n->type,
+                'title'     => $n->title,
+                'message'   => $n->message,
+                'read'      => !is_null($n->read_at),
+                'timestamp' => $n->created_at->toISOString(),
+            ]);
 
-            foreach ($pending as $apt) {
-                $notifications[] = [
-                    'id'      => 'pending-' . $apt->id,
-                    'type'    => 'pending_appointment',
-                    'title'   => 'Cita pendiente de confirmación',
-                    'message' => "{$apt->pet->name} ({$apt->user->name}) - {$apt->date} {$apt->start_time}",
-                    'date'    => $apt->created_at,
-                    'read'      => false,
-                    'timestamp' => now()->toISOString(),
-                    'data'    => ['appointmentId' => $apt->id],
-                ];
-            }
-        } else {
-            // Citas próximas del cliente
-            $upcoming = Appointment::with(['pet', 'service'])
-                ->where('user_id', $user->id)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->whereBetween('date', [$today, $in7Days])
-                ->orderBy('date')->orderBy('start_time')
-                ->take(5)->get();
-
-            foreach ($upcoming as $apt) {
-                $notifications[] = [
-                    'id'      => 'upcoming-' . $apt->id,
-                    'type'    => 'upcoming_appointment',
-                    'title'   => 'Cita próxima',
-                    'message' => "{$apt->pet->name} - {$apt->service->name} el {$apt->date} a las {$apt->start_time}",
-                    'date'    => $apt->created_at,
-                    'read'      => false,
-                    'timestamp' => now()->toISOString(),
-                    'data'    => ['appointmentId' => $apt->id],
-                ];
-            }
-        }
+        $unreadCount = $notifications->where('read', false)->count();
 
         return response()->json([
             'success' => true,
             'data'    => [
-                'notifications' => $notifications,
-                'unreadCount'   => count($notifications),
+                'notifications' => $notifications->values(),
+                'unreadCount'   => $unreadCount,
             ],
         ]);
+    }
+
+    public function markAsRead(Request $request, string $id)
+    {
+        $user = $request->user();
+
+        $notification = Notification::where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        if (is_null($notification->read_at)) {
+            $notification->update(['read_at' => now()]);
+        }
+
+        return response()->json(['success' => true]);
+    }
+
+    public function markAllAsRead(Request $request)
+    {
+        $user = $request->user();
+
+        Notification::where('user_id', $user->id)
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
     }
 }

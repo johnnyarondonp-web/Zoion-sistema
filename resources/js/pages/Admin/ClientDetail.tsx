@@ -31,6 +31,7 @@ interface PetData {
   name: string;
   species: string;
   breed: string | null;
+  gender: string | null;
   isActive: boolean;
   photo: string | null;
   vaccinations: string | null;

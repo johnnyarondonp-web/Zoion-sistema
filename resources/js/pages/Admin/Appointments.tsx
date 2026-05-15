@@ -48,6 +48,8 @@ import {
   Activity,
   Plus,
   Loader2,
+  MessageCircle,
+  Send,
 } from 'lucide-react';
 import {
   Dialog,
@@ -73,6 +75,7 @@ interface Appointment {
   pet: { id: string; name: string; species: string; breed: string | null };
   service: { id: string; name: string; durationMinutes: number; price: number };
   user: { id: string; name: string; email: string; phone?: string };
+  unreadMessages?: number;
 }
 
 interface Pagination {
@@ -201,6 +204,11 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
   const [newAptLoadingSlots, setNewAptLoadingSlots] = useState(false);
   const [newAptSubmitting, setNewAptSubmitting] = useState(false);
 
+  // Chat messages
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
+
   useEffect(() => {
     fetchServices();
   }, []);
@@ -249,6 +257,25 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
     }
   }, [statusFilter, serviceFilter, dateFrom, dateTo, search]);
 
+  const fetchMessages = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/appointments/${id}/messages`, {
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessages(data.data);
+        const hasUnread = data.data.some((m: any) => !m.isReadByAdmin);
+        if (hasUnread) {
+          fetch(`/api/appointments/${id}/messages/read`, {
+            method: 'PATCH',
+            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': getCsrfToken() }
+          }).catch(() => {});
+        }
+      }
+    } catch { /* silent */ }
+  }, []);
+
   useEffect(() => {
     fetchAppointments(1);
   }, [fetchAppointments]);
@@ -261,10 +288,36 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
           if (data.success) {
             setSelectedAppointment(data.data);
             setIsSheetOpen(true);
+            fetchMessages(data.data.id);
           }
         });
     }
-  }, [selectedAppointmentId]);
+  }, [selectedAppointmentId, fetchMessages]);
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedAppointment) return;
+    setSendingMessage(true);
+    try {
+      const res = await fetch(`/api/appointments/${selectedAppointment.id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify({ message: newMessage.trim() })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMessages(prev => [...prev, data.data]);
+        setNewMessage('');
+      }
+    } catch {
+      toast.error('No se pudo enviar el mensaje');
+    } finally {
+      setSendingMessage(false);
+    }
+  };
 
   const handleStatusChange = async (appointmentId: string, newStatus: string) => {
     setChangingStatus(appointmentId);
@@ -594,7 +647,12 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                           ? 'bg-white dark:bg-transparent hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20'
                           : 'bg-gray-50/60 dark:bg-gray-800/20 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20'
                       }`}
-                      onClick={() => { setSelectedAppointment(apt); setIsSheetOpen(true); }}
+                      onClick={() => {
+                        setMessages([]);
+                        setSelectedAppointment(apt);
+                        setIsSheetOpen(true);
+                        fetchMessages(apt.id);
+                      }}
                     >
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -617,6 +675,14 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                           {statusLabels[apt.status] || apt.status}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {apt.unreadMessages > 0 && (
+                          <div className="flex items-center gap-1 bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 px-2 py-1 rounded-full text-[10px] font-bold w-fit">
+                            <MessageCircle className="h-3 w-3" />
+                            {apt.unreadMessages}
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -630,7 +696,11 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => { setSelectedAppointment(apt); setIsSheetOpen(true); }}>
+                            <DropdownMenuItem onClick={() => { 
+                              setSelectedAppointment(apt); 
+                              setIsSheetOpen(true); 
+                              fetchMessages(apt.id);
+                            }}>
                               <Eye className="h-4 w-4 mr-2" />
                               Ver detalle
                             </DropdownMenuItem>
@@ -799,6 +869,67 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     ${Number(selectedAppointment.paymentAmount || selectedAppointment.service.price).toFixed(2)}
                   </span>
+                </div>
+              </div>
+
+              {/* Chat con el cliente */}
+              <div className="py-5 border-b border-gray-100 dark:border-gray-800">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">
+                  Mensajes
+                </p>
+                <div className="flex flex-col gap-3 max-h-60 overflow-y-auto mb-3 p-2 bg-gray-50/50 dark:bg-gray-900/50 rounded-xl">
+                  {messages.length === 0 ? (
+                    <div className="flex flex-col items-center py-4 text-center">
+                      <MessageCircle className="h-8 w-8 text-gray-300 dark:text-gray-600 mb-2" />
+                      <p className="text-xs text-gray-500 dark:text-gray-400">No hay mensajes</p>
+                    </div>
+                  ) : (
+                    messages.map((msg, idx) => {
+                      const isAdmin = msg.user.role === 'admin' || msg.user.role === 'receptionist';
+                      return (
+                        <div key={msg.id} className={`flex ${isAdmin ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-[85%] rounded-xl px-3 py-2 ${
+                            isAdmin
+                              ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'
+                              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                          }`}>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className={`text-[10px] font-semibold ${isAdmin ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                {msg.user.name}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{msg.message}</p>
+                            <p className="text-[9px] text-gray-400 dark:text-gray-500 mt-1">
+                              {new Date(msg.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                      }
+                    }}
+                    placeholder="Escribe un mensaje..."
+                    className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                  />
+                  <Button
+                    size="sm"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim() || sendingMessage}
+                  >
+                    {sendingMessage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
 

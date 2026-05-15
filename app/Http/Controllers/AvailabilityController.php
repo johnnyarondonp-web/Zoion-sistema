@@ -46,6 +46,23 @@ class AvailabilityController extends Controller
         $dayOfWeek = Carbon::parse($date)->dayOfWeek;
         $schedule = Schedule::where('day_of_week', $dayOfWeek)->first();
 
+        // Si no hay horario guardado, aplicar el predeterminado: L-V disponible, fines de semana no.
+        if (!$schedule) {
+            $isWeekday = $dayOfWeek >= 1 && $dayOfWeek <= 5;
+            if (!$isWeekday) {
+                return response()->json([
+                    'success' => true,
+                    'data' => ['available' => false, 'slots' => []]
+                ]);
+            }
+            // Crear un objeto temporal con el horario predeterminado para no romper el flujo siguiente.
+            $schedule = (object)[
+                'is_available' => true,
+                'open_time'    => '09:00',
+                'close_time'   => '18:00',
+            ];
+        }
+
         if (!$schedule || !$schedule->is_available) {
             return response()->json([
                 'success' => true,
@@ -156,9 +173,19 @@ class AvailabilityController extends Controller
 
     public function schedule()
     {
+        $dbSchedules = Schedule::all();
+
+        if ($dbSchedules->isEmpty()) {
+            // Tabla vacía: aplicar defaults. Sábado (6) y domingo (0) no disponibles.
+            return response()->json([
+                'success' => true,
+                'data' => ['unavailableDays' => [0, 6]]
+            ]);
+        }
+
         // El cliente solo necesita saber qué días de la semana no están disponibles.
         // No exponemos open_time ni close_time — eso es configuración interna.
-        $unavailable = Schedule::where('is_available', false)->pluck('day_of_week');
+        $unavailable = $dbSchedules->where('is_available', false)->pluck('day_of_week');
 
         return response()->json([
             'success' => true,

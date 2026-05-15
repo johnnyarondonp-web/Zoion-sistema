@@ -13,7 +13,7 @@ class Pet extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'user_id', 'name', 'species', 'breed', 'birthdate',
+        'id', 'user_id', 'name', 'species', 'breed', 'gender', 'birthdate',
         'weight', 'photo', 'notes', 'weight_history', 'vaccinations', 'is_active'
     ];
 

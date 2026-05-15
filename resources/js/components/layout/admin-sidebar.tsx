@@ -80,7 +80,7 @@ function getInitials(name: string | null | undefined): string {
 
 export const AdminSidebar = memo(function AdminSidebar() {
   const { url } = usePage();
-  const { user } = useAuth();
+  const { user, unreadMessages } = useAuth();
 
   // Memoizamos la función de comparación para evitar recálculos innecesarios
   const isActive = useMemo(() => {
@@ -156,9 +156,14 @@ export const AdminSidebar = memo(function AdminSidebar() {
                     >
                       {item.icon}
                     </span>
-                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 relative z-10">
+                    <span className="transition-transform duration-200 group-hover:translate-x-0.5 relative z-10 flex-1 text-left">
                       {item.label}
                     </span>
+                    {item.href === '/admin/appointments' && unreadMessages > 0 && (
+                      <span className="relative z-10 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-violet-500 px-1.5 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-gray-900 transition-transform group-hover:scale-110">
+                        {unreadMessages > 99 ? '99+' : unreadMessages}
+                      </span>
+                    )}
                   </button>
                 );
               })}

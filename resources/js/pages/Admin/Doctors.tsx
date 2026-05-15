@@ -50,13 +50,13 @@ const emptyForm = { name: '', specialty: '', phone: '', email: '', isActive: tru
 const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 const headers = (extra = {}) => ({ 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrf(), ...extra });
 
-const VETERINARY_SPECIALTIES = [
-  'Medicina General', 'Cirugía de Tejidos Blandos', 'Cirugía Ortopédica',
-  'Dermatología', 'Cardiología', 'Neurología', 'Oncología', 'Oftalmología',
-  'Odontología', 'Gastroenterología', 'Nefrología y Urología', 'Endocrinología',
-  'Reproducción y Obstetricia', 'Medicina de Fauna Silvestre', 'Animales Exóticos',
-  'Medicina Felina', 'Comportamiento Animal', 'Anestesiología',
-  'Diagnóstico por Imagen', 'Urgencias y Medicina de Emergencia',
+const SPECIALTIES = [
+  'Medicina General Veterinaria',
+  'Cirugía Veterinaria',
+  'Dermatología Veterinaria',
+  'Odontología Veterinaria',
+  'Cardiología Veterinaria',
+  'Oftalmología Veterinaria',
 ];
 
 const DOCTOR_NAME_REGEX = /^(Dr\.|Dra\.)?\s?[A-Za-záéíóúÁÉÍÓÚüÜñÑ]+(\s[A-Za-záéíóúÁÉÍÓÚüÜñÑ]+){1,3}$/;
@@ -243,7 +243,7 @@ export default function Doctors() {
                   <SelectValue placeholder="Seleccionar especialidad..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {VETERINARY_SPECIALTIES.map((s) => (
+                  {SPECIALTIES.map((s) => (
                     <SelectItem key={s} value={s}>{s}</SelectItem>
                   ))}
                 </SelectContent>

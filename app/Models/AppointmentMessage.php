@@ -14,7 +14,7 @@ class AppointmentMessage extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'id', 'appointment_id', 'user_id', 'message', 'created_at'
+        'id', 'appointment_id', 'user_id', 'message', 'created_at', 'is_read_by_client', 'is_read_by_admin'
     ];
 
     protected $casts = [
