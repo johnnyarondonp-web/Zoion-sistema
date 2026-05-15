@@ -25,7 +25,16 @@ use Inertia\Inertia;
 | 1. Rutas Públicas (No requieren Login)
 |--------------------------------------------------------------------------
 */
-Route::get('/', fn () => Inertia::render('Home'));
+Route::get('/', function () {
+    if (auth()->check()) {
+        $role = auth()->user()->role;
+        if ($role === 'admin' || $role === 'receptionist') {
+            return redirect('/admin/dashboard');
+        }
+        return redirect('/client/pets');
+    }
+    return Inertia::render('Home');
+});
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/login', [AuthController::class, 'login']);
