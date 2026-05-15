@@ -117,7 +117,7 @@ export default function Pets() {
           <Skeleton className="h-8 w-40" />
           <Skeleton className="h-10 w-36" />
         </div>
-        <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="overflow-hidden border-gray-200 dark:border-gray-700">
               <Skeleton className="aspect-square w-full rounded-t-xl" />
@@ -152,8 +152,8 @@ export default function Pets() {
       {/* Filters */}
       {pets.length > 0 && (
         <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2">
               <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filtros</span>
               {hasActiveFilters && (
@@ -162,15 +162,15 @@ export default function Pets() {
                 </Button>
               )}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {/* Search */}
               <div className="relative sm:col-span-2 lg:col-span-3">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por nombre o raza..."
-                  className="pl-9 h-9 text-sm bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-emerald-400 focus:ring-emerald-400/20"
+                  placeholder="Buscar mascota..."
+                  className="pl-9 h-8 text-xs bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-emerald-400 focus:ring-emerald-400/20"
                 />
                 {search && (
                   <button
@@ -183,8 +183,8 @@ export default function Pets() {
               </div>
 
               {/* Results count */}
-              <div className="flex items-center h-9 px-3">
-                <span className="text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center h-8 px-3">
+                <span className="text-xs text-gray-500 dark:text-gray-400">
                   {filteredPets.length} {filteredPets.length === 1 ? 'mascota' : 'mascotas'}
                   {hasActiveFilters && (
                     <span> de {pets.length}</span>
@@ -269,7 +269,7 @@ export default function Pets() {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4"
+          className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"
         >
           {filteredPets.map((pet) => {
             const sp = pet.species.toLowerCase();
@@ -293,7 +293,7 @@ export default function Pets() {
                           <img 
                             src={pet.photo} 
                             alt={pet.name}
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                            className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" 
                           />
                         )
                         : (

@@ -19,24 +19,88 @@ import { Navbar } from '@/components/layout/navbar';
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+58');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only letters and spaces, max 50
+    const filtered = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '').slice(0, 50);
+    setName(filtered);
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Max 60
+    setEmail(e.target.value.slice(0, 60));
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    
+    // Ensure it always starts with +58
+    if (!value.startsWith('+58')) {
+      setPhone('+58');
+      return;
+    }
+
+    // Only allow digits after +58, max length 12 (+58 + 9 digits)
+    const digitsOnly = value.slice(3).replace(/\D/g, '');
+    const filtered = '+58' + digitsOnly.slice(0, 9);
+    setPhone(filtered);
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPassword(e.target.value.slice(0, 30));
+  };
+
+  const handleConfirmPasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setConfirmPassword(e.target.value.slice(0, 30));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Client-side validation
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    // Validation rules
+    const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+    const phoneRegex = /^\+58\d{9}$/;
+    const emailSuffix = /.com$/;
+
+    if (name.length < 3 || name.length > 50) {
+      setError('El nombre debe tener entre 3 y 50 caracteres');
       return;
     }
 
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (!nameRegex.test(name)) {
+      setError('El nombre solo debe contener letras');
+      return;
+    }
+
+    if (email.length > 60) {
+      setError('El correo no puede exceder los 60 caracteres');
+      return;
+    }
+
+    if (!email.includes('@') || !emailSuffix.test(email)) {
+      setError('El formato del correo debe ser @ y terminar en .com');
+      return;
+    }
+
+    if (!phoneRegex.test(phone)) {
+      setError('El teléfono debe tener el formato +58 seguido de 9 dígitos');
+      return;
+    }
+
+    if (password.length < 6 || password.length > 30) {
+      setError('La contraseña debe tener entre 6 y 30 caracteres');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
       return;
     }
 
@@ -47,7 +111,7 @@ export default function Register() {
       {
         name,
         email,
-        phone: phone || undefined,
+        phone,
         password,
         password_confirmation: confirmPassword,
       },
@@ -112,15 +176,16 @@ export default function Register() {
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="name">Nombre completo</Label>
+                    <Label htmlFor="name">Nombre y apellido</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="name"
                         type="text"
-                        placeholder="Tu nombre"
+                        placeholder="Ej: Juan Pérez"
                         value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        onChange={handleNameChange}
+                        maxLength={50}
                         className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.15)]"
                         required
                         autoComplete="name"
@@ -138,7 +203,8 @@ export default function Register() {
                         type="email"
                         placeholder="tu@correo.com"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={handleEmailChange}
+                        maxLength={60}
                         className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.15)]"
                         required
                         autoComplete="email"
@@ -148,18 +214,18 @@ export default function Register() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">
-                      Teléfono <span className="text-muted-foreground font-normal">(opcional)</span>
-                    </Label>
+                    <Label htmlFor="phone">Teléfono</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         id="phone"
                         type="tel"
-                        placeholder="+52 55 1234 5678"
+                        placeholder="+58 1234 5678"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={handlePhoneChange}
+                        maxLength={12}
                         className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.15)]"
+                        required
                         autoComplete="tel"
                         disabled={isLoading}
                       />
@@ -173,9 +239,10 @@ export default function Register() {
                       <Input
                         id="reg-password"
                         type="password"
-                        placeholder="Mínimo 6 caracteres"
+                        placeholder="Mínimo 6 y máximo 30"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        onChange={handlePasswordChange}
+                        maxLength={30}
                         className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.15)]"
                         required
                         autoComplete="new-password"
@@ -193,7 +260,8 @@ export default function Register() {
                         type="password"
                         placeholder="Repite tu contraseña"
                         value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        onChange={handleConfirmPasswordChange}
+                        maxLength={30}
                         className="pl-10 transition-all duration-200 focus:ring-2 focus:ring-teal-400/30 focus:border-teal-400 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.15)]"
                         required
                         autoComplete="new-password"

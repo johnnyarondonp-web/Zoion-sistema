@@ -32,6 +32,7 @@ import {
   ShieldCheck,
   Activity,
   MessageCircle,
+  PawPrint,
 } from 'lucide-react';
 import { motion, type Variants } from 'framer-motion';
 import {
@@ -250,7 +251,7 @@ export default function Dashboard() {
     {
       label: 'Mascotas atendidas',
       value: data.petsAttendedThisMonth,
-      icon: Heart,
+      icon: PawPrint,
       cardBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
       iconBg: 'bg-white/20',
       textColor: 'text-white',
@@ -404,15 +405,15 @@ export default function Dashboard() {
       {/* Metric Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => (
-          <motion.div key={metric.label} variants={item}>
-            <Card className={`overflow-hidden relative border-0 ${metric.cardBg} shadow-lg hover:shadow-xl transition-shadow duration-300`}>
+          <motion.div key={metric.label} variants={item} className="h-full">
+            <Card className={`overflow-hidden relative border-0 ${metric.cardBg} shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex items-center`}>
               {/* Large faded icon background */}
               <div className="absolute -right-3 -bottom-3 opacity-10">
                 <metric.icon className="h-24 w-24" />
               </div>
               {/* Shine effect */}
               <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
-              <CardContent className="p-6 relative z-10">
+              <CardContent className="p-5 relative z-10 w-full">
                 <div className="flex items-center gap-4">
                   <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${metric.iconBg} backdrop-blur-sm`}>
                     <metric.icon className={`h-6 w-6 ${metric.textColor}`} />

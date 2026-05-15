@@ -24,7 +24,22 @@ import {
   Calendar,
   Syringe,
   AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  StickyNote,
+  Weight,
+  Eye,
+  X,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { formatTime12h } from '@/lib/format';
 
 interface PetData {
   id: string;
@@ -32,8 +47,12 @@ interface PetData {
   species: string;
   breed: string | null;
   gender: string | null;
-  isActive: boolean;
+  birthdate: string | null;
+  weight: number | null;
   photo: string | null;
+  notes: string | null;
+  weightHistory: any[] | null;
+  isActive: boolean;
   vaccinations: string | null;
 }
 
@@ -120,6 +139,33 @@ function formatShortDate(dateStr: string): string {
   return date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
 }
 
+function calculateAge(birthdate: string | null): string {
+  if (!birthdate) return '—';
+  try {
+    const [y, m, d] = birthdate.split('-').map(Number);
+    const birth = new Date(y, m - 1, d);
+    const today = new Date();
+    let ageYears = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) ageYears--;
+    if (ageYears <= 0) {
+      const ageMonths = (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth();
+      if (ageMonths <= 0) return '< 1 mes';
+      return `${ageMonths} ${ageMonths === 1 ? 'mes' : 'meses'}`;
+    }
+    return `${ageYears} ${ageYears === 1 ? 'año' : 'años'}`;
+  } catch { return '—'; }
+}
+
+function formatFullDate(dateStr: string | null): string {
+  if (!dateStr) return '—';
+  try {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const date = new Date(y, m - 1, d);
+    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+  } catch { return dateStr; }
+}
+
 const container = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { staggerChildren: 0.06 } },
@@ -142,6 +188,8 @@ interface Props {
 export default function ClientDetail({ clientId }: Props) {
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPet, setSelectedPet] = useState<PetData | null>(null);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (clientId) fetchClient();
@@ -221,6 +269,7 @@ export default function ClientDetail({ clientId }: Props) {
   const upcomingAppointments = client.appointments.filter((a) => a.status === 'pending' || a.status === 'confirmed');
 
   return (
+    <>
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
       {/* Back Button */}
       <motion.div variants={item}>
@@ -333,7 +382,11 @@ export default function ClientDetail({ clientId }: Props) {
         {client.pets.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {client.pets.map((pet) => (
-              <Card key={pet.id} className="border-gray-200 dark:border-gray-700 hover:border-emerald-200 dark:hover:border-emerald-700 transition-all duration-200 hover:shadow-sm overflow-hidden group">
+              <Card 
+                key={pet.id} 
+                className="border-gray-200 dark:border-gray-700 hover:border-emerald-300 dark:hover:border-emerald-700 transition-all duration-200 hover:shadow-md overflow-hidden group cursor-pointer"
+                onClick={() => setSelectedPet(pet)}
+              >
                 <div className="h-1 bg-gradient-to-r from-emerald-400 via-teal-400 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
@@ -514,7 +567,140 @@ export default function ClientDetail({ clientId }: Props) {
           </Card>
         </motion.div>
       )}
+
+      {/* Pet Detail Modal */}
+      <Dialog open={!!selectedPet} onOpenChange={(open) => !open && setSelectedPet(null)}>
+        <DialogContent className="max-w-md sm:max-w-lg p-0 overflow-hidden border-none shadow-2xl">
+          {selectedPet && (
+            <>
+              <DialogHeader className="p-0">
+                <div className="bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white relative">
+                  <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-white/5 -translate-y-1/2 translate-x-1/2" />
+                  <div className="flex items-center gap-4 relative">
+                    {selectedPet.photo ? (
+                      <div className="relative group cursor-zoom-in" onClick={() => setPreviewImage(selectedPet.photo)}>
+                        <img src={selectedPet.photo} alt={selectedPet.name} className="h-20 w-20 rounded-2xl object-cover ring-4 ring-white/20 shadow-lg transition-transform hover:scale-105" />
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                          <Eye className="h-6 w-6 text-white" />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-20 w-20 rounded-2xl bg-white/10 flex items-center justify-center ring-4 ring-white/20">
+                        <PawPrint className="h-10 w-10 text-white/80" />
+                      </div>
+                    )}
+                    <div>
+                      <DialogTitle className="text-2xl font-bold text-white">{selectedPet.name}</DialogTitle>
+                      <DialogDescription className="text-emerald-50/80 mt-1 flex items-center gap-1.5 font-medium">
+                        {speciesLabels[selectedPet.species.toLowerCase()] || selectedPet.species}
+                        {selectedPet.breed && <span> · {selectedPet.breed}</span>}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                </div>
+              </DialogHeader>
+
+              <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 text-center border border-gray-100 dark:border-gray-800">
+                    <Calendar className="h-4 w-4 mx-auto text-emerald-500 mb-1" />
+                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{calculateAge(selectedPet.birthdate)}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Edad</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 text-center border border-gray-100 dark:border-gray-800">
+                    <Weight className="h-4 w-4 mx-auto text-emerald-500 mb-1" />
+                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100">{selectedPet.weight ? `${selectedPet.weight} kg` : '—'}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Peso</p>
+                  </div>
+                  <div className="rounded-xl bg-gray-50 dark:bg-gray-800/50 p-3 text-center border border-gray-100 dark:border-gray-800">
+                    <Heart className="h-4 w-4 mx-auto text-emerald-500 mb-1" />
+                    <p className="text-xs font-bold text-gray-900 dark:text-gray-100 capitalize">{selectedPet.gender === 'macho' ? 'Macho' : selectedPet.gender === 'hembra' ? 'Hembra' : '—'}</p>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-wider">Sexo</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Nacimiento</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 font-medium">{formatFullDate(selectedPet.birthdate)}</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estado</p>
+                      <Badge variant="secondary" className={selectedPet.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}>
+                        {selectedPet.isActive ? 'Activo' : 'Inactivo'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {selectedPet.notes && (
+                    <div className="space-y-1.5 p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/10 border border-amber-100 dark:border-amber-900/30">
+                      <p className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+                        <StickyNote className="h-3 w-3" /> Notas médicas
+                      </p>
+                      <p className="text-xs text-amber-800/80 dark:text-amber-300/80 italic leading-relaxed">
+                        "{selectedPet.notes}"
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-1">
+                      <Syringe className="h-3 w-3" /> Resumen de Vacunación
+                    </p>
+                    {(() => {
+                       let vaccList: Array<{ name: string; date: string; nextDue: string }> = [];
+                       try { vaccList = selectedPet.vaccinations ? JSON.parse(selectedPet.vaccinations) : []; } catch { /* ignore */ }
+                       
+                       if (vaccList.length === 0) return <p className="text-xs text-gray-500 italic">No hay vacunas registradas.</p>;
+                       
+                       return (
+                         <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                           {vaccList.map((v, i) => (
+                             <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800">
+                               <div>
+                                 <p className="text-xs font-semibold text-gray-900 dark:text-gray-100">{v.name}</p>
+                                 <p className="text-[10px] text-gray-500">{v.date ? formatFullDate(v.date) : 'Sin fecha'}</p>
+                               </div>
+                               {v.nextDue && (
+                                 <Badge variant="outline" className="text-[9px] border-emerald-200 text-emerald-700">
+                                   Próx: {formatShortDate(v.nextDue)}
+                                 </Badge>
+                               )}
+                             </div>
+                           ))}
+                         </div>
+                       );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Preview Modal */}
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-3xl p-0 overflow-hidden border-none bg-transparent shadow-none flex items-center justify-center">
+          {previewImage && (
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative">
+              <img src={previewImage} alt="Preview" className="max-h-[90vh] max-w-full rounded-xl shadow-2xl" />
+              <Button 
+                variant="secondary" 
+                size="icon" 
+                className="absolute top-4 right-4 rounded-full bg-black/50 text-white hover:bg-black/70 border-none"
+                onClick={() => setPreviewImage(null)}
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </motion.div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
+    </>
   );
 }
 
