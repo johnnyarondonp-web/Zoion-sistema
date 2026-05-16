@@ -242,7 +242,9 @@ class PetController extends Controller
         $height = imagesy($image);
         if ($width < 100 || $height < 100) {
             imagedestroy($image);
-            return $oldPhoto;
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'photo' => 'La imagen debe ser de al menos 100x100 píxeles'
+            ]);
         }
 
         $ulid = (string) Str::ulid();

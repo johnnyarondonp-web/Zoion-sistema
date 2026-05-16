@@ -17,6 +17,8 @@ use App\Http\Controllers\WalkInController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Api\UserPreferenceController;
 use App\Http\Controllers\UploadController;
+use App\Http\Controllers\PasswordResetController;
+use App\Http\Controllers\EmailVerificationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -41,8 +43,14 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,60');
 Route::get('/about', fn () => Inertia::render('About'))->name('about');
+
+// ── Rutas de Recuperación de Contraseña ───────────────────────────────
+Route::get('/forgot-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLinkEmail'])->name('password.email');
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
 /*
 |--------------------------------------------------------------------------
@@ -56,8 +64,13 @@ Route::middleware(['auth'])->group(function () {
     // General APIs
     Route::get('/api/user/clinic-info', [UserController::class, 'clinicInfo']);
 
+    // ── Verificación de Email ───────────────────────────────────────────
+    Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
+    Route::get('/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware(['signed'])->name('verification.verify');
+    Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])->middleware(['throttle:6,1'])->name('verification.send');
+
     // ── Vistas cliente ───────────────────────────────────────────────────
-    Route::prefix('client')->group(function () {
+    Route::prefix('client')->middleware(['role:client', 'verified'])->group(function () {
         Route::get('/home',                               fn () => Inertia::render('Client/Home'));
         Route::get('/pets',                               fn () => Inertia::render('Client/Pets'));
         Route::get('/pets/new',                           fn () => Inertia::render('Client/PetForm', ['mode' => 'create']));
@@ -163,10 +176,27 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'));
     Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'));
 
-    // ── API Admin: Acciones Críticas (Admin Only) ───────────────────────
     Route::middleware('role:admin')->group(function () {
         Route::delete('/api/admin/clients/{id}',    [AdminClientController::class, 'destroy']);
         Route::delete('/api/blocked-dates/{id}',    [BlockedDateController::class, 'destroy']);
+
+        // Gestión de servicios (Solo admin)
+        Route::post('/api/services',                    [ServiceController::class, 'store']);
+        Route::patch('/api/services/{id}',              [ServiceController::class, 'update']);
+        Route::delete('/api/services/{id}',             [ServiceController::class, 'destroy']);
+
+        // Gestión de médicos (Solo admin)
+        Route::get('/api/admin/doctors',                      [DoctorController::class, 'index']);
+        Route::post('/api/admin/doctors',                     [DoctorController::class, 'store']);
+        Route::patch('/api/admin/doctors/{id}',               [DoctorController::class, 'update']);
+        Route::delete('/api/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
+        Route::patch('/api/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
+
+        // Gestión de recepcionistas (Solo admin)
+        Route::get('/api/admin/receptionists',                      [\App\Http\Controllers\ReceptionistController::class, 'index']);
+        Route::post('/api/admin/receptionists',                     [\App\Http\Controllers\ReceptionistController::class, 'store']);
+        Route::patch('/api/admin/receptionists/{id}',               [\App\Http\Controllers\ReceptionistController::class, 'update']);
+        Route::delete('/api/admin/receptionists/{id}',              [\App\Http\Controllers\ReceptionistController::class, 'destroy']);
     });
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
@@ -175,11 +205,6 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── API Admin: Dashboard & Reports ───────────────────────────────────
     Route::get('/api/dashboard', [DashboardController::class, 'index']);
     Route::get('/api/reports', [DashboardController::class, 'reports']);
-
-    // ── API Admin: Servicios ─────────────────────────────────────────────
-    Route::post('/api/services',                    [ServiceController::class, 'store']);
-    Route::patch('/api/services/{id}',              [ServiceController::class, 'update']);
-    Route::delete('/api/services/{id}',             [ServiceController::class, 'destroy']);
 
     // ── API Admin: Clientes ──────────────────────────────────────────────
     Route::get('/api/admin/clients',         [AdminClientController::class, 'index']);
@@ -192,20 +217,9 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── API Admin: Fechas bloqueadas ─────────────────────────────────────
     Route::post('/api/blocked-dates',         [BlockedDateController::class, 'store']);
 
-    // ── Vista + API Admin: Médicos ────────────────────────────────────────
-    Route::get('/admin/doctors',                          fn () => Inertia::render('Admin/Doctors'));
-    Route::get('/api/admin/doctors',                      [DoctorController::class, 'index']);
-    Route::post('/api/admin/doctors',                     [DoctorController::class, 'store']);
-    Route::patch('/api/admin/doctors/{id}',               [DoctorController::class, 'update']);
-    Route::delete('/api/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
-    Route::patch('/api/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
-
-    // ── Vista + API Admin: Recepcionistas ─────────────────────────────────
-    Route::get('/admin/receptionists',                          fn () => Inertia::render('Admin/Receptionists'));
-    Route::get('/api/admin/receptionists',                      [\App\Http\Controllers\ReceptionistController::class, 'index']);
-    Route::post('/api/admin/receptionists',                     [\App\Http\Controllers\ReceptionistController::class, 'store']);
-    Route::patch('/api/admin/receptionists/{id}',               [\App\Http\Controllers\ReceptionistController::class, 'update']);
-    Route::delete('/api/admin/receptionists/{id}',              [\App\Http\Controllers\ReceptionistController::class, 'destroy']);
+    // ── Vistas Admin Extras ─────────────────────────────────────────────
+    Route::get('/admin/doctors',        fn () => Inertia::render('Admin/Doctors'));
+    Route::get('/admin/receptionists',  fn () => Inertia::render('Admin/Receptionists'));
 
     // ── Vista + API Admin: Atención presencial (walk-in) ─────────────────
     Route::get('/admin/walk-in',                          fn () => Inertia::render('Admin/WalkIn'));

@@ -118,6 +118,13 @@ export default function Login() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">Contraseña</Label>
+                      <button
+                        type="button"
+                        onClick={() => router.visit('/forgot-password')}
+                        className="text-xs font-medium text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 hover:underline transition-colors"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </button>
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

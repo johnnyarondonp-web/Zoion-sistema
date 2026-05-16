@@ -34,6 +34,9 @@ class WalkInController extends Controller
     {
         $phone = $request->query('phone');
 
+        // Sanitización para dejar solo números y +
+        $phone = preg_replace('/[^0-9+]/', '', $phone);
+
         // Mayor seguridad: Mínimo 7 caracteres para evitar exposición masiva
         if (!$phone || strlen($phone) < 7) {
             return response()->json(['success' => true, 'data' => null]);
@@ -140,7 +143,7 @@ class WalkInController extends Controller
             ], 400);
         }
 
-        $lockKey = "appointment_lock_{$today}";
+        $lockKey = "appointment_lock_{$today}_{$data['startTime']}";
         $lock = Cache::lock($lockKey, 10);
 
         try {

@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 
 class AuthController extends Controller
@@ -27,9 +29,19 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        $throttleKey = Str::lower($request->input('email')) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'email' => "Demasiados intentos fallidos. Por favor, espera {$seconds} segundos antes de intentar de nuevo.",
+            ]);
+        }
+
         $remember = $request->boolean('remember');
 
         if (Auth::attempt($credentials, $remember)) {
+            RateLimiter::clear($throttleKey);
             $request->session()->regenerate();
 
             $user = Auth::user();
@@ -43,6 +55,8 @@ class AuthController extends Controller
 
             return redirect()->intended($redirects[$user->role] ?? '/client/pets');
         }
+
+        RateLimiter::hit($throttleKey, 120); // Bloqueo por 2 minutos (120 seg) si llega al límite
 
         return back()->withErrors([
             'email' => 'Las credenciales no son correctas.',
@@ -75,6 +89,8 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
             'role'     => 'client',
         ]);
+
+        event(new \Illuminate\Auth\Events\Registered($user));
 
         Auth::login($user);
 

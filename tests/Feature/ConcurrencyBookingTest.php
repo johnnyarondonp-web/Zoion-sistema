@@ -73,7 +73,7 @@ class ConcurrencyBookingTest extends TestCase
 
         Cache::shouldReceive('lock')
             ->once()
-            ->with("appointment_lock_{$tomorrow}", 10)
+            ->with("appointment_lock_{$tomorrow}_10:00", 10)
             ->andReturn(new \Illuminate\Cache\NoLock('test', 10));
 
         $res = $this->actingAs($this->client)->postJson('/api/appointments', [

@@ -226,7 +226,7 @@ class AppointmentController extends Controller
 
         $source = ($isStaff && $request->userId && $request->userId !== $user->id) ? 'admin_booked' : 'online';
 
-        $lockKey = "appointment_lock_{$request->date}";
+        $lockKey = "appointment_lock_{$request->date}_{$request->startTime}";
         $lock = Cache::lock($lockKey, 10);
 
         try {

@@ -333,6 +333,11 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
       if (data.success) {
         toast.success(`Estado cambiado a "${statusLabels[newStatus]}"`);
         fetchAppointments(pagination.page);
+        
+        // Actualizar el estado de la cita seleccionada para que el modal refleje el cambio
+        if (selectedAppointment?.id === appointmentId) {
+          setSelectedAppointment(prev => prev ? { ...prev, status: newStatus } : null);
+        }
       } else {
         toast.error(data.error || 'Error al cambiar estado');
       }

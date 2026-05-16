@@ -28,6 +28,7 @@ class ZoionBugFixesTest extends TestCase
             'id'       => (string) Str::ulid(),
             'name'     => fake()->name(),
             'email'    => fake()->unique()->safeEmail(),
+            'email_verified_at' => now(),
             'password' => bcrypt('password'),
             'role'     => $role,
         ]);
