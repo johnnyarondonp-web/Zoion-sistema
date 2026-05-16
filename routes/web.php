@@ -42,7 +42,7 @@ Route::get('/', function () {
 });
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/register', [AuthController::class, 'showRegister']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,60');
 Route::get('/about', fn () => Inertia::render('About'))->name('about');
 
