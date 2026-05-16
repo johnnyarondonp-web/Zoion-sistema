@@ -13,7 +13,7 @@ class ReceptionistController extends Controller
     {
         $receptionists = User::where('role', 'receptionist')
             ->orderBy('created_at', 'desc')
-            ->get(['id', 'name', 'email', 'phone', 'created_at']);
+            ->get(['id', 'name', 'cedula', 'email', 'phone', 'created_at']);
 
         return response()->json(['success' => true, 'data' => $receptionists]);
     }
@@ -21,8 +21,9 @@ class ReceptionistController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users',
+            'name'     => 'required|string|min:4|max:40|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+            'cedula'   => 'required|string|unique:users,cedula|numeric|between:5000000,33000000',
+            'email'    => 'required|string|email|max:50|unique:users',
             'password' => 'required|string|min:6',
             'phone'    => 'nullable|string|max:20',
         ]);
@@ -30,6 +31,7 @@ class ReceptionistController extends Controller
         $receptionist = User::create([
             'id'       => (string) Str::ulid(),
             'name'     => $request->name,
+            'cedula'   => $request->cedula,
             'email'    => $request->email,
             'password' => Hash::make($request->password),
             'phone'    => $request->phone,
@@ -38,7 +40,7 @@ class ReceptionistController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $receptionist->only(['id', 'name', 'email', 'phone', 'created_at'])
+            'data'    => $receptionist->only(['id', 'name', 'cedula', 'email', 'phone', 'created_at'])
         ], 201);
     }
 
@@ -47,15 +49,17 @@ class ReceptionistController extends Controller
         $receptionist = User::where('role', 'receptionist')->findOrFail($id);
 
         $request->validate([
-            'name'  => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:20',
+            'name'   => 'required|string|min:4|max:40|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
+            'cedula' => 'required|string|unique:users,cedula,' . $id . '|numeric|between:5000000,33000000',
+            'email'  => 'required|string|email|max:50|unique:users,email,' . $id,
+            'phone'  => 'nullable|string|max:20',
         ]);
 
         $receptionist->update([
-            'name'  => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
+            'name'   => $request->name,
+            'cedula' => $request->cedula,
+            'email'  => $request->email,
+            'phone'  => $request->phone,
         ]);
 
         if ($request->filled('password')) {
@@ -65,7 +69,7 @@ class ReceptionistController extends Controller
 
         return response()->json([
             'success' => true,
-            'data'    => $receptionist->only(['id', 'name', 'email', 'phone', 'created_at'])
+            'data'    => $receptionist->only(['id', 'name', 'cedula', 'email', 'phone', 'created_at'])
         ]);
     }
 

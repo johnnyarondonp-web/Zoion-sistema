@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class WalkInController extends Controller
 {
@@ -132,102 +133,104 @@ class WalkInController extends Controller
             ], 400);
         }
 
-        $slotStart = $data['startTime'];
-        $slotEnd   = $endTime;
+        $lockKey = "appointment_lock_{$today}_{$data['startTime']}";
+        $lock = Cache::lock($lockKey, 10);
 
-        // Misma lógica de capacidad que en AvailabilityController para que ambos flujos sean consistentes.
-        $doctorIds = DB::table('doctor_services')
-            ->join('doctors', 'doctors.id', '=', 'doctor_services.doctor_id')
-            ->where('doctor_services.service_id', $data['serviceId'])
-            ->where('doctors.is_active', true)
-            ->pluck('doctor_services.doctor_id');
+        try {
+            $lock->block(5);
 
-        $totalDoctors    = $doctorIds->count();
-        $usesDoctorLogic = $totalDoctors > 0;
+            $slotStart = $data['startTime'];
+            $slotEnd   = $endTime;
 
-        if ($usesDoctorLogic) {
-            $busyFromAppts = Appointment::where('date', $today)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->whereIn('doctor_id', $doctorIds)
-                ->where('start_time', '<', $slotEnd)
-                ->where('end_time', '>', $slotStart)
-                ->distinct('doctor_id')
-                ->count('doctor_id');
+            // Re-verificar capacidad dentro del bloqueo
+            $doctorIds = DB::table('doctor_services')
+                ->join('doctors', 'doctors.id', '=', 'doctor_services.doctor_id')
+                ->where('doctor_services.service_id', $data['serviceId'])
+                ->where('doctors.is_active', true)
+                ->pluck('doctor_services.doctor_id');
 
-            $busyFromWalkIns = WalkInAppointment::where('date', $today)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->whereIn('doctor_id', $doctorIds)
-                ->where('start_time', '<', $slotEnd)
-                ->where('end_time', '>', $slotStart)
-                ->distinct('doctor_id')
-                ->count('doctor_id');
+            $totalDoctors    = $doctorIds->count();
+            $usesDoctorLogic = $totalDoctors > 0;
 
-            if (($busyFromAppts + $busyFromWalkIns) >= $totalDoctors) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'No hay médicos disponibles en ese horario para este servicio.',
-                ], 409);
-            }
-
-            // El médico con menor carga en ese momento
-            $assignedDoctorId = Doctor::whereHas('services', fn ($q) => $q->where('services.id', $data['serviceId']))
-                ->where('is_active', true)
-                ->withCount(['appointments as today_count' => fn ($q) => $q
-                    ->where('date', $today)
+            if ($usesDoctorLogic) {
+                $busyFromAppts = Appointment::where('date', $today)
                     ->whereIn('status', ['pending', 'confirmed'])
-                ])
-                ->orderBy('today_count')
-                ->value('id');
-        } else {
-            $overlap = Appointment::where('date', $today)
-                ->whereIn('status', ['pending', 'confirmed'])
-                ->where('start_time', '<', $slotEnd)
-                ->where('end_time', '>', $slotStart)
-                ->exists();
+                    ->whereIn('doctor_id', $doctorIds)
+                    ->where('start_time', '<', $slotEnd)
+                    ->where('end_time', '>', $slotStart)
+                    ->distinct('doctor_id')
+                    ->count('doctor_id');
 
-            if ($overlap) {
-                return response()->json([
-                    'success' => false,
-                    'error'   => 'El horario seleccionado ya está ocupado.',
-                ], 409);
+                $busyFromWalkIns = WalkInAppointment::where('date', $today)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->whereIn('doctor_id', $doctorIds)
+                    ->where('start_time', '<', $slotEnd)
+                    ->where('end_time', '>', $slotStart)
+                    ->distinct('doctor_id')
+                    ->count('doctor_id');
+
+                if (($busyFromAppts + $busyFromWalkIns) >= $totalDoctors) {
+                    return response()->json(['success' => false, 'error' => 'Ya no hay médicos disponibles en ese horario.'], 409);
+                }
+
+                $assignedDoctorId = Doctor::whereHas('services', fn ($q) => $q->where('services.id', $data['serviceId']))
+                    ->where('is_active', true)
+                    ->withCount(['appointments as today_count' => fn ($q) => $q
+                        ->where('date', $today)
+                        ->whereIn('status', ['pending', 'confirmed'])
+                    ])
+                    ->orderBy('today_count')
+                    ->value('id');
+            } else {
+                $overlap = Appointment::where('date', $today)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                    ->where('start_time', '<', $slotEnd)
+                    ->where('end_time', '>', $slotStart)
+                    ->exists();
+
+                if ($overlap) {
+                    return response()->json(['success' => false, 'error' => 'El horario seleccionado ya está ocupado.'], 409);
+                }
+                $assignedDoctorId = null;
             }
 
-            $assignedDoctorId = null;
+            $result = DB::transaction(function () use ($data, $service, $today, $endTime, $assignedDoctorId) {
+                $client = WalkInClient::updateOrCreate(
+                    ['phone' => $data['phone']],
+                    [
+                        'owner_name'  => $data['ownerName'],
+                        'email'       => $data['email'] ?? null,
+                        'pet_name'    => $data['petName'],
+                        'pet_species' => $data['petSpecies'],
+                        'pet_breed'   => $data['petBreed'] ?? null,
+                        'pet_birth_date' => $data['petBirthDate'] ?? null,
+                        'pet_weight'  => $data['petWeight'] ?? null,
+                    ]
+                );
+
+                $walkin = WalkInAppointment::create([
+                    'walk_in_client_id' => $client->id,
+                    'service_id'        => $data['serviceId'],
+                    'doctor_id'         => $assignedDoctorId,
+                    'date'              => $today,
+                    'start_time'        => $data['startTime'],
+                    'end_time'          => $endTime,
+                    'status'            => 'confirmed',
+                    'payment_method'    => $data['paymentMethod'] ?? null,
+                    'payment_status'    => 'pending',
+                    'payment_amount'    => $service->price,
+                ]);
+
+                return $walkin->load(['client', 'service', 'doctor']);
+            });
+
+            return response()->json(['success' => true, 'data' => $this->formatWalkIn($result)], 201);
+
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            return response()->json(['success' => false, 'error' => 'El sistema está ocupado, por favor reintenta.'], 408);
+        } finally {
+            $lock?->release();
         }
-
-        $result = DB::transaction(function () use ($data, $service, $today, $endTime, $assignedDoctorId) {
-            // updateOrCreate para que los datos (incluyendo pet_birth_date) se guarden
-            // aunque el cliente ya exista con ese teléfono
-            $client = WalkInClient::updateOrCreate(
-                ['phone' => $data['phone']],
-                [
-                    'owner_name'  => $data['ownerName'],
-                    'email'       => $data['email'] ?? null,
-                    'pet_name'    => $data['petName'],
-                    'pet_species' => $data['petSpecies'],
-                    'pet_breed'   => $data['petBreed'] ?? null,
-                    'pet_birth_date' => $data['petBirthDate'] ?? null,
-                    'pet_weight'  => $data['petWeight'] ?? null,
-                ]
-            );
-
-            $walkin = WalkInAppointment::create([
-                'walk_in_client_id' => $client->id,
-                'service_id'        => $data['serviceId'],
-                'doctor_id'         => $assignedDoctorId,
-                'date'              => $today,
-                'start_time'        => $data['startTime'],
-                'end_time'          => $endTime,
-                'status'            => 'confirmed',
-                'payment_method'    => $data['paymentMethod'] ?? null,
-                'payment_status'    => 'pending',
-                'payment_amount'    => $service->price,
-            ]);
-
-            return $walkin->load(['client', 'service', 'doctor']);
-        });
-
-        return response()->json(['success' => true, 'data' => $this->formatWalkIn($result)], 201);
     }
 
 

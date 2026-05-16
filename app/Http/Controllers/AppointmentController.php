@@ -9,6 +9,8 @@ use App\Models\BlockedDate;
 use App\Models\Schedule;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class AppointmentController extends Controller
 {
@@ -198,10 +200,6 @@ class AppointmentController extends Controller
 
         $endTime = $this->minutesToTime($this->timeToMinutes($request->startTime) + $service->duration_minutes);
 
-        if (!$this->hasCapacityFor($request->serviceId, $request->date, $request->startTime, $endTime)) {
-            return response()->json(['success' => false, 'error' => 'Este horario coincide con otra cita existente'], 409);
-        }
-
         // Verificar fechas bloqueadas
         if (BlockedDate::where('date', $request->date)->exists()) {
             return response()->json(['success' => false, 'error' => 'Esta fecha está bloqueada por la clínica'], 400);
@@ -215,7 +213,7 @@ class AppointmentController extends Controller
         }
 
         $startMinutes = $this->timeToMinutes($request->startTime);
-        $endMinutes   = $startMinutes + $service->duration_minutes; // endTime ya calculado arriba
+        $endMinutes   = $startMinutes + $service->duration_minutes;
         $openMinutes  = $this->timeToMinutes($schedule->open_time);
         $closeMinutes = $this->timeToMinutes($schedule->close_time);
 
@@ -226,43 +224,58 @@ class AppointmentController extends Controller
             ], 400);
         }
 
-        // Asignar el médico con menos citas activas ese día para este servicio.
-        // Si no hay doctores configurados aún, doctor_id queda null (retrocompatible).
-        $assignedDoctorId = null;
-        $availableDoctors = \App\Models\Doctor::whereHas('services', fn ($q) => $q->where('services.id', $request->serviceId))
-            ->where('is_active', true)
-            ->withCount(['appointments as today_count' => fn ($q) => $q
-                ->where('date', $request->date)
-                ->whereIn('status', ['pending', 'confirmed'])
-            ])
-            ->orderBy('today_count')
-            ->get();
-
-        if ($availableDoctors->isNotEmpty()) {
-            $assignedDoctorId = $availableDoctors->first()->id;
-        } else {
-            // No hay doctores disponibles para este servicio en este momento
-            return response()->json(['success' => false, 'error' => 'No hay médicos disponibles para este servicio en el horario solicitado'], 409);
-        }
-
         $source = ($isStaff && $request->userId && $request->userId !== $user->id) ? 'admin_booked' : 'online';
 
-        $appointment = Appointment::create([
-            'id'             => (string) Str::ulid(),
-            'user_id'        => $targetUserId,
-            'pet_id'         => $request->petId,
-            'service_id'     => $request->serviceId,
-            'doctor_id'      => $assignedDoctorId,
-            'source'         => $source,
-            'date'           => $request->date,
-            'start_time'     => $request->startTime,
-            'end_time'       => $endTime,
-            'status'         => 'pending',
-            'notes'          => $request->notes ? trim($request->notes) : null,
-            'status_history' => [['status' => 'pending', 'date' => now()->toISOString()]],
-            'payment_method' => $request->paymentMethod,
-            'payment_status' => 'pending',
-        ]);
+        $lockKey = "appointment_lock_{$request->date}_{$request->startTime}";
+        $lock = Cache::lock($lockKey, 10);
+
+        try {
+            // Esperar hasta 5 segundos para obtener el bloqueo
+            $lock->block(5);
+
+            // Re-verificar capacidad dentro del bloqueo
+            if (!$this->hasCapacityFor($request->serviceId, $request->date, $request->startTime, $endTime)) {
+                return response()->json(['success' => false, 'error' => 'Este horario ya no está disponible'], 409);
+            }
+
+            // Asignar el médico con menos citas activas ese día para este servicio.
+            $assignedDoctorId = null;
+            $availableDoctors = \App\Models\Doctor::whereHas('services', fn ($q) => $q->where('services.id', $request->serviceId))
+                ->where('is_active', true)
+                ->withCount(['appointments as today_count' => fn ($q) => $q
+                    ->where('date', $request->date)
+                    ->whereIn('status', ['pending', 'confirmed'])
+                ])
+                ->orderBy('today_count')
+                ->get();
+
+            if ($availableDoctors->isNotEmpty()) {
+                $assignedDoctorId = $availableDoctors->first()->id;
+            } else {
+                return response()->json(['success' => false, 'error' => 'No hay médicos disponibles para este servicio'], 409);
+            }
+
+            $appointment = Appointment::create([
+                'id'             => (string) Str::ulid(),
+                'user_id'        => $targetUserId,
+                'pet_id'         => $request->petId,
+                'service_id'     => $request->serviceId,
+                'doctor_id'      => $assignedDoctorId,
+                'source'         => $source,
+                'date'           => $request->date,
+                'start_time'     => $request->startTime,
+                'end_time'       => $endTime,
+                'status'         => 'pending',
+                'notes'          => $request->notes ? trim($request->notes) : null,
+                'status_history' => [['status' => 'pending', 'date' => now()->toISOString()]],
+                'payment_method' => $request->paymentMethod,
+                'payment_status' => 'pending',
+            ]);
+        } catch (\Illuminate\Contracts\Cache\LockTimeoutException $e) {
+            return response()->json(['success' => false, 'error' => 'El sistema está procesando demasiadas solicitudes, por favor intenta de nuevo en unos segundos.'], 408);
+        } finally {
+            $lock?->release();
+        }
 
         // Notificar según quién agendó: si el staff agendó para un cliente, el cliente recibe la notificación.
         if ($source === 'admin_booked') {

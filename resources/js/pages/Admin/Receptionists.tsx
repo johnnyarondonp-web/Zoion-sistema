@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -9,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '@/components/ui/dialog';
 import {
   AlertDialog,
@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, User, Phone, Pencil, Loader2, Trash2 } from 'lucide-react';
+import { Plus, User, Phone, Pencil, Loader2, Trash2, IdCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -29,16 +29,20 @@ import AdminLayout from '@/components/layout/AdminLayout';
 interface Receptionist {
   id: string;
   name: string;
+  cedula: string;
   phone: string | null;
   email: string;
 }
 
 const emptyForm = { 
   name: '', 
+  cedula: '',
   phone: '', 
   email: '', 
-  password: ''
+  password: '',
+  confirmPassword: ''
 };
+
 const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 const headers = (extra = {}) => ({ 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrf(), ...extra });
 
@@ -76,9 +80,11 @@ export default function Receptionists() {
     setEditTarget(rec);
     setForm({ 
       name: rec.name, 
+      cedula: rec.cedula || '',
       phone: rec.phone || '', 
       email: rec.email || '', 
-      password: ''
+      password: '',
+      confirmPassword: ''
     });
     setTouched({});
     setModalOpen(true);
@@ -87,6 +93,7 @@ export default function Receptionists() {
   const validate = (): boolean => {
     const errors: string[] = [];
 
+    // Validar nombre: 4-40 chars, solo letras y espacios
     if (!form.name.trim()) {
       errors.push('El nombre es requerido');
     } else if (form.name.trim().length < 4 || form.name.trim().length > 40) {
@@ -95,20 +102,39 @@ export default function Receptionists() {
       errors.push('El nombre solo puede contener letras y espacios');
     }
 
+    // Validar cédula: 5M - 33M
+    if (!form.cedula.trim()) {
+      errors.push('La cédula es requerida');
+    } else {
+      const c = parseInt(form.cedula);
+      if (isNaN(c) || c < 5000000 || c > 33000000) {
+        errors.push('Ingrese una cédula válida entre 5,000,000 y 33,000,000');
+      }
+    }
+
+    // Validar correo: max 50 chars
     if (!form.email) {
       errors.push('El correo es requerido');
+    } else if (form.email.length > 50) {
+      errors.push('El correo no puede exceder los 50 caracteres');
     } else if (!EMAIL_REGEX.test(form.email)) {
       errors.push('El correo electrónico no es válido');
     }
 
+    // Validar contraseña
     if (!editTarget && !form.password) {
-      errors.push('La contraseña es obligatoria al crear un usuario');
+      errors.push('La contraseña es obligatoria');
     } else if (form.password && form.password.length < 6) {
       errors.push('La contraseña debe tener al menos 6 caracteres');
     }
 
+    if (form.password !== form.confirmPassword) {
+      errors.push('Las contraseñas no coinciden');
+    }
+
+    // Validar teléfono
     if (form.phone && !VENEZUELA_PHONE_REGEX.test(form.phone)) {
-      errors.push('Teléfono inválido. Formato requerido: +584121234567');
+      errors.push('El teléfono debe tener el formato +58 seguido de 10 dígitos');
     }
 
     if (errors.length > 0) {
@@ -127,6 +153,7 @@ export default function Receptionists() {
       const method = isEditing ? 'PATCH' : 'POST';
 
       const payload: any = { ...form };
+      delete payload.confirmPassword;
       if (isEditing && !form.password) {
         delete payload.password;
       }
@@ -135,7 +162,7 @@ export default function Receptionists() {
       const data = await res.json();
       
       if (data.success) {
-        toast.success(isEditing ? 'Recepcionista actualizado' : 'Recepcionista registrado exitosamente');
+        toast.success(isEditing ? 'Recepcionista actualizado' : 'Recepcionista registrado');
         setModalOpen(false);
         if (isEditing) {
           setReceptionists(prev => prev.map(r => r.id === editTarget.id ? data.data : r));
@@ -170,150 +197,213 @@ export default function Receptionists() {
     }
   };
 
-  const hasError = (field: keyof typeof form) => {
-    if (!touched[field]) return false;
-    if (field === 'name') return !form.name.trim() || form.name.length < 4 || !NAME_REGEX.test(form.name);
-    if (field === 'email') return !form.email.trim() || !EMAIL_REGEX.test(form.email);
-    if (field === 'phone') return form.phone && !VENEZUELA_PHONE_REGEX.test(form.phone);
-    if (field === 'password') return !editTarget && form.password.length < 6;
-    return false;
-  };
-
   return (
-    <AdminLayout>
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6 max-w-6xl mx-auto">
-        
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-gray-900 p-6 rounded-3xl border border-gray-100 dark:border-gray-800 shadow-sm">
-          <div>
-            <h1 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">Recepcionistas</h1>
-            <p className="text-sm text-gray-500 font-medium mt-1">Gestiona el personal de recepción de la clínica</p>
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Recepcionistas</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona el personal de recepción de la clínica</p>
+        </div>
+        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+          <Plus className="h-4 w-4 mr-2" /> Agregar recepcionista
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-40 rounded-xl" />)}
+        </div>
+      ) : receptionists.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gray-50 dark:bg-gray-800 mb-4">
+            <User className="h-10 w-10 text-gray-300 dark:text-gray-600" />
           </div>
-          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-full px-6 h-11 font-bold shadow-lg shadow-emerald-500/20 transition-all hover:scale-105 active:scale-95">
-            <Plus className="h-4 w-4 mr-2" /> Nuevo Recepcionista
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">Sin personal registrado</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Agrega al primer recepcionista del equipo</p>
+          <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Plus className="h-4 w-4 mr-2" /> Agregar recepcionista
           </Button>
         </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {receptionists.map(rec => (
+            <ReceptionistCard 
+              key={rec.id} 
+              receptionist={rec} 
+              onEdit={openEdit} 
+              onDelete={setConfirmDelete} 
+            />
+          ))}
+        </div>
+      )}
 
-        {/* Grid de Recepcionistas */}
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-3xl" />)}
-          </div>
-        ) : receptionists.length === 0 ? (
-          <div className="bg-white dark:bg-gray-900 rounded-3xl p-12 text-center border border-gray-100 dark:border-gray-800">
-            <User className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Sin personal registrado</h3>
-            <p className="text-gray-500 mt-2 max-w-md mx-auto">Aún no has registrado a ningún recepcionista en el sistema.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {receptionists.map((rec, i) => (
-              <motion.div key={rec.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }}>
-                <Card className="rounded-3xl border-gray-100 dark:border-gray-800 overflow-hidden hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300 group bg-white dark:bg-gray-900">
-                  <CardContent className="p-6">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/20 flex items-center justify-center border border-emerald-100/50 dark:border-emerald-800/50 shadow-inner">
-                          <span className="text-xl font-black text-emerald-600 dark:text-emerald-400">
-                            {rec.name[0]}
-                          </span>
-                        </div>
-                        <div>
-                          <h3 className="font-bold text-gray-900 dark:text-white line-clamp-1 text-lg">{rec.name}</h3>
-                          <p className="text-[10px] uppercase tracking-widest font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">Recepción</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-6 space-y-3">
-                      <div className="flex items-center gap-3 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <User className="h-4 w-4 text-sky-500" />
-                        <span className="truncate">{rec.email}</span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800/50 p-2.5 rounded-xl border border-gray-100 dark:border-gray-800">
-                        <Phone className="h-4 w-4 text-amber-500" />
-                        {rec.phone || <span className="text-gray-400 italic text-xs">Sin teléfono</span>}
-                      </div>
-                    </div>
-
-                    <div className="mt-6 flex gap-2">
-                      <Button variant="outline" className="flex-1 rounded-xl h-10 border-gray-200 dark:border-gray-700 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200" onClick={() => openEdit(rec)}>
-                        <Pencil className="h-4 w-4 mr-2" /> Editar
-                      </Button>
-                      <Button variant="outline" className="w-10 px-0 rounded-xl border-gray-200 dark:border-gray-700 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200" onClick={() => setConfirmDelete(rec)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        )}
-
-        {/* Modal de Formulario */}
-        <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-          <DialogContent className="sm:max-w-md rounded-[2rem] p-0 overflow-hidden border-none shadow-2xl">
-            <div className="bg-gradient-to-br from-emerald-500 to-teal-600 p-6 text-white">
-              <DialogTitle className="text-xl font-black flex items-center gap-2">
-                <User className="h-5 w-5" />
-                {editTarget ? 'Editar Recepcionista' : 'Nuevo Recepcionista'}
-              </DialogTitle>
+      {/* Modal crear/editar */}
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{editTarget ? 'Editar recepcionista' : 'Nuevo recepcionista'}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Nombre completo *</Label>
+              <Input 
+                value={form.name} 
+                onChange={e => {
+                  const val = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                  setForm(f => ({ ...f, name: val }));
+                }} 
+                placeholder="Ej. María Pérez" 
+                maxLength={40}
+                className="mt-1" 
+              />
             </div>
-            
-            <div className="p-6 space-y-4 bg-white dark:bg-gray-900">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nombre Completo <span className="text-red-500">*</span></Label>
-                <Input value={form.name} onChange={e => { setForm({...form, name: e.target.value}); setTouched({...touched, name: true}); }} placeholder="Ej: María Pérez" className={`h-11 rounded-xl ${hasError('name') ? 'border-red-500' : ''}`} />
+            <div>
+              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Cédula *</Label>
+              <Input 
+                value={form.cedula} 
+                onChange={e => setForm(f => ({ ...f, cedula: e.target.value.replace(/\D/g, '').slice(0, 8) }))} 
+                onBlur={() => setTouched(prev => ({ ...prev, cedula: true }))}
+                placeholder="Ej. 12345678" 
+                maxLength={8}
+                className="mt-1" 
+              />
+              {touched.cedula && form.cedula && (parseInt(form.cedula) < 5000000 || parseInt(form.cedula) > 33000000) && (
+                <p className="text-[10px] text-red-500 mt-1">Cédula fuera de rango (5M - 33M)</p>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Correo electrónico *</Label>
+              <Input 
+                type="email"
+                value={form.email} 
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} 
+                placeholder="correo@clinica.com" 
+                maxLength={50}
+                className="mt-1" 
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
+                  Contraseña {editTarget ? '(Opcional)' : '*'}
+                </Label>
+                <Input 
+                  type="password"
+                  value={form.password} 
+                  onChange={e => setForm(f => ({ ...f, password: e.target.value }))} 
+                  placeholder="******" 
+                  className="mt-1" 
+                />
               </div>
-              
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Correo Electrónico <span className="text-red-500">*</span></Label>
-                <Input value={form.email} onChange={e => { setForm({...form, email: e.target.value}); setTouched({...touched, email: true}); }} placeholder="correo@clinica.com" type="email" className={`h-11 rounded-xl ${hasError('email') ? 'border-red-500' : ''}`} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Contraseña {editTarget ? '(Opcional para cambiar)' : '<span className="text-red-500">*</span>'}</Label>
-                <Input value={form.password} onChange={e => { setForm({...form, password: e.target.value}); setTouched({...touched, password: true}); }} placeholder="Mínimo 6 caracteres" type="password" className={`h-11 rounded-xl ${hasError('password') ? 'border-red-500' : ''}`} />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Teléfono</Label>
-                <Input value={form.phone} onChange={e => { setForm({...form, phone: e.target.value}); setTouched({...touched, phone: true}); }} placeholder="+584121234567" className={`h-11 rounded-xl ${hasError('phone') ? 'border-red-500' : ''}`} />
-              </div>
-
-              <div className="pt-4 flex gap-3">
-                <Button variant="ghost" className="flex-1 rounded-xl font-bold" onClick={() => setModalOpen(false)}>Cancelar</Button>
-                <Button className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold text-white shadow-lg shadow-emerald-500/20" onClick={save} disabled={saving}>
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Guardar
-                </Button>
+              <div>
+                <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Repetir contraseña</Label>
+                <Input 
+                  type="password"
+                  value={form.confirmPassword} 
+                  onChange={e => setForm(f => ({ ...f, confirmPassword: e.target.value }))} 
+                  placeholder="******" 
+                  className="mt-1" 
+                />
               </div>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Modal Confirmación Desactivar/Eliminar */}
-        <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
-          <AlertDialogContent className="rounded-3xl border-none shadow-2xl sm:max-w-md p-6">
-            <AlertDialogHeader>
-              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <Trash2 className="h-6 w-6 text-red-600" />
+            <div>
+              <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Teléfono</Label>
+              <div className="relative mt-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="text-sm font-semibold text-gray-500">+58</span>
+                </div>
+                <Input 
+                  value={form.phone.replace('+58', '')} 
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setForm(f => ({ ...f, phone: '+58' + val }));
+                  }} 
+                  placeholder="4241234567" 
+                  maxLength={10}
+                  className="pl-11" 
+                />
               </div>
-              <AlertDialogTitle className="text-center text-xl font-bold">¿Eliminar recepcionista?</AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-gray-500">
-                Esta acción eliminará permanentemente a <strong>{confirmDelete?.name}</strong> del sistema. Sus acciones previas quedarán registradas, pero ya no podrá iniciar sesión.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="mt-6 flex-col sm:flex-row gap-2">
-              <AlertDialogCancel className="rounded-xl border-gray-200 mt-0 h-11 font-bold flex-1">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={(e) => { e.preventDefault(); deleteReceptionist(); }} className="rounded-xl bg-red-600 hover:bg-red-700 h-11 font-bold text-white flex-1">
-                Eliminar definitivamente
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-        
-      </motion.div>
-    </AdminLayout>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+              <Button onClick={save} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                {editTarget ? 'Guardar cambios' : 'Crear recepcionista'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmación eliminar */}
+      <AlertDialog open={!!confirmDelete} onOpenChange={o => { if (!o) setConfirmDelete(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar a {confirmDelete?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción eliminará permanentemente al recepcionista del sistema. No podrá volver a iniciar sesión.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteReceptionist} className="bg-red-600 hover:bg-red-700 text-white">
+              Eliminar definitivamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </motion.div>
   );
 }
+
+function ReceptionistCard({ 
+  receptionist, 
+  onEdit, 
+  onDelete 
+}: { 
+  receptionist: Receptionist; 
+  onEdit: (r: Receptionist) => void; 
+  onDelete: (r: Receptionist) => void;
+}) {
+  const initials = receptionist.name.split(' ').slice(0, 2).map(p => p[0]).join('').toUpperCase();
+  return (
+    <Card className="border-gray-200 dark:border-gray-700 transition-all hover:shadow-md">
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-sky-400 to-indigo-500 text-white font-bold text-sm flex-shrink-0">
+            {initials}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{receptionist.name}</p>
+              <Badge variant="outline" className="border-sky-200 text-sky-700 text-[10px]">
+                Recepción
+              </Badge>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1">
+              <IdCard className="h-3 w-3 text-gray-400" />
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{receptionist.cedula}</p>
+            </div>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{receptionist.email}</p>
+            {receptionist.phone && (
+              <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
+                <Phone className="h-3 w-3" /> {receptionist.phone}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100 dark:border-gray-800">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(receptionist)} className="h-7 text-xs flex-1">
+            <Pencil className="h-3 w-3 mr-1" /> Editar
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => onDelete(receptionist)} className="h-7 text-xs flex-1 text-red-600 hover:text-red-700 hover:bg-red-50">
+            <Trash2 className="h-3 w-3 mr-1" /> Eliminar
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+Receptionists.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;

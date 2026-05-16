@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $keyType = 'string';
 
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'favorites', 'email_verified_at',
+        'name', 'cedula', 'email', 'phone', 'password', 'role', 'favorites', 'email_verified_at',
         'email_notifications', 'appointment_reminders', 'daily_summary', 'theme_preference',
     ];
 
