@@ -226,7 +226,7 @@ class AppointmentController extends Controller
 
         $source = ($isStaff && $request->userId && $request->userId !== $user->id) ? 'admin_booked' : 'online';
 
-        $lockKey = "appointment_lock_{$request->date}_{$request->startTime}";
+        $lockKey = "appointment_lock_{$request->date}";
         $lock = Cache::lock($lockKey, 10);
 
         try {
@@ -412,6 +412,20 @@ class AppointmentController extends Controller
         ];
 
         return response()->json(['success' => true, 'data' => $mappedAppointment]);
+    }
+
+    public function clinicInfo()
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'name'    => config('app.name', 'Zoion'),
+                'address' => config('clinic.address', ''),
+                'phone'   => config('clinic.phone', ''),
+                'email'   => config('clinic.email', ''),
+                'logo'    => config('clinic.logo', null),
+            ]
+        ]);
     }
 
     public function update(Request $request, $id)

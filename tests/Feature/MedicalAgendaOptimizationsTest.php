@@ -27,10 +27,24 @@ class MedicalAgendaOptimizationsTest extends TestCase
     {
         parent::setUp();
 
-        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->admin = User::forceCreate([
+            'id' => (string) Str::ulid(),
+            'name' => 'Admin User',
+            'email' => 'admin@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'admin'
+        ]);
         
-        $this->doctorUser = User::factory()->create(['role' => 'doctor']);
+        $this->doctorUser = User::forceCreate([
+            'id' => (string) Str::ulid(),
+            'name' => 'Dr. House',
+            'email' => 'doctor@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'doctor'
+        ]);
+
         $this->doctor = Doctor::create([
+            'id' => (string) Str::ulid(),
             'user_id' => $this->doctorUser->id,
             'name' => 'Dr. House',
             'specialty' => 'Diagnóstico',
@@ -38,7 +52,13 @@ class MedicalAgendaOptimizationsTest extends TestCase
         ]);
         $this->doctorUser->refresh();
 
-        $this->client = User::factory()->create(['role' => 'client']);
+        $this->client = User::forceCreate([
+            'id' => (string) Str::ulid(),
+            'name' => 'Client User',
+            'email' => 'client@test.com',
+            'password' => bcrypt('password'),
+            'role' => 'client'
+        ]);
         $this->pet = Pet::create([
             'id' => (string) Str::ulid(),
             'user_id' => $this->client->id,
@@ -122,6 +142,7 @@ class MedicalAgendaOptimizationsTest extends TestCase
             'name' => 'Receptionist One',
             'email' => 'reception@example.com',
             'password' => 'password123',
+            'cedula' => '12345678',
             'phone' => '+584120000000',
         ]);
 
@@ -139,6 +160,7 @@ class MedicalAgendaOptimizationsTest extends TestCase
         $response = $this->actingAs($this->admin)->patchJson("/api/admin/receptionists/{$receptionistId}", [
             'name' => 'Receptionist Updated',
             'email' => 'reception@example.com',
+            'cedula' => '12345678',
             'phone' => '+584129999999',
         ]);
 

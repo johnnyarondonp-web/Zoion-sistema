@@ -34,37 +34,44 @@ class WalkInController extends Controller
     {
         $phone = $request->query('phone');
 
-        if (!$phone || strlen($phone) < 4) {
+        // Mayor seguridad: Mínimo 7 caracteres para evitar exposición masiva
+        if (!$phone || strlen($phone) < 7) {
             return response()->json(['success' => true, 'data' => null]);
         }
 
         // Primero buscar en walk_in_clients (clientes presenciales frecuentes)
-        $walkIn = WalkInClient::where('phone', 'like', "%{$phone}%")->first();
-        if ($walkIn) {
+        $walkIn = WalkInClient::where('phone', 'like', "%{$phone}%")->limit(5)->get();
+        if ($walkIn->isNotEmpty()) {
+            $w = $walkIn->first();
             return response()->json([
                 'success' => true,
                 'data'    => [
                     'type'      => 'walk_in',
-                    'ownerName' => $walkIn->owner_name,
-                    'phone'     => $walkIn->phone,
-                    'email'     => $walkIn->email,
-                    'petName'   => $walkIn->pet_name,
-                    'petSpecies'=> $walkIn->pet_species,
-                    'petBreed'  => $walkIn->pet_breed,
+                    'ownerName' => $w->owner_name,
+                    'phone'     => $w->phone,
+                    'email'     => $w->email,
+                    'petName'   => $w->pet_name,
+                    'petSpecies'=> $w->pet_species,
+                    'petBreed'  => $w->pet_breed,
                 ],
             ]);
         }
 
         // Luego buscar en usuarios registrados
-        $user = User::where('phone', 'like', "%{$phone}%")->where('role', 'client')->first();
-        if ($user) {
+        $user = User::where('phone', 'like', "%{$phone}%")
+            ->where('role', 'client')
+            ->limit(5)
+            ->get();
+
+        if ($user->isNotEmpty()) {
+            $u = $user->first();
             return response()->json([
                 'success' => true,
                 'data'    => [
                     'type'      => 'user',
-                    'ownerName' => $user->name,
-                    'phone'     => $user->phone,
-                    'email'     => $user->email,
+                    'ownerName' => $u->name,
+                    'phone'     => $u->phone,
+                    'email'     => $u->email,
                     'petName'   => null,
                     'petSpecies'=> null,
                     'petBreed'  => null,
@@ -133,7 +140,7 @@ class WalkInController extends Controller
             ], 400);
         }
 
-        $lockKey = "appointment_lock_{$today}_{$data['startTime']}";
+        $lockKey = "appointment_lock_{$today}";
         $lock = Cache::lock($lockKey, 10);
 
         try {

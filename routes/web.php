@@ -53,6 +53,9 @@ Route::middleware(['auth'])->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // General APIs
+    Route::get('/api/user/clinic-info', [UserController::class, 'clinicInfo']);
+
     // ── Vistas cliente ───────────────────────────────────────────────────
     Route::prefix('client')->group(function () {
         Route::get('/home',                               fn () => Inertia::render('Client/Home'));
@@ -159,6 +162,12 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::get('/admin/services/{id}/edit', fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'edit', 'serviceId' => request()->route('id')]));
     Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'));
     Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'));
+
+    // ── API Admin: Acciones Críticas (Admin Only) ───────────────────────
+    Route::middleware('role:admin')->group(function () {
+        Route::delete('/api/admin/clients/{id}',    [AdminClientController::class, 'destroy']);
+        Route::delete('/api/blocked-dates/{id}',    [BlockedDateController::class, 'destroy']);
+    });
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
     Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'));
@@ -166,7 +175,6 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     // ── API Admin: Dashboard & Reports ───────────────────────────────────
     Route::get('/api/dashboard', [DashboardController::class, 'index']);
     Route::get('/api/reports', [DashboardController::class, 'reports']);
-    Route::get('/api/user/clinic-info', [UserController::class, 'clinicInfo']);
 
     // ── API Admin: Servicios ─────────────────────────────────────────────
     Route::post('/api/services',                    [ServiceController::class, 'store']);
@@ -177,17 +185,12 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::get('/api/admin/clients',         [AdminClientController::class, 'index']);
     Route::get('/api/admin/clients/{id}',    [AdminClientController::class, 'show']);
     Route::patch('/api/admin/clients/{id}',  [AdminClientController::class, 'update']);
-    Route::delete('/api/admin/clients/{id}', [AdminClientController::class, 'destroy']);
 
     // ── API Admin: Horarios ──────────────────────────────────────────────
     Route::put('/api/schedules',  [ScheduleController::class, 'update']);
 
     // ── API Admin: Fechas bloqueadas ─────────────────────────────────────
     Route::post('/api/blocked-dates',         [BlockedDateController::class, 'store']);
-    Route::delete('/api/blocked-dates/{id}',  [BlockedDateController::class, 'destroy']);
-
-    // ── API Admin: Notas clínicas (escritura/edición) — Movidas a grupo general con auth ────────────────────
-
 
     // ── Vista + API Admin: Médicos ────────────────────────────────────────
     Route::get('/admin/doctors',                          fn () => Inertia::render('Admin/Doctors'));

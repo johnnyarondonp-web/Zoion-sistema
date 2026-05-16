@@ -59,7 +59,7 @@ class DoctorController extends Controller
 
         $doctor = DB::transaction(function () use ($data) {
             // 1. Crear el Usuario para acceso al sistema
-            $user = User::create([
+            $user = User::forceCreate([
                 'id'       => (string) Str::ulid(),
                 'name'     => $data['name'],
                 'email'    => $data['email'],

@@ -47,7 +47,7 @@ class AppointmentMessageController extends Controller
             abort(403);
         }
 
-        $request->validate(['message' => 'required|string']);
+        $request->validate(['message' => 'required|string|max:500']);
 
         $message = AppointmentMessage::create([
             'id'                => (string) Str::ulid(),

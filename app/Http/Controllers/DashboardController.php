@@ -7,119 +7,107 @@ use App\Models\Pet;
 use App\Models\Appointment;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $today = Carbon::today();
-        $startOfMonth = Carbon::now()->startOfMonth();
-        
-        $total_clients = User::where('role', 'client')->count();
-        $total_pets = Pet::count();
-        $total_appointments = Appointment::count();
-        $appointments_today = Appointment::where('date', $today->format('Y-m-d'))->count();
-        $appointments_pending = Appointment::where('status', 'pending')->count();
-        $appointments_confirmed = Appointment::where('status', 'confirmed')->count();
-        
-        $revenue_month = Appointment::where('status', 'completed')
-            ->where('date', 'like', $startOfMonth->format('Y-m') . '-%')
-            ->with('service')
-            ->get()
-            ->sum(function ($appointment) {
-                return $appointment->service ? $appointment->service->price : 0;
-            });
+        $data = Cache::remember('dashboard_stats', 60, function () {
+            $today = Carbon::today();
+            $startOfMonth = Carbon::now()->startOfMonth();
+            $now = Carbon::now();
+            
+            $total_clients = User::where('role', 'client')->count();
+            $total_pets = Pet::count();
+            $total_appointments = Appointment::count();
+            $appointments_today = Appointment::where('date', $today->format('Y-m-d'))->count();
+            $appointments_pending = Appointment::where('status', 'pending')->count();
+            $appointments_confirmed = Appointment::where('status', 'confirmed')->count();
+            
+            // Optimizado: SUM en base de datos
+            $revenue_month = Appointment::join('services', 'appointments.service_id', '=', 'services.id')
+                ->where('appointments.status', 'completed')
+                ->where('appointments.date', '>=', $startOfMonth->format('Y-m-d'))
+                ->sum('services.price');
 
-        $recent_appointments = Appointment::with(['user:id,name,email', 'service'])
-            ->orderBy('date', 'desc')
-            ->orderBy('start_time', 'desc')
-            ->take(5)
-            ->get()
-            ->map(function ($apt) {
-                // Return mapped array that matches what Dashboard.tsx expects
-                return [
-                    'id' => $apt->id,
-                    'date' => $apt->date,
-                    'startTime' => $apt->start_time,
-                    'endTime' => $apt->end_time,
-                    'status' => $apt->status,
-                    'pet' => $apt->pet ? ['id' => $apt->pet->id, 'name' => $apt->pet->name, 'species' => $apt->pet->species, 'breed' => $apt->pet->breed] : null,
-                    'user' => $apt->user ? ['id' => $apt->user->id, 'name' => $apt->user->name, 'email' => $apt->user->email] : null,
-                    'service' => $apt->service ? ['id' => $apt->service->id, 'name' => $apt->service->name, 'durationMinutes' => $apt->service->duration_minutes, 'price' => $apt->service->price] : null,
+            $recent_appointments = Appointment::with(['user:id,name,email', 'service'])
+                ->orderBy('date', 'desc')
+                ->orderBy('start_time', 'desc')
+                ->take(5)
+                ->get()
+                ->map(function ($apt) {
+                    return [
+                        'id' => $apt->id,
+                        'date' => $apt->date,
+                        'startTime' => $apt->start_time,
+                        'endTime' => $apt->end_time,
+                        'status' => $apt->status,
+                        'pet' => $apt->pet ? ['id' => $apt->pet->id, 'name' => $apt->pet->name, 'species' => $apt->pet->species, 'breed' => $apt->pet->breed] : null,
+                        'user' => $apt->user ? ['id' => $apt->user->id, 'name' => $apt->user->name, 'email' => $apt->user->email] : null,
+                        'service' => $apt->service ? ['id' => $apt->service->id, 'name' => $apt->service->name, 'durationMinutes' => $apt->service->duration_minutes, 'price' => $apt->service->price] : null,
+                    ];
+                });
+
+            $appointments_by_status = Appointment::selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->get()
+                ->map(fn($item) => ['status' => $item->status, 'count' => $item->count]);
+
+            $appointments_by_month = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $monthDate = Carbon::now()->subMonths($i);
+                $count = Appointment::where('date', 'like', $monthDate->format('Y-m') . '-%')->count();
+                $appointments_by_month[] = [
+                    'month' => $monthDate->format('M'),
+                    'count' => $count
                 ];
-            });
+            }
 
-        $appointments_by_status_raw = Appointment::selectRaw('status, count(*) as count')
-            ->groupBy('status')
-            ->get();
+            $appointmentsThisMonth = Appointment::where('date', 'like', $now->format('Y-m') . '-%')->count();
+            $appointmentsLastMonth = Appointment::where('date', 'like', $now->copy()->subMonth()->format('Y-m') . '-%')->count();
+                
+            $cancellationRate = $total_appointments > 0 ? 
+                round((Appointment::where('status', 'cancelled')->count() / $total_appointments) * 100, 1) : 0;
+
+            $unreadMessages = \App\Models\AppointmentMessage::where('is_read_by_admin', false)->count();
+
+            $mostRequestedServiceQuery = Appointment::selectRaw('service_id, count(*) as count')
+                ->groupBy('service_id')
+                ->orderByDesc('count')
+                ->with('service')
+                ->first();
+                
+            $mostRequestedService = null;
+            if ($mostRequestedServiceQuery && $mostRequestedServiceQuery->service) {
+                $mostRequestedService = [
+                    'serviceId' => $mostRequestedServiceQuery->service_id,
+                    'name' => $mostRequestedServiceQuery->service->name,
+                    'count' => $mostRequestedServiceQuery->count
+                ];
+            }
             
-        $appointments_by_status = $appointments_by_status_raw->map(function ($item) {
-            return [
-                'status' => $item->status,
-                'count' => $item->count
-            ];
-        });
-
-        $appointments_by_month = [];
-        for ($i = 5; $i >= 0; $i--) {
-            $monthDate = Carbon::now()->subMonths($i);
-            $count = Appointment::where('date', 'like', $monthDate->format('Y-m') . '-%')
-                ->count();
-            $appointments_by_month[] = [
-                'month' => $monthDate->format('M'),
-                'count' => $count
-            ];
-        }
-
-        // For Dashboard.tsx specifically, it needs some specific fields:
-        $appointmentsThisMonth = Appointment::where('date', 'like', Carbon::now()->format('Y-m') . '-%')->count();
-        $appointmentsLastMonth = Appointment::where('date', 'like', Carbon::now()->subMonth()->format('Y-m') . '-%')->count();
-            
-        $cancellationRate = $total_appointments > 0 ? 
-            round((Appointment::where('status', 'cancelled')->count() / $total_appointments) * 100, 1) : 0;
-
-        $unreadMessages = \App\Models\AppointmentMessage::where('is_read_by_admin', false)->count();
-
-        $mostRequestedServiceQuery = Appointment::selectRaw('service_id, count(*) as count')
-            ->groupBy('service_id')
-            ->orderByDesc('count')
-            ->with('service')
-            ->first();
-            
-        $mostRequestedService = null;
-        if ($mostRequestedServiceQuery && $mostRequestedServiceQuery->service) {
-            $mostRequestedService = [
-                'serviceId' => $mostRequestedServiceQuery->service_id,
-                'name' => $mostRequestedServiceQuery->service->name,
-                'count' => $mostRequestedServiceQuery->count
-            ];
-        }
-        
-        $appointmentsByService = Appointment::selectRaw('service_id, count(*) as count')
-            ->groupBy('service_id')
-            ->with('service')
-            ->get()
-            ->map(function ($item) {
-                return [
+            $appointmentsByService = Appointment::selectRaw('service_id, count(*) as count')
+                ->groupBy('service_id')
+                ->with('service')
+                ->get()
+                ->map(fn($item) => [
                     'serviceId' => $item->service_id,
                     'name' => $item->service ? $item->service->name : 'Unknown',
                     'count' => $item->count
+                ]);
+
+            $appointmentsByDay = [];
+            for ($i = 13; $i >= 0; $i--) {
+                $dayDate = Carbon::now()->subDays($i);
+                $count = Appointment::where('date', $dayDate->format('Y-m-d'))->count();
+                $appointmentsByDay[] = [
+                    'date' => $dayDate->format('Y-m-d'),
+                    'count' => $count
                 ];
-            });
+            }
 
-        $appointmentsByDay = [];
-        for ($i = 13; $i >= 0; $i--) {
-            $dayDate = Carbon::now()->subDays($i);
-            $count = Appointment::where('date', $dayDate->format('Y-m-d'))->count();
-            $appointmentsByDay[] = [
-                'date' => $dayDate->format('Y-m-d'),
-                'count' => $count
-            ];
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
+            return [
                 'total_clients' => $total_clients,
                 'total_pets' => $total_pets,
                 'total_appointments' => $total_appointments,
@@ -130,20 +118,22 @@ class DashboardController extends Controller
                 'recent_appointments' => $recent_appointments,
                 'appointments_by_status' => $appointments_by_status,
                 'appointments_by_month' => $appointments_by_month,
-                // Fields for Dashboard.tsx
                 'appointmentsThisMonth' => $appointmentsThisMonth,
                 'appointmentsLastMonth' => $appointmentsLastMonth,
                 'mostRequestedService' => $mostRequestedService,
                 'unreadMessages' => $unreadMessages,
-                'petsAttendedThisMonth' => Appointment::where('date', 'like', Carbon::now()->format('Y-m') . '-%')
-                    ->distinct('pet_id')
-                    ->count(),
+                'petsAttendedThisMonth' => Appointment::where('date', 'like', $now->format('Y-m') . '-%')->distinct('pet_id')->count('pet_id'),
                 'upcomingToday' => $appointments_today,
                 'cancellationRate' => $cancellationRate,
                 'recentAppointments' => $recent_appointments,
                 'appointmentsByService' => $appointmentsByService,
                 'appointmentsByDay' => $appointmentsByDay,
-            ]
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data
         ]);
     }
 

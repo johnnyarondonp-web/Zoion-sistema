@@ -67,7 +67,8 @@ class AuthController extends Controller
             'password.max' => 'La contraseña no puede exceder los 30 caracteres.',
         ]);
 
-        $user = User::create([
+        $user = User::forceCreate([
+            'id'       => (string) \Illuminate\Support\Str::ulid(),
             'name'     => $data['name'],
             'email'    => $data['email'],
             'phone'    => $data['phone'],

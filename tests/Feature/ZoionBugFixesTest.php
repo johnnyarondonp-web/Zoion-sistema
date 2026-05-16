@@ -24,7 +24,7 @@ class ZoionBugFixesTest extends TestCase
 
     private function makeUser(string $role = 'client'): User
     {
-        return User::create([
+        return User::forceCreate([
             'id'       => (string) Str::ulid(),
             'name'     => fake()->name(),
             'email'    => fake()->unique()->safeEmail(),

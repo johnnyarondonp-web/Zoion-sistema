@@ -237,6 +237,14 @@ class PetController extends Controller
             return $oldPhoto;
         }
 
+        // Validación de dimensiones mínimas (100x100)
+        $width = imagesx($image);
+        $height = imagesy($image);
+        if ($width < 100 || $height < 100) {
+            imagedestroy($image);
+            return $oldPhoto;
+        }
+
         $ulid = (string) Str::ulid();
         $filename = "pets/{$ulid}.webp";
         $tempPath = sys_get_temp_dir() . "/{$ulid}.webp";

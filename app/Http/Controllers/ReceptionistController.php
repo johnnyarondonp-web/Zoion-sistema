@@ -28,7 +28,7 @@ class ReceptionistController extends Controller
             'phone'    => 'nullable|string|max:20',
         ]);
 
-        $receptionist = User::create([
+        $receptionist = User::forceCreate([
             'id'       => (string) Str::ulid(),
             'name'     => $request->name,
             'cedula'   => $request->cedula,
