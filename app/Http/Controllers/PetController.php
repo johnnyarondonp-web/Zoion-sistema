@@ -16,15 +16,19 @@ class PetController extends Controller
 
         // El staff puede ver mascotas de otro usuario directamente, necesario para
         // que el admin pueda agendar citas en nombre de un cliente.
-        if (in_array($user->role, ['admin', 'receptionist']) && $request->userId) {
+        if (in_array($user->role, ['admin', 'receptionist', 'doctor']) && $request->userId) {
             $query->where('user_id', $request->userId);
-        } else {
+        } else if (!in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
             $query->where('user_id', $user->id);
+        }
+
+        if ($request->search) {
+            $query->where('name', 'ilike', '%' . $request->search . '%');
         }
 
         return response()->json([
             'success' => true, 
-            'data'    => $query->get()->map(fn($p) => [
+            'data'    => $query->with('user')->get()->map(fn($p) => [
                 'id'            => $p->id,
                 'name'          => $p->name,
                 'species'       => $p->species,
@@ -37,6 +41,12 @@ class PetController extends Controller
                 'isActive'      => $p->is_active,
                 'weightHistory' => $p->weight_history,
                 'vaccinations'  => $p->vaccinations,
+                'user'          => $p->user ? [
+                    'id' => $p->user->id,
+                    'name' => $p->user->name,
+                    'email' => $p->user->email,
+                    'phone' => $p->user->phone,
+                ] : null,
             ])
         ]);
     }
@@ -69,7 +79,11 @@ class PetController extends Controller
 
     public function show(Request $request, $id)
     {
-        $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+        $pet = Pet::where('id', $id);
+        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
+            $pet->where('user_id', $request->user()->id);
+        }
+        $pet = $pet->firstOrFail();
         return response()->json([
             'success' => true, 
             'data' => [
@@ -91,7 +105,11 @@ class PetController extends Controller
 
     public function update(Request $request, $id)
     {
-        $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+        $pet = Pet::where('id', $id);
+        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
+            $pet->where('user_id', $request->user()->id);
+        }
+        $pet = $pet->firstOrFail();
         $data = $request->only(['name', 'species', 'breed', 'gender', 'birthdate', 'weight', 'notes', 'is_active']);
 
         if ($request->has('photo')) {
@@ -111,7 +129,11 @@ class PetController extends Controller
 
     public function addVaccination(Request $request, $id)
     {
-        $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+        $pet = Pet::where('id', $id);
+        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
+            $pet->where('user_id', $request->user()->id);
+        }
+        $pet = $pet->firstOrFail();
         $vaccinations = $pet->vaccinations ?? [];
         $vaccinations[] = $request->all();
         $pet->update(['vaccinations' => $vaccinations]);
@@ -120,10 +142,18 @@ class PetController extends Controller
 
     public function addWeight(Request $request, $id)
     {
-        $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
+        $pet = Pet::where('id', $id);
+        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
+            $pet->where('user_id', $request->user()->id);
+        }
+        $pet = $pet->firstOrFail();
+
         $history = $pet->weight_history ?? [];
         $history[] = $request->all();
-        $pet->update(['weight_history' => $history]);
+        
+        $weight = isset($request->weight) ? (float) $request->weight : $pet->weight;
+        $pet->update(['weight_history' => $history, 'weight' => $weight]);
+        
         return response()->json(['success' => true, 'data' => $pet]);
     }
 
@@ -141,8 +171,25 @@ class PetController extends Controller
 
     public function healthSummary(Request $request, $id)
     {
-        Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
-        return response()->json(['success' => true, 'data' => []]);
+        $pet = Pet::where('id', $id);
+        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
+            $pet->where('user_id', $request->user()->id);
+        }
+        $pet = $pet->firstOrFail();
+
+        // Obtener todas las notas clínicas de TODAS las citas de esta mascota
+        $notes = \App\Models\ClinicalNote::with('doctor:id,name')->whereHas('appointment', function($q) use ($id) {
+            $q->where('pet_id', $id);
+        })->orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'notes' => $notes,
+                'weightHistory' => $pet->weight_history ?? [],
+                'vaccinations' => $pet->vaccinations ?? [],
+            ]
+        ]);
     }
 
     // ✅ CAMBIO 3: Nuevo método específico para toggle

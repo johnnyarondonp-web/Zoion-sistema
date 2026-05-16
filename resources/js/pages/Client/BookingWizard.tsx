@@ -38,6 +38,7 @@ import {
   ShieldCheck,
   Activity,
   ScanLine,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';

@@ -13,10 +13,14 @@ class ClinicalNote extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'id', 'appointment_id', 'note', 'diagnosis', 'treatment', 'follow_up'
+        'id', 'appointment_id', 'doctor_id', 'note', 'diagnosis', 'treatment', 'follow_up'
     ];
 
     public function appointment() {
         return $this->belongsTo(Appointment::class);
+    }
+
+    public function doctor() {
+        return $this->belongsTo(Doctor::class);
     }
 }

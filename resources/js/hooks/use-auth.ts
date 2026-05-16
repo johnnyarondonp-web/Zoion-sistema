@@ -4,8 +4,9 @@ interface AuthUser {
   id: string
   name: string
   email: string
-  role: 'admin' | 'client'
+  role: 'admin' | 'client' | 'doctor'
   phone?: string
+  specialty?: string
 }
 
 interface PageProps {
@@ -22,6 +23,7 @@ export function useAuth() {
     user: auth?.user ?? null,
     isAdmin: auth?.user?.role === 'admin',
     isClient: auth?.user?.role === 'client',
+    isDoctor: auth?.user?.role === 'doctor',
     isAuthenticated: !!auth?.user,
     unreadMessages: auth?.unreadMessages ?? 0,
   }

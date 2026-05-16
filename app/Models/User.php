@@ -41,4 +41,8 @@ class User extends Authenticatable
     public function messages() {
         return $this->hasMany(AppointmentMessage::class);
     }
+
+    public function doctor() {
+        return $this->hasOne(Doctor::class);
+    }
 }

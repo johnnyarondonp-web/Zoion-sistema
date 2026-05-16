@@ -45,6 +45,7 @@ export const sidebarSections: SidebarSection[] = [
       { label: 'Citas',                href: '/admin/appointments', icon: <Calendar className="h-4 w-4" />,    matchPrefixes: ['/admin/appointments'] },
       { label: 'Calendario',           href: '/admin/calendar',     icon: <CalendarDays className="h-4 w-4" />, matchPrefixes: ['/admin/calendar'] },
       { label: 'Equipo médico',        href: '/admin/doctors',      icon: <Stethoscope className="h-4 w-4" />, matchPrefixes: ['/admin/doctors'] },
+      { label: 'Recepcionistas',       href: '/admin/receptionists', icon: <UserCircle className="h-4 w-4" />, matchPrefixes: ['/admin/receptionists'] },
       { label: 'Atención presencial',  href: '/admin/walk-in',      icon: <UserPlus className="h-4 w-4" />,    matchPrefixes: ['/admin/walk-in'] },
     ],
   },

@@ -12,19 +12,6 @@ class NotificationController extends Controller
         $user = $request->user();
         $limit = $request->get('limit', 30);
 
-        // Pruning: Keep only last 50 notifications for this user
-        $totalCount = Notification::where('user_id', $user->id)->count();
-        if ($totalCount > 50) {
-            $keepIds = Notification::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->take(50)
-                ->pluck('id');
-            
-            Notification::where('user_id', $user->id)
-                ->whereNotIn('id', $keepIds)
-                ->delete();
-        }
-
         $notifications = Notification::where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
             ->take($limit)

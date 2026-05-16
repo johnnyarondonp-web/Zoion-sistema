@@ -31,6 +31,9 @@ Route::get('/', function () {
         if ($role === 'admin' || $role === 'receptionist') {
             return redirect('/admin/dashboard');
         }
+        if ($role === 'doctor') {
+            return redirect('/doctor/agenda');
+        }
         return redirect('/client/pets');
     }
     return Inertia::render('Home');
@@ -112,8 +115,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/appointments/{appointmentId}/messages', [AppointmentMessageController::class, 'store']);
     Route::patch('/api/appointments/{appointmentId}/messages/read', [AppointmentMessageController::class, 'markAsRead']);
 
-    // ── API: Notas clínicas (lectura para cliente) ───────────────────────
+    // ── API: Notas clínicas ───────────────────────
     Route::get('/api/appointments/{appointmentId}/clinical-notes', [ClinicalNoteController::class, 'index']);
+    Route::post('/api/appointments/{appointmentId}/clinical-notes',        [ClinicalNoteController::class, 'store']);
+    Route::patch('/api/appointments/{appointmentId}/clinical-notes/{id}',  [ClinicalNoteController::class, 'update']);
+    Route::delete('/api/appointments/{appointmentId}/clinical-notes/{id}', [ClinicalNoteController::class, 'destroy']);
 
     // ── API: Notificaciones ──────────────────────────────────────────────
     Route::get('/api/notifications',                         [NotificationController::class, 'index']);
@@ -180,10 +186,8 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::post('/api/blocked-dates',         [BlockedDateController::class, 'store']);
     Route::delete('/api/blocked-dates/{id}',  [BlockedDateController::class, 'destroy']);
 
-    // ── API Admin: Notas clínicas (escritura/edición) ────────────────────
-    Route::post('/api/appointments/{appointmentId}/clinical-notes',        [ClinicalNoteController::class, 'store']);
-    Route::patch('/api/appointments/{appointmentId}/clinical-notes/{id}',  [ClinicalNoteController::class, 'update']);
-    Route::delete('/api/appointments/{appointmentId}/clinical-notes/{id}', [ClinicalNoteController::class, 'destroy']);
+    // ── API Admin: Notas clínicas (escritura/edición) — Movidas a grupo general con auth ────────────────────
+
 
     // ── Vista + API Admin: Médicos ────────────────────────────────────────
     Route::get('/admin/doctors',                          fn () => Inertia::render('Admin/Doctors'));
@@ -192,6 +196,13 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::patch('/api/admin/doctors/{id}',               [DoctorController::class, 'update']);
     Route::delete('/api/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
     Route::patch('/api/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
+
+    // ── Vista + API Admin: Recepcionistas ─────────────────────────────────
+    Route::get('/admin/receptionists',                          fn () => Inertia::render('Admin/Receptionists'));
+    Route::get('/api/admin/receptionists',                      [\App\Http\Controllers\ReceptionistController::class, 'index']);
+    Route::post('/api/admin/receptionists',                     [\App\Http\Controllers\ReceptionistController::class, 'store']);
+    Route::patch('/api/admin/receptionists/{id}',               [\App\Http\Controllers\ReceptionistController::class, 'update']);
+    Route::delete('/api/admin/receptionists/{id}',              [\App\Http\Controllers\ReceptionistController::class, 'destroy']);
 
     // ── Vista + API Admin: Atención presencial (walk-in) ─────────────────
     Route::get('/admin/walk-in',                          fn () => Inertia::render('Admin/WalkIn'));
@@ -204,4 +215,7 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
 // ── Panel del médico (rutas propias, solo role:doctor) ───────────────────────
 Route::middleware(['auth', 'role:doctor'])->group(function () {
     Route::get('/doctor/agenda', fn () => Inertia::render('Doctor/Agenda'));
+    Route::get('/doctor/agenda/{id}', fn () => Inertia::render('Doctor/Agenda', ['selectedAppointmentId' => request()->route('id')]));
+    Route::get('/doctor/notifications', fn () => Inertia::render('Doctor/Notifications'));
+    Route::get('/doctor/profile', fn () => Inertia::render('Doctor/Profile'));
 });

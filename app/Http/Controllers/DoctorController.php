@@ -54,10 +54,8 @@ class DoctorController extends Controller
             'serviceIds.min' => 'Debe seleccionar al menos un servicio.',
         ]);
 
-        // Prefijo Dr si falta
-        if (!preg_match('/^Dr\.?\s+/i', $data['name'])) {
-            $data['name'] = 'Dr ' . trim($data['name']);
-        }
+        // Limpieza de espacios en el nombre
+        $data['name'] = trim($data['name']);
 
         $doctor = DB::transaction(function () use ($data) {
             // 1. Crear el Usuario para acceso al sistema
@@ -67,6 +65,7 @@ class DoctorController extends Controller
                 'email'    => $data['email'],
                 'password' => Hash::make($data['cedula']), // Cédula como contraseña inicial
                 'role'     => 'doctor',
+                'phone'    => $data['phone'] ?? null,
             ]);
 
             // 2. Crear el perfil de Doctor vinculado al usuario
@@ -100,9 +99,10 @@ class DoctorController extends Controller
 
         $data = $request->validate([
             'name'       => 'sometimes|string|max:255',
+            'cedula'     => 'sometimes|integer|between:5000000,33000000|unique:doctors,cedula,' . $doctor->id,
             'specialty'  => 'nullable|string|max:255',
             'phone'      => 'nullable|string|max:30',
-            'email'      => 'nullable|email|max:150',
+            'email'      => 'nullable|email|max:150|unique:doctors,email,' . $doctor->id . '|unique:users,email,' . $doctor->user_id,
             'photo'      => 'nullable|string',
             'isActive'   => 'boolean',
             'serviceIds' => 'nullable|array',
@@ -112,12 +112,29 @@ class DoctorController extends Controller
         DB::transaction(function () use ($doctor, $data) {
             $doctor->update(array_filter([
                 'name'      => $data['name'] ?? null,
+                'cedula'    => $data['cedula'] ?? null,
                 'specialty' => $data['specialty'] ?? null,
                 'phone'     => $data['phone'] ?? null,
                 'email'     => $data['email'] ?? null,
                 'photo'     => $data['photo'] ?? null,
                 'is_active' => $data['isActive'] ?? null,
             ], fn ($v) => $v !== null));
+
+            // Sincronizamos los datos básicos con el usuario de acceso si existen cambios
+            if ($doctor->user_id) {
+                $user = User::find($doctor->user_id);
+                if ($user) {
+                    $userUpdate = [];
+                    if (isset($data['name']))   $userUpdate['name']  = $data['name'];
+                    if (isset($data['email']))  $userUpdate['email'] = $data['email'];
+                    if (isset($data['cedula'])) $userUpdate['password'] = Hash::make($data['cedula']);
+                    if (isset($data['phone']))  $userUpdate['phone'] = $data['phone'];
+
+                    if (!empty($userUpdate)) {
+                        $user->update($userUpdate);
+                    }
+                }
+            }
 
             if (array_key_exists('serviceIds', $data)) {
                 $doctor->services()->sync($data['serviceIds'] ?? []);

@@ -29,8 +29,7 @@ class ScheduleController extends Controller
     {
         abort_if($request->user()->role !== 'admin', 403);
 
-        // The frontend sends a bare JSON array, not { schedules: [...] }
-        $items = $request->json()->all();
+        $items = $request->input('schedules') ?? $request->json()->all();
 
         foreach ($items as $s) {
             $existing = Schedule::where('day_of_week', $s['dayOfWeek'])->first();

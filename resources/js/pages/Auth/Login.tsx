@@ -42,7 +42,7 @@ export default function Login() {
 
     router.post(
       '/login',
-      { email, password },
+      { email, password, remember },
       {
         onError: (errors) => {
           setError(errors.email ?? errors.password ?? 'Correo o contraseña incorrectos');

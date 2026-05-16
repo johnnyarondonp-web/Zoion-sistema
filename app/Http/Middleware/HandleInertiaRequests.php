@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Hash;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -24,7 +25,11 @@ class HandleInertiaRequests extends Middleware
                     'name'  => $request->user()->name,
                     'email' => $request->user()->email,
                     'role'  => $request->user()->role,
-                    'phone' => $request->user()->phone,
+                    'phone' => $request->user()->phone ?? ($request->user()->role === 'doctor' ? $request->user()->doctor?->phone : null),
+                    'specialty' => $request->user()->role === 'doctor' ? $request->user()->doctor?->specialty : null,
+                    'needsPasswordChange' => $request->user()->role === 'doctor' && $request->user()->doctor 
+                        ? Hash::check($request->user()->doctor->cedula, $request->user()->password) 
+                        : false,
                 ] : null,
                 'unreadMessages' => $request->user()
                     ? (in_array($request->user()->role, ['admin', 'receptionist'])

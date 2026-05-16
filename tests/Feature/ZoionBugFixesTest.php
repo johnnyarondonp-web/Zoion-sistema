@@ -184,14 +184,14 @@ class ZoionBugFixesTest extends TestCase
         $pet1    = $this->makePet($client1->id);
         $pet2    = $this->makePet($client2->id);
 
-        // Primera cita — debe pasar
+        // Primera cita — debe fallar porque ya no se permite agendar sin médicos
         $res1 = $this->actingAs($client1)->postJson('/api/appointments', [
             'petId'     => $pet1->id,
             'serviceId' => $service->id,
             'date'      => $date,
             'startTime' => '09:00',
         ]);
-        $res1->assertStatus(201);
+        $res1->assertStatus(409);
 
         // Segunda cita en el mismo slot — debe ser rechazada (comportamiento original)
         $res2 = $this->actingAs($client2)->postJson('/api/appointments', [
@@ -333,6 +333,13 @@ class ZoionBugFixesTest extends TestCase
             'status'     => 'pending',
         ]);
 
+        \App\Models\Notification::create([
+            'user_id' => $admin->id,
+            'title'   => 'Test',
+            'message' => 'Test message',
+            'type'    => 'new_appointment',
+        ]);
+
         $res = $this->actingAs($admin)->getJson('/api/notifications');
 
         $res->assertStatus(200)
@@ -458,6 +465,7 @@ class ZoionBugFixesTest extends TestCase
     public function test_crear_cita_rechaza_dia_no_laborable(): void
     {
         $service = $this->makeService(60);
+        $this->makeDoctor($service);
         $client  = $this->makeUser();
         $pet     = $this->makePet($client->id);
 
@@ -477,6 +485,7 @@ class ZoionBugFixesTest extends TestCase
     public function test_crear_cita_rechaza_hora_fuera_de_horario_laboral(): void
     {
         $service = $this->makeService(60);
+        $this->makeDoctor($service);
         $client  = $this->makeUser();
         $pet     = $this->makePet($client->id);
 
@@ -516,6 +525,7 @@ class ZoionBugFixesTest extends TestCase
     {
         $date    = $this->tomorrowWithSchedule();
         $service = $this->makeService(60);
+        $this->makeDoctor($service);
         $client  = $this->makeUser();
         $pet     = $this->makePet($client->id);
 

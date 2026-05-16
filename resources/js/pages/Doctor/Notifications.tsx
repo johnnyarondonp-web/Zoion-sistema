@@ -1,10 +1,9 @@
 import { useEffect } from 'react';
 import { useNotificationStore } from '@/store/notification-store';
-import AdminLayout from '@/components/layout/AdminLayout';
+import DoctorLayout from '@/components/layout/DoctorLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { 
   Bell, 
@@ -14,7 +13,6 @@ import {
   Sparkles, 
   MessageCircle, 
   Info,
-  Trash2,
   Clock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -48,7 +46,7 @@ function getNotificationIcon(type: string) {
   }
 }
 
-export default function NotificationsPage() {
+export default function DoctorNotificationsPage() {
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
 
   useEffect(() => {
@@ -60,7 +58,8 @@ export default function NotificationsPage() {
     
     const appointmentId = n.data?.appointment_id;
     if (appointmentId) {
-      router.visit(`/admin/appointments/${appointmentId}`);
+      // Los doctores ven los detalles en su agenda
+      router.visit(`/doctor/agenda/${appointmentId}`);
     }
   };
 
@@ -75,7 +74,7 @@ export default function NotificationsPage() {
             Notificaciones
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 font-medium">
-            Gestión de alertas y avisos del sistema (últimas 50)
+            Tus avisos y alertas de citas (últimas 50)
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -164,7 +163,7 @@ export default function NotificationsPage() {
                 </div>
                 <h3 className="text-xl font-black text-gray-900 dark:text-gray-100 tracking-tight">Bandeja de entrada vacía</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 max-w-xs mt-2 font-medium">
-                  No tienes notificaciones pendientes. Todo está al día.
+                  No tienes notificaciones pendientes. Te avisaremos cuando tengas nuevas citas asignadas.
                 </p>
               </div>
             )}
@@ -177,11 +176,11 @@ export default function NotificationsPage() {
           <Info className="h-5 w-5 text-amber-600 dark:text-amber-400" />
         </div>
         <p className="text-xs text-amber-800 dark:text-amber-400 font-medium leading-relaxed">
-          Nota de rendimiento: El sistema conserva únicamente las últimas 50 notificaciones por usuario. Las más antiguas se eliminan automáticamente.
+          Para garantizar la rapidez del sistema, solo conservamos tus últimas 50 notificaciones. Las alertas más antiguas se eliminan automáticamente.
         </p>
       </div>
     </div>
   );
 }
 
-NotificationsPage.layout = (page: React.ReactNode) => <AdminLayout>{page}</AdminLayout>;
+DoctorNotificationsPage.layout = (page: React.ReactNode) => <DoctorLayout>{page}</DoctorLayout>;

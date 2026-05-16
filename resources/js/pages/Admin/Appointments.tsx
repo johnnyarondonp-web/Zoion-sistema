@@ -75,6 +75,7 @@ interface Appointment {
   pet: { id: string; name: string; species: string; breed: string | null };
   service: { id: string; name: string; durationMinutes: number; price: number };
   user: { id: string; name: string; email: string; phone?: string };
+  doctor?: { id: string; name: string; } | null;
   unreadMessages?: number;
 }
 
@@ -676,7 +677,7 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {apt.unreadMessages > 0 && (
+                        {(apt.unreadMessages ?? 0) > 0 && (
                           <div className="flex items-center gap-1 bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300 px-2 py-1 rounded-full text-[10px] font-bold w-fit">
                             <MessageCircle className="h-3 w-3" />
                             {apt.unreadMessages}
@@ -816,7 +817,7 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
 
               {/* Paciente + dueño en dos columnas */}
               <div className="py-5 border-b border-gray-100 dark:border-gray-800">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Paciente</p>
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedAppointment.pet.name}</p>
@@ -830,13 +831,20 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                       Ver historial →
                     </button>
                   </div>
-                  <div className="border-l border-gray-100 dark:border-gray-800 pl-4">
+                  <div className="sm:border-l sm:border-gray-100 dark:border-gray-800 sm:pl-4">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Dueño</p>
                     <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{selectedAppointment.user.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{selectedAppointment.user.email}</p>
                     {selectedAppointment.user.phone && (
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{selectedAppointment.user.phone}</p>
                     )}
+                  </div>
+                  <div className="sm:border-l sm:border-gray-100 dark:border-gray-800 sm:pl-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-2">Médico Asignado</p>
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
+                      <Stethoscope className="h-3 w-3 text-emerald-500" />
+                      {selectedAppointment.doctor ? selectedAppointment.doctor.name : 'No asignado'}
+                    </p>
                   </div>
                 </div>
               </div>

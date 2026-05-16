@@ -3,7 +3,7 @@ import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // Mock de fetch global para simular respuestas del backend
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch as any;
 
 // Mock de router de Inertia
 vi.mock('@inertiajs/react', () => ({

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Appointment;
 use App\Models\BlockedDate;
+use App\Models\Doctor;
 use App\Models\Schedule;
 use App\Models\Service;
 use App\Models\User;
@@ -33,6 +34,17 @@ class AvailabilityControllerTest extends TestCase
             'category'         => 'consulta',
             'is_active'        => true,
         ]);
+
+        // Crear doctor y asignarlo al servicio para que haya capacidad
+        $doctorUser = User::factory()->create(['role' => 'doctor']);
+        $doctor = Doctor::create([
+            'id' => (string) Str::ulid(),
+            'user_id' => $doctorUser->id,
+            'name' => 'Dr. Test',
+            'specialty' => 'Test',
+            'is_active' => true,
+        ]);
+        $doctor->services()->attach($this->service->id);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -68,7 +80,7 @@ class AvailabilityControllerTest extends TestCase
     // ─── Tests: endpoint /api/availability/schedule ───────────────────────────
 
     /** @test */
-    public function schedule_endpoint_returns_unavailable_days_when_db_has_data(): void
+    public function test_schedule_endpoint_returns_unavailable_days_when_db_has_data(): void
     {
         $this->createDefaultSchedules();
 
@@ -82,7 +94,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function schedule_endpoint_returns_default_unavailable_days_when_table_is_empty(): void
+    public function test_schedule_endpoint_returns_default_unavailable_days_when_table_is_empty(): void
     {
         // Sin schedules en DB: debe devolver sábado y domingo como no disponibles por defecto.
         $res = $this->actingAs($this->user)->getJson('/api/availability/schedule');
@@ -94,7 +106,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function schedule_endpoint_reflects_admin_changes(): void
+    public function test_schedule_endpoint_reflects_admin_changes(): void
     {
         $this->createDefaultSchedules();
         // El admin desactiva el viernes
@@ -113,7 +125,7 @@ class AvailabilityControllerTest extends TestCase
     // ─── Tests: endpoint /api/availability?date=...&serviceId=... ────────────
 
     /** @test */
-    public function availability_returns_slots_for_open_weekday(): void
+    public function test_availability_returns_slots_for_open_weekday(): void
     {
         $this->createDefaultSchedules();
         $monday = $this->nextWeekday(1); // próximo lunes
@@ -128,7 +140,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_no_slots_for_saturday_with_default_schedule(): void
+    public function test_availability_returns_no_slots_for_saturday_with_default_schedule(): void
     {
         $this->createDefaultSchedules();
         $saturday = $this->nextWeekday(6);
@@ -141,7 +153,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_no_slots_for_sunday_with_default_schedule(): void
+    public function test_availability_returns_no_slots_for_sunday_with_default_schedule(): void
     {
         $this->createDefaultSchedules();
         $sunday = $this->nextWeekday(0);
@@ -153,7 +165,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_no_slots_when_table_empty_and_day_is_weekend(): void
+    public function test_availability_returns_no_slots_when_table_empty_and_day_is_weekend(): void
     {
         // Sin schedules en DB, sábado debe devolver no disponible (default).
         $saturday = $this->nextWeekday(6);
@@ -165,7 +177,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_slots_when_table_empty_and_day_is_weekday(): void
+    public function test_availability_returns_slots_when_table_empty_and_day_is_weekday(): void
     {
         // Sin schedules en DB, lunes debe usar el horario predeterminado y devolver slots.
         $monday = $this->nextWeekday(1);
@@ -178,7 +190,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_no_slots_for_blocked_date(): void
+    public function test_availability_returns_no_slots_for_blocked_date(): void
     {
         $this->createDefaultSchedules();
         $monday = $this->nextWeekday(1);
@@ -196,7 +208,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_generates_correct_number_of_slots(): void
+    public function test_availability_generates_correct_number_of_slots(): void
     {
         // Horario 09:00-18:00 con servicio de 60 min = 9 slots (9,10,11,12,13,14,15,16,17)
         $this->createDefaultSchedules();
@@ -211,7 +223,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_respects_custom_schedule_hours(): void
+    public function test_availability_respects_custom_schedule_hours(): void
     {
         // El admin cambia el horario del lunes a 10:00-14:00
         $this->createSchedule(1, true, '10:00', '14:00');
@@ -227,7 +239,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_returns_no_slots_for_disabled_weekday(): void
+    public function test_availability_returns_no_slots_for_disabled_weekday(): void
     {
         // Admin desactiva el viernes
         for ($d = 0; $d <= 6; $d++) {
@@ -242,7 +254,7 @@ class AvailabilityControllerTest extends TestCase
     }
 
     /** @test */
-    public function availability_slot_labels_are_in_12h_format(): void
+    public function test_availability_slot_labels_are_in_12h_format(): void
     {
         $this->createDefaultSchedules();
         $monday = $this->nextWeekday(1);

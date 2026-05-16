@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { Bell, Calendar, Info, Sparkles, ShieldCheck, CheckCheck, MessageCircle } from 'lucide-react';
 import { Link, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/hooks/use-auth';
 import { useNotificationStore, type Notification } from '@/store/notification-store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -68,9 +69,14 @@ function NotificationItem({
     const appointmentId = notification.data?.appointment_id;
     
     if (appointmentId) {
-      // Si estamos en admin, ir a la ruta de admin. Si no, a la de cliente.
+      // Redirección inteligente según el rol
       const isAdmin = window.location.pathname.startsWith('/admin');
-      const baseRoute = isAdmin ? '/admin/appointments' : '/client/appointments';
+      const isDoctor = window.location.pathname.startsWith('/doctor');
+      
+      let baseRoute = '/client/appointments';
+      if (isAdmin) baseRoute = '/admin/appointments';
+      if (isDoctor) baseRoute = '/doctor/agenda'; // Los doctores ven los detalles en la agenda
+      
       router.visit(`${baseRoute}/${appointmentId}`);
     }
     
@@ -112,6 +118,7 @@ function NotificationItem({
 }
 
 export function NotificationBell() {
+  const { user, isAdmin, isDoctor } = useAuth();
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const [open, setOpen] = useState(false);
   const prevUnreadCount = useRef(unreadCount);
@@ -137,6 +144,10 @@ export function NotificationBell() {
 
   const displayNotifications = notifications.slice(0, 5);
   const hasMore = notifications.length > 5;
+
+  const viewAllHref = isAdmin 
+    ? '/admin/notifications' 
+    : (isDoctor ? '/doctor/notifications' : '/client/appointments');
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -210,7 +221,7 @@ export function NotificationBell() {
           {/* Footer */}
           <div className="relative z-50 border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3 shrink-0">
             <Link
-              href="/admin/notifications"
+              href={viewAllHref}
               className="block w-full text-center text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300 transition-colors"
               onClick={() => setOpen(false)}
             >

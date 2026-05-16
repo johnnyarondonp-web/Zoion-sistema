@@ -47,7 +47,16 @@ interface Doctor {
   services: Service[];
 }
 
-const emptyForm = { name: '', cedula: '', specialty: '', phone: '', email: '', isActive: true, serviceIds: [] as string[] };
+const emptyForm = { 
+  prefix: 'Dr', 
+  name: '', 
+  cedula: '', 
+  specialty: '', 
+  phone: '', 
+  email: '', 
+  isActive: true, 
+  serviceIds: [] as string[] 
+};
 const getCsrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 const headers = (extra = {}) => ({ 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrf(), ...extra });
 
@@ -87,10 +96,39 @@ export default function Doctors() {
     }).finally(() => setLoading(false));
   }, []);
 
-  const openCreate = () => { setEditTarget(null); setForm(emptyForm); setModalOpen(true); };
+  const openCreate = () => { 
+    setEditTarget(null); 
+    setForm(emptyForm); 
+    setTouched({});
+    setModalOpen(true); 
+  };
+
   const openEdit = (doc: Doctor) => {
     setEditTarget(doc);
-    setForm({ name: doc.name, cedula: doc.cedula || '', specialty: doc.specialty || '', phone: doc.phone || '', email: doc.email || '', isActive: doc.isActive, serviceIds: doc.services.map(s => s.id) });
+    
+    // Extraer prefijo del nombre si existe
+    let displayName = doc.name;
+    let prefix = 'Dr';
+    
+    if (displayName.startsWith('Dra ')) {
+      prefix = 'Dra';
+      displayName = displayName.substring(4);
+    } else if (displayName.startsWith('Dr ')) {
+      prefix = 'Dr';
+      displayName = displayName.substring(3);
+    }
+
+    setForm({ 
+      prefix,
+      name: displayName, 
+      cedula: doc.cedula || '', 
+      specialty: doc.specialty || '', 
+      phone: doc.phone || '', 
+      email: doc.email || '', 
+      isActive: doc.isActive, 
+      serviceIds: doc.services.map(s => s.id) 
+    });
+    setTouched({});
     setModalOpen(true);
   };
 
@@ -141,7 +179,14 @@ export default function Doctors() {
     try {
       const url = editTarget ? `/api/admin/doctors/${editTarget.id}` : '/api/admin/doctors';
       const method = editTarget ? 'PATCH' : 'POST';
-      const res = await fetch(url, { method, headers: headers(), body: JSON.stringify(form) });
+      
+      // Combinar prefijo y nombre para el backend
+      const payload = {
+        ...form,
+        name: `${form.prefix} ${form.name.trim()}`
+      };
+
+      const res = await fetch(url, { method, headers: headers(), body: JSON.stringify(payload) });
       const data = await res.json();
       if (data.success) {
         toast.success(editTarget ? 'Médico actualizado' : 'Médico creado');
@@ -251,10 +296,16 @@ export default function Doctors() {
           <div className="space-y-4 mt-2">
             <div>
               <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">Nombre *</Label>
-              <div className="relative mt-1">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-sm font-semibold text-gray-500">Dr </span>
-                </div>
+              <div className="flex gap-2 mt-1">
+                <Select value={form.prefix} onValueChange={(v) => setForm(f => ({ ...f, prefix: v }))}>
+                  <SelectTrigger className="w-[80px] font-semibold text-gray-700">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Dr">Dr</SelectItem>
+                    <SelectItem value="Dra">Dra</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Input 
                   value={form.name} 
                   onChange={e => {
@@ -262,7 +313,7 @@ export default function Doctors() {
                     setForm(f => ({ ...f, name: val }));
                   }} 
                   placeholder="Johnny Rondón" 
-                  className="pl-8" 
+                  className="flex-1" 
                 />
               </div>
             </div>

@@ -60,23 +60,35 @@ class AppointmentController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        $query = Appointment::with(['pet', 'service']);
+        $query = Appointment::with(['pet', 'service', 'doctor']);
 
-        // Seguridad: Filtrar por usuario si no es admin
-        if ($user->role !== 'admin') {
-            $query->where('user_id', $user->id)
-                  ->withCount(['messages as unread_messages' => function ($query) {
-                      $query->where('is_read_by_client', false);
-                  }]);
-        } else {
+        // Seguridad: Filtrar según el rol del usuario
+        if ($user->role === 'admin' || $user->role === 'receptionist') {
+            // Personal administrativo ve todo
             $query->with(['user:id,name,email,phone'])
                   ->withCount(['messages as unread_messages' => function ($query) {
                       $query->where('is_read_by_admin', false);
                   }]);
+        } elseif ($user->role === 'doctor') {
+            // El médico solo ve las citas que tiene asignadas
+            $query->where('doctor_id', $user->doctor->id)
+                  ->with(['user:id,name,email,phone'])
+                  ->withCount(['messages as unread_messages' => function ($query) {
+                      $query->where('is_read_by_admin', false);
+                  }]);
+        } else {
+            // El cliente solo ve sus propias citas
+            $query->where('user_id', $user->id)
+                  ->withCount(['messages as unread_messages' => function ($query) {
+                      $query->where('is_read_by_client', false);
+                  }]);
         }
 
         // Filtros opcionales
-        if ($request->status)    $query->where('status', $request->status);
+        if ($request->status) {
+            $statuses = explode(',', $request->status);
+            $query->whereIn('status', $statuses);
+        }
         if ($request->petId)     $query->where('pet_id', $request->petId);
         if ($request->serviceId) $query->where('service_id', $request->serviceId);
         if ($request->date)      $query->where('date', $request->date);
@@ -105,11 +117,14 @@ class AppointmentController extends Controller
             'review'        => $apt->review,
             'unreadMessages'=> $apt->unread_messages ?? 0,
             'pet' => $apt->pet ? [
-                'id'      => $apt->pet->id,
-                'name'    => $apt->pet->name,
-                'photo'   => $apt->pet->photo,
-                'species' => $apt->pet->species,
-                'breed'   => $apt->pet->breed,
+                'id'        => $apt->pet->id,
+                'name'      => $apt->pet->name,
+                'photo'     => $apt->pet->photo,
+                'species'   => $apt->pet->species,
+                'breed'     => $apt->pet->breed,
+                'gender'    => $apt->pet->gender,
+                'birthdate' => $apt->pet->birthdate,
+                'weight'    => $apt->pet->weight,
             ] : null,
             'service' => $apt->service ? [
                 'id'              => $apt->service->id,
@@ -122,6 +137,10 @@ class AppointmentController extends Controller
                 'name'  => $apt->user->name,
                 'email' => $apt->user->email,
                 'phone' => $apt->user->phone,
+            ] : null,
+            'doctor' => $apt->doctor ? [
+                'id'   => $apt->doctor->id,
+                'name' => $apt->doctor->name,
             ] : null,
         ]);
 
@@ -267,6 +286,20 @@ class AppointmentController extends Controller
             }
         }
 
+        // Notificar al doctor asignado
+        if ($assignedDoctorId) {
+            $assignedDoctor = \App\Models\Doctor::find($assignedDoctorId);
+            if ($assignedDoctor && $assignedDoctor->user_id) {
+                \App\Models\Notification::create([
+                    'user_id' => $assignedDoctor->user_id,
+                    'title'   => 'Nuevo paciente asignado',
+                    'message' => "Se te ha asignado un paciente ({$pet->name}) para el {$appointment->date} a las {$appointment->start_time}.",
+                    'type'    => 'new_appointment',
+                    'data'    => ['appointment_id' => $appointment->id],
+                ]);
+            }
+        }
+
         $appointment->load(['pet', 'service']);
 
         $mappedAppointment = [
@@ -304,12 +337,16 @@ class AppointmentController extends Controller
 
     public function show(Request $request, $id)
     {
-        $appointment = Appointment::with(['pet', 'service', 'user:id,name,email,phone', 'clinicalNotes'])->findOrFail($id);
+        $appointment = Appointment::with(['pet', 'service', 'user:id,name,email,phone', 'clinicalNotes', 'doctor'])->findOrFail($id);
         $user = $request->user();
 
-        // Seguridad: Verificar que sea el dueño o admin
-        if ($user->role !== 'admin' && $appointment->user_id !== $user->id) {
-            abort(403, 'No autorizado');
+        // Seguridad: El usuario debe ser el dueño, el médico asignado o personal administrativo.
+        $isClientOwner = $appointment->user_id === $user->id;
+        $isAssignedDoc = ($user->role === 'doctor' && $appointment->doctor_id === $user->doctor?->id);
+        $isStaff       = in_array($user->role, ['admin', 'receptionist']);
+
+        if (!$isClientOwner && !$isAssignedDoc && !$isStaff) {
+            abort(403, 'No tienes permiso para ver esta cita.');
         }
 
         $mappedAppointment = [
@@ -325,11 +362,14 @@ class AppointmentController extends Controller
             'rating'        => $appointment->rating,
             'review'        => $appointment->review,
             'pet' => $appointment->pet ? [
-                'id'      => $appointment->pet->id,
-                'name'    => $appointment->pet->name,
-                'photo'   => $appointment->pet->photo,
-                'species' => $appointment->pet->species,
-                'breed'   => $appointment->pet->breed,
+                'id'        => $appointment->pet->id,
+                'name'      => $appointment->pet->name,
+                'photo'     => $appointment->pet->photo,
+                'species'   => $appointment->pet->species,
+                'breed'     => $appointment->pet->breed,
+                'gender'    => $appointment->pet->gender,
+                'birthdate' => $appointment->pet->birthdate,
+                'weight'    => $appointment->pet->weight,
             ] : null,
             'service' => $appointment->service ? [
                 'id'              => $appointment->service->id,
@@ -342,6 +382,10 @@ class AppointmentController extends Controller
                 'name'  => $appointment->user->name,
                 'email' => $appointment->user->email,
                 'phone' => $appointment->user->phone,
+            ] : null,
+            'doctor' => $appointment->doctor ? [
+                'id'   => $appointment->doctor->id,
+                'name' => $appointment->doctor->name,
             ] : null,
             'clinicalNotesRecords' => $appointment->clinicalNotes->map(fn($cn) => [
                 'id'        => $cn->id,
@@ -377,8 +421,9 @@ class AppointmentController extends Controller
             'cancelled_at'
         ];
 
-        // Solo el administrador y recepcionista pueden cambiar estado y datos de pago
-        if (in_array($user->role, ['admin', 'receptionist'])) {
+        // Solo el administrador, recepcionista o el médico asignado pueden cambiar el estado.
+        // Los médicos necesitan esto para marcar citas como completadas tras la consulta.
+        if (in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
             $allowedFields[] = 'status';
             $allowedFields[] = 'payment_method';
             $allowedFields[] = 'payment_status';
