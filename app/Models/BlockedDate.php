@@ -13,4 +13,10 @@ class BlockedDate extends Model
     protected $keyType = 'string';
 
     protected $fillable = ['id', 'date', 'reason'];
+
+    // Normalizamos el formato de fecha bloqueada para que siempre devuelva 'Y-m-d'.
+    public function getDateAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : $value;
+    }
 }

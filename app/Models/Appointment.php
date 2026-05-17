@@ -27,12 +27,22 @@ class Appointment extends Model
         'payment_amount' => 'decimal:2',
     ];
 
-    // El campo date está definido como string en la migración original (error de diseño).
-    // Lo normalizamos aquí para que siempre devuelva Y-m-d. Si algún día se migra a
-    // tipo date real en PostgreSQL, este accessor se puede eliminar sin tocar el resto.
+    // Normalizamos el formato de fecha y hora devueltos por la base de datos.
+    // Dado que PostgreSQL nativo almacena y devuelve fechas/horas con variaciones (ej. horas con segundos),
+    // garantizamos que la API y la lógica de negocio consuman siempre formatos limpios 'Y-m-d' e 'H:i'.
     public function getDateAttribute($value): string
     {
         return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : $value;
+    }
+
+    public function getStartTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
+    }
+
+    public function getEndTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
     }
 
     public function doctor() {

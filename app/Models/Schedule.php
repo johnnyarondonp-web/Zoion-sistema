@@ -19,4 +19,15 @@ class Schedule extends Model
     protected $casts = [
         'is_available' => 'boolean',
     ];
+
+    // Normalizamos el formato de hora laborable para que siempre devuelva 'H:i' (ej: '09:00' en lugar de '09:00:00').
+    public function getOpenTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
+    }
+
+    public function getCloseTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
+    }
 }

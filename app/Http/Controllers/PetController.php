@@ -14,11 +14,12 @@ class PetController extends Controller
         $user  = $request->user();
         $query = Pet::orderBy('created_at', 'desc');
 
-        // El staff puede ver mascotas de otro usuario directamente, necesario para
-        // que el admin pueda agendar citas en nombre de un cliente.
+        // El personal de la clínica puede filtrar por el ID de un cliente específico,
+        // lo cual es necesario para agendar citas en su nombre.
         if (in_array($user->role, ['admin', 'receptionist', 'doctor']) && $request->userId) {
             $query->where('user_id', $request->userId);
         } else if (!in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
+            // Los clientes normales solo pueden ver sus propios registros
             $query->where('user_id', $user->id);
         }
 
@@ -26,29 +27,61 @@ class PetController extends Controller
             $query->where('name', 'ilike', '%' . $request->search . '%');
         }
 
+        // Paginamos por defecto si el usuario es administrador/receptionista/médico y no busca un cliente específico,
+        // o si el request solicita explícitamente paginar. Esto evita que la respuesta sea ilimitada (miles de registros).
+        $shouldPaginate = $request->has('page') || $request->has('per_page') || 
+            (in_array($user->role, ['admin', 'receptionist', 'doctor']) && !$request->userId);
+
+        if ($shouldPaginate) {
+            $perPage = $request->input('per_page', 15);
+            $paginator = $query->with('user')->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $paginator->getCollection()->map(fn($p) => $this->mapPet($p)),
+                'meta'    => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page'    => $paginator->lastPage(),
+                    'per_page'     => $paginator->perPage(),
+                    'total'        => $paginator->total(),
+                ]
+            ]);
+        }
+
+        // En caso de que se solicite un cliente específico o sea un flujo directo de cliente
+        // que no sobrecargue la memoria, devolvemos el listado completo para simplificar la integración.
         return response()->json([
             'success' => true, 
-            'data'    => $query->with('user')->get()->map(fn($p) => [
-                'id'            => $p->id,
-                'name'          => $p->name,
-                'species'       => $p->species,
-                'breed'         => $p->breed,
-                'gender'        => $p->gender,
-                'birthdate'     => $p->birthdate,
-                'weight'        => $p->weight,
-                'photo'         => $p->photo,
-                'notes'         => $p->notes,
-                'isActive'      => $p->is_active,
-                'weightHistory' => $p->weight_history,
-                'vaccinations'  => $p->vaccinations,
-                'user'          => $p->user ? [
-                    'id' => $p->user->id,
-                    'name' => $p->user->name,
-                    'email' => $p->user->email,
-                    'phone' => $p->user->phone,
-                ] : null,
-            ])
+            'data'    => $query->with('user')->get()->map(fn($p) => $this->mapPet($p))
         ]);
+    }
+
+    /**
+     * Mapea un modelo Pet a un array formateado para el frontend.
+     * Este helper asegura homogeneidad entre respuestas completas y paginadas.
+     */
+    private function mapPet(Pet $p): array
+    {
+        return [
+            'id'            => $p->id,
+            'name'          => $p->name,
+            'species'       => $p->species,
+            'breed'         => $p->breed,
+            'gender'        => $p->gender,
+            'birthdate'     => $p->birthdate,
+            'weight'        => $p->weight,
+            'photo'         => $p->photo,
+            'notes'         => $p->notes,
+            'isActive'      => $p->is_active,
+            'weightHistory' => $p->weight_history,
+            'vaccinations'  => $p->vaccinations,
+            'user'          => $p->user ? [
+                'id' => $p->user->id,
+                'name' => $p->user->name,
+                'email' => $p->user->email,
+                'phone' => $p->user->phone,
+            ] : null,
+        ];
     }
 
     public function store(Request $request)

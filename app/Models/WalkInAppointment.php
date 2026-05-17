@@ -23,6 +23,23 @@ class WalkInAppointment extends Model
         'payment_amount' => 'decimal:2',
     ];
 
+    // Normalizamos el formato de fecha y hora devueltos por la base de datos.
+    // Garantiza compatibilidad uniforme con formatos limpios 'Y-m-d' e 'H:i' en SQLite y PostgreSQL.
+    public function getDateAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : $value;
+    }
+
+    public function getStartTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
+    }
+
+    public function getEndTimeAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('H:i') : $value;
+    }
+
     public function client()
     {
         return $this->belongsTo(WalkInClient::class, 'walk_in_client_id');

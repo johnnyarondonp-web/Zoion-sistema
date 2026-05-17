@@ -60,16 +60,14 @@ class AppointmentMessageController extends Controller
         ]);
 
         if ($user->role === 'client') {
-            $admins = \App\Models\User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                \App\Models\Notification::create([
-                    'user_id' => $admin->id,
-                    'title'   => 'Nuevo mensaje de cliente',
-                    'message' => "{$user->name} ha enviado un mensaje en la cita.",
-                    'type'    => 'new_message',
-                    'data'    => ['appointment_id' => $appointmentId],
-                ]);
-            }
+            // Delegamos el envío de notificaciones de nuevos mensajes a administradores a la cola de trabajos.
+            // Esto elimina la latencia de inserciones secuenciales durante el chat interactivo del cliente.
+            \App\Jobs\NotifyAdminsJob::dispatch(
+                'Nuevo mensaje de cliente',
+                "{$user->name} ha enviado un mensaje en la cita.",
+                'new_message',
+                ['appointment_id' => $appointmentId]
+            );
         } else {
             \App\Models\Notification::create([
                 'user_id' => $appointment->user_id,
