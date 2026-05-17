@@ -22,9 +22,10 @@ class DatabaseSeeder extends Seeder
         ]);
 
         User::factory()->create([
-            'id'    => (string) Str::ulid(),
-            'name'  => 'Test User',
-            'email' => 'test@example.com',
+            'id'                => (string) Str::ulid(),
+            'name'              => 'Test User',
+            'email'             => 'test@example.com',
+            'email_verified_at' => now(),
         ]);
     }
 }

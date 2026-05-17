@@ -23,9 +23,10 @@ class CreateAdminUser extends Command
         User::updateOrCreate(
             ['email' => $email],
             [
-                'name'     => $name,
-                'password' => Hash::make($password),
-                'role'     => 'admin',
+                'name'              => $name,
+                'password'          => Hash::make($password),
+                'role'              => 'admin',
+                'email_verified_at' => now(),
             ]
         );
 

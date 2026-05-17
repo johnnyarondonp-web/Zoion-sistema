@@ -9,6 +9,13 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.7] - 2026-05-17
+
+### Corregido
+- **Seguridad**: Adición manual de `email_verified_at` con valor `now()` en los Seeders (`AdminUserSeeder`, `DatabaseSeeder`) y en el comando de consola `zoion:admin` para evitar bloqueos de inicio de sesión de perfiles administrativos y de prueba bajo flujos estrictos de verificación de email.
+
+---
+
 ## [V3.9.6] - 2026-05-17
 
 ### Añadido
