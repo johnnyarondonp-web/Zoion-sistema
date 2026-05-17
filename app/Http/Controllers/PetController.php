@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\Storage;
 
 class PetController extends Controller
 {
+    /**
+     * Devuelve el listado de mascotas del usuario autenticado.
+     * El personal clínico (admin, receptionist, doctor) puede filtrar por userId para
+     * gestionar mascotas de un cliente específico. Los clientes ordinarios solo acceden
+     * a sus propios registros. La respuesta se pagina automáticamente cuando el actor
+     * es staff sin filtro explícito, evitando devolver miles de registros sin límite.
+     */
     public function index(Request $request)
     {
         $user  = $request->user();
@@ -84,6 +91,14 @@ class PetController extends Controller
         ];
     }
 
+    /**
+     * Registra una nueva mascota vinculada al usuario autenticado.
+     * Procesa y convierte la foto recibida (base64 o URL) a WebP optimizado antes de
+     * persistirla en el disco, validando dimensiones mínimas de 100×100 px.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse  HTTP 201 con la mascota creada.
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -110,6 +125,14 @@ class PetController extends Controller
         return response()->json(['success' => true, 'data' => $pet], 201);
     }
 
+    /**
+     * Retorna el detalle completo de una mascota por su ID.
+     * Los clientes solo pueden acceder a sus propias mascotas; el personal clínico
+     * puede consultar cualquier registro del sistema.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request, $id)
     {
         $pet = Pet::where('id', $id);
@@ -136,6 +159,14 @@ class PetController extends Controller
         ]);
     }
 
+    /**
+     * Actualiza los datos de una mascota existente.
+     * Si el payload incluye una nueva foto, el helper processPhoto reemplaza la imagen
+     * anterior en disco y elimina el archivo viejo para liberar almacenamiento.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function update(Request $request, $id)
     {
         $pet = Pet::where('id', $id);
@@ -153,6 +184,13 @@ class PetController extends Controller
         return response()->json(['success' => true, 'data' => $pet]);
     }
 
+    /**
+     * Elimina una mascota del sistema.
+     * Solo el propietario autenticado puede eliminar sus propias mascotas.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function destroy(Request $request, $id)
     {
         $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
@@ -160,6 +198,14 @@ class PetController extends Controller
         return response()->json(['success' => true]);
     }
 
+    /**
+     * Agrega un registro de vacunación al historial de la mascota.
+     * Los datos se almacenan como un arreglo JSON adjunto al campo vaccinations del modelo Pet,
+     * permitiendo añadir entradas sin perder el historial previo.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function addVaccination(Request $request, $id)
     {
         $pet = Pet::where('id', $id);
@@ -173,6 +219,14 @@ class PetController extends Controller
         return response()->json(['success' => true, 'data' => $pet]);
     }
 
+    /**
+     * Registra un nuevo punto de peso en el historial de la mascota.
+     * Actualiza tanto el campo weight (peso actual) como el arreglo weight_history
+     * (historial de pesos con fecha y valor) de forma atómica en un solo update.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function addWeight(Request $request, $id)
     {
         $pet = Pet::where('id', $id);
@@ -190,18 +244,38 @@ class PetController extends Controller
         return response()->json(['success' => true, 'data' => $pet]);
     }
 
+    /**
+     * Devuelve el historial de pesos de una mascota del cliente autenticado.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getWeight(Request $request, $id)
     {
         $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
         return response()->json(['success' => true, 'data' => $pet->weight_history ?? []]);
     }
 
+    /**
+     * Devuelve el historial de vacunaciones de una mascota del cliente autenticado.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function getVaccinations(Request $request, $id)
     {
         $pet = Pet::where('id', $id)->where('user_id', $request->user()->id)->firstOrFail();
         return response()->json(['success' => true, 'data' => $pet->vaccinations ?? []]);
     }
 
+    /**
+     * Devuelve un resumen de salud completo de la mascota:
+     * notas clínicas de todas sus citas (con médico), historial de pesos y vacunaciones.
+     * Diseñado para alimentar la vista de ficha médica del portal del cliente y del panel admin.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function healthSummary(Request $request, $id)
     {
         $pet = Pet::where('id', $id);
@@ -225,7 +299,14 @@ class PetController extends Controller
         ]);
     }
 
-    // ✅ CAMBIO 3: Nuevo método específico para toggle
+    /**
+     * Alterna el estado activo/inactivo de la mascota del cliente autenticado.
+     * Una mascota inactiva queda oculta por defecto en el listado del portal,
+     * sin eliminar su historial médico del sistema.
+     *
+     * @param  string  $id  ULID de la mascota.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function toggleActive(Request $request, string $id)
     {
         $pet = Pet::where('id', $id)

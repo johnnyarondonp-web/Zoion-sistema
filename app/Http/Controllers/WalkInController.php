@@ -14,8 +14,25 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
+/**
+ * Gestiona citas presenciales (walk-in) para clientes sin cuenta registrada.
+ *
+ * Reglas de negocio clave:
+ * - Búsqueda de cliente: prioriza walk_in_clients sobre usuarios registrados por teléfono.
+ * - Asignación de médico: round-robin por carga del día (menor número de citas activas).
+ * - Concurrencia: bloqueo atómico con Cache::lock (Redis en prod / driver default en tests)
+ *   para evitar doble-booking cuando múltiples recepcionistas crean citas simultáneamente.
+ * - Capacidad: se verifica que al menos un médico competente esté libre en el slot antes
+ *   de persistir el registro (re-verificación dentro del lock).
+ */
 class WalkInController extends Controller
 {
+    /**
+     * Lista las últimas 100 citas walk-in ordenadas por fecha y hora descendente.
+     * Incluye relaciones de client, service y doctor para poblar la vista de recepción.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $walkins = WalkInAppointment::with(['client', 'service', 'doctor'])
@@ -28,8 +45,14 @@ class WalkInController extends Controller
         return response()->json(['success' => true, 'data' => $walkins]);
     }
 
-    // Busca por teléfono en usuarios registrados y en clientes walk-in previos.
-    // Devuelve lo suficiente para pre-rellenar el formulario sin exponer datos sensibles.
+    /**
+     * Busca un cliente existente por número de teléfono para pre-rellenar el formulario.
+     * Sanitiza y valida el formato venezolano (+58 o 58 + 9 dígitos). La búsqueda
+     * prioriza walk_in_clients (frecuentes presenciales) y cae alç tabla de usuarios
+     * registrados si no hay coincidencia, minimizando la carga de datos al frontend.
+     *
+     * @return \Illuminate\Http\JsonResponse  null en data si no se encuentra ningún cliente.
+     */
     public function search(Request $request)
     {
         $phone = $request->query('phone');
@@ -85,6 +108,19 @@ class WalkInController extends Controller
         return response()->json(['success' => true, 'data' => null]);
     }
 
+    /**
+     * Crea una nueva cita walk-in para hoy.
+     *
+     * Flujo:
+     * 1. Valida el payload y calcula end_time a partir del start_time + duration del servicio.
+     * 2. Verifica que el horario pedido cae dentro del horario laboral del día (Schedule o
+     *    fallback L-V 09:00-18:00).
+     * 3. Adquiere un lock atómico por slot para serializar peticiones concurrentes.
+     * 4. Dentro del lock, re-verifica capacidad de médicos libres y asigna por round-robin.
+     * 5. Persiste WalkInClient (upsert por teléfono) y WalkInAppointment en una transacción.
+     *
+     * @return \Illuminate\Http\JsonResponse  HTTP 201 con la cita creada, 409 si sin capacidad.
+     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -249,6 +285,14 @@ class WalkInController extends Controller
     }
 
 
+    /**
+     * Registra el pago de una cita walk-in y la marca como completada.
+     * Valida método y monto, actualiza payment_status a 'paid' y status a 'completed'
+     * de forma atómica, registrando además la fecha/hora de cobro (paid_at).
+     *
+     * @param  string  $id  ID de la cita walk-in.
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function confirmPayment(Request $request, $id)
     {
         $walkin = WalkInAppointment::findOrFail($id);
