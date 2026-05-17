@@ -17,7 +17,7 @@ class Pet extends Model
         'weight', 'photo', 'notes', 'weight_history', 'vaccinations', 'is_active'
     ];
 
-    protected $appends = ['isActive'];
+
 
     protected $casts = [
         'weight_history' => 'array',
@@ -25,10 +25,7 @@ class Pet extends Model
         'is_active' => 'boolean',
     ];
 
-    public function getIsActiveAttribute(): bool
-    {
-        return (bool) $this->attributes['is_active'];
-    }
+
 
     public function user() {
         return $this->belongsTo(User::class);
