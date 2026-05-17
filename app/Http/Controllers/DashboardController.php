@@ -10,6 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Controlador para la gestión y generación de estadísticas y reportes administrativos.
+ *
+ * Proporciona datos consolidados para el dashboard de administración e informes detallados
+ * por rangos de fecha, aplicando optimizaciones avanzadas de base de datos como almacenamiento
+ * en caché y reducción de queries redundantes (N+1).
+ */
 class DashboardController extends Controller
 {
     // Las queries que agrupan por mes usan funciones distintas según el motor.
@@ -23,6 +30,17 @@ class DashboardController extends Controller
         };
     }
 
+    /**
+     * Obtiene el estado y métricas generales del dashboard administrativo.
+     *
+     * Este método recupera información crítica (total de clientes, mascotas, citas, ingresos del mes,
+     * distribución de citas por estado y mes, entre otros). Los resultados se almacenan en caché por
+     * 60 segundos para evitar sobrecargar la base de datos con peticiones concurrentes de múltiples
+     * administradores. Además, optimiza las consultas agrupando conteos mensuales y diarios en una sola
+     * query en lugar de ejecutar consultas en bucle.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function index()
     {
         $data = Cache::remember('dashboard_stats', 60, function () {
@@ -173,6 +191,24 @@ class DashboardController extends Controller
         return response()->json(['success' => true, 'data' => $data]);
     }
 
+    /**
+     * Genera reportes analíticos detallados basados en un rango de fechas.
+     *
+     * Extrae métricas clave para la administración de la clínica:
+     * 1. Resumen general (ingresos totales, tasa de completación, citas completadas).
+     * 2. Desglose de citas por estado (mapeado a etiquetas legibles).
+     * 3. Distribución mensual de citas e ingresos de los últimos 6 meses.
+     * 4. Top 5 de servicios más solicitados junto con su revenue.
+     * 5. Evolución del número de nuevos clientes registrados por mes.
+     *
+     * Optimizaciones críticas aplicadas:
+     * - El cálculo del revenue total y por servicio se realiza mediante agregaciones SQL directo (SUM/JOIN),
+     *   evitando la hidratación de modelos y resolviendo problemas históricos de consultas N+1 en bucles.
+     * - Las expresiones de fecha aprovechan los índices compuestos configurados en la base de datos.
+     *
+     * @param  \Illuminate\Http\Request  $request  Petición con los parámetros opcionales 'from' y 'to' (formato Y-m-d).
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function reports(Request $request)
     {
         $from = $request->input('from', Carbon::now()->startOfMonth()->format('Y-m-d'));

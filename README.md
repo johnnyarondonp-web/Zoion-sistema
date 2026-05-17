@@ -13,7 +13,7 @@ Zoion es una plataforma integral diseñada para optimizar la gestión de clínic
 | Capa | Tecnología |
 |---|---|
 | Backend | Laravel 13 (PHP 8.3+) |
-| Frontend | React 18 + TypeScript |
+| Frontend | React 19 + TypeScript 6 |
 | Comunicación | Inertia.js |
 | Estilos | Tailwind CSS 4 + shadcn/ui |
 | Animaciones | Framer Motion |
