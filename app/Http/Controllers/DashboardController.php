@@ -125,6 +125,7 @@ class DashboardController extends Controller
 
             // Mismo enfoque que para los meses: una sola query que trae los conteos
             // de los últimos 14 días, eliminando el loop de 14 queries independientes.
+            // (Nota: Este bloque resuelve el pendiente de las 20 queries en el dashboard).
             $start14Days = Carbon::now()->subDays(13)->format('Y-m-d');
             $rawDayCounts = Appointment::where('date', '>=', $start14Days)
                 ->where('date', '<=', Carbon::now()->format('Y-m-d'))

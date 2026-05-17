@@ -243,6 +243,4 @@ database/
 
 Este proyecto está bajo la licencia **MIT**.
 
----
 
-<p align="center">Desarrollado con ❤️ para amantes de los animales.</p>
