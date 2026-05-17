@@ -9,6 +9,15 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.8] - 2026-05-17
+
+### Corregido
+- **Autenticación**: Sincronización robusta de los errores de validación de Inertia en el estado local de React dentro de `Login.tsx`, garantizando que las credenciales incorrectas muestren alertas inmediatas al usuario.
+- **Autenticación**: Eliminación del middleware redundante `throttle:5,1` en la ruta `/login`, delegando el control de rate-limiting al controlador para responder con redirecciones de sesión amigables en lugar de páginas de error 429 crudas del navegador.
+- **Pruebas**: Refactorización de `test_login_is_throttled` en `RegressionFixTest.php` para validar las redirecciones y mensajes de error específicos del rate limiter en la sesión, logrando la aprobación total de la suite de pruebas.
+
+---
+
 ## [V3.9.7] - 2026-05-17
 
 ### Corregido

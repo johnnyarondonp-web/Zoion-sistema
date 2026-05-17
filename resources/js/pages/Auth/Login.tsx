@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import {
   PawPrint,
@@ -15,11 +15,18 @@ import { Navbar } from '@/components/layout/navbar';
 
 /* ─── Main login page component ─── */
 export default function Login() {
+  const { errors } = usePage().props as any;
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (errors && (errors.email || errors.password)) {
+      setError(errors.email || errors.password || '');
+    }
+  }, [errors]);
 
   useEffect(() => {
     const cookies = document.cookie.split(';').map(c => c.trim());

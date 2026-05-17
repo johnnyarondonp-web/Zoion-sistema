@@ -15,15 +15,17 @@ class RegressionFixTest extends TestCase
      */
     public function test_login_is_throttled(): void
     {
-        // 5 attempts allowed in 1 minute. 6th should fail.
+        // 5 attempts allowed. 6th should fail.
         for ($i = 0; $i < 5; $i++) {
             $response = $this->post('/login', [
                 'email' => 'test@example.com',
                 'password' => 'password',
             ]);
-            // The route might return 302 (redirect back) or 422 (validation error)
-            // but it should NOT be 429 yet.
-            $this->assertNotEquals(429, $response->getStatusCode(), "Attempt $i should not be throttled.");
+            $response->assertStatus(302);
+            $response->assertSessionHasErrors('email');
+            
+            $errors = session()->get('errors');
+            $this->assertStringContainsString('credenciales no son correctas', $errors->first('email'));
         }
 
         $response = $this->post('/login', [
@@ -31,7 +33,11 @@ class RegressionFixTest extends TestCase
             'password' => 'password',
         ]);
 
-        $response->assertStatus(429);
+        $response->assertStatus(302);
+        $response->assertSessionHasErrors('email');
+        
+        $errors = session()->get('errors');
+        $this->assertStringContainsString('Demasiados intentos fallidos', $errors->first('email'));
     }
 
     /**
