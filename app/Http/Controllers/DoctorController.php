@@ -82,6 +82,9 @@ class DoctorController extends Controller
 
             if (!empty($data['serviceIds'])) {
                 $doctor->services()->sync($data['serviceIds']);
+                foreach ($data['serviceIds'] as $serviceId) {
+                    \Illuminate\Support\Facades\Cache::forget("service_doctors:{$serviceId}");
+                }
             }
 
             return $doctor;
@@ -137,7 +140,13 @@ class DoctorController extends Controller
             }
 
             if (array_key_exists('serviceIds', $data)) {
+                foreach ($doctor->services as $service) {
+                    \Illuminate\Support\Facades\Cache::forget("service_doctors:{$service->id}");
+                }
                 $doctor->services()->sync($data['serviceIds'] ?? []);
+                foreach ($data['serviceIds'] ?? [] as $serviceId) {
+                    \Illuminate\Support\Facades\Cache::forget("service_doctors:{$serviceId}");
+                }
             }
         });
 
@@ -159,6 +168,10 @@ class DoctorController extends Controller
             ], 422);
         }
 
+        foreach ($doctor->services as $service) {
+            \Illuminate\Support\Facades\Cache::forget("service_doctors:{$service->id}");
+        }
+
         $doctor->update(['is_active' => false]);
 
         return response()->json(['success' => true]);
@@ -167,6 +180,9 @@ class DoctorController extends Controller
     public function toggleActive($id)
     {
         $doctor = Doctor::findOrFail($id);
+        foreach ($doctor->services as $service) {
+            \Illuminate\Support\Facades\Cache::forget("service_doctors:{$service->id}");
+        }
         $doctor->update(['is_active' => !$doctor->is_active]);
 
         return response()->json([

@@ -80,9 +80,9 @@ class AppointmentService
         $source = ($isStaff && isset($data['userId']) && $data['userId'] !== $user->id) ? 'admin_booked' : 'online';
         $lockKey = "appointment_lock_{$data['date']}_{$data['startTime']}";
 
-        // En producción usamos Redis para locks si está disponible (REDIS_HOST no es nulo y el driver está cargado).
+        // En producción usamos Redis para locks si está disponible (REDIS_HOST no es nulo en configuración y el driver está cargado).
         // Si no, cae en el driver de cache configurado por defecto (database o array en tests).
-        $lockStore = (env('REDIS_HOST') && extension_loaded('redis') && env('APP_ENV') !== 'testing') ? 'redis' : null;
+        $lockStore = (config('database.redis.default.host') && extension_loaded('redis') && !app()->environment('testing')) ? 'redis' : null;
         $lock = $lockStore ? Cache::store($lockStore)->lock($lockKey, 10) : Cache::lock($lockKey, 10);
 
         try {
@@ -223,7 +223,7 @@ class AppointmentService
 
     private function hasCapacityFor(string $serviceId, string $date, string $startTime, string $endTime): bool
     {
-        $isTesting = env('APP_ENV') === 'testing';
+        $isTesting = app()->environment('testing');
 
         $doctorIdsFetcher = function () use ($serviceId) {
             return DB::table('doctor_services')
@@ -235,7 +235,7 @@ class AppointmentService
 
         $doctorIds = $isTesting 
             ? $doctorIdsFetcher() 
-            : Cache::remember("service_doctors:{$serviceId}", 5, $doctorIdsFetcher);
+            : Cache::remember("service_doctors:{$serviceId}", 60, $doctorIdsFetcher);
 
         $totalDoctors = $doctorIds->count();
 
