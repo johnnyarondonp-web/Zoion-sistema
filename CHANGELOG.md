@@ -9,6 +9,19 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.6] - 2026-05-17
+
+### Añadido
+- **Seguridad**: Bloqueo estricto contra el bypass de calificación de citas en el endpoint general de actualización (PATCH) para perfiles de cliente, reforzando la idempotencia del rating.
+- **Seguridad**: Regeneración y rotación exitosa de la clave de cifrado local `APP_KEY` para invalidar sesiones previas y asegurar la integridad criptográfica del sistema.
+- **Pruebas**: Adición del test `test_rating_no_se_puede_sobrescribir_via_update` en `AppointmentFlowsTest.php` para validar la seguridad del PATCH general.
+
+### Optimizado
+- **Dashboard**: Refactorización de las consultas mensuales en `DashboardController` (`index()` y `reports()`) agrupando por `DB::raw()` en lugar del alias de select, garantizando compatibilidad nativa con motores SQL estrictos como PostgreSQL.
+- **Rendimiento**: Optimización del hook React `usePendingAppointments.ts` filtrando por `status=pending` en el backend (`GET /api/appointments?status=pending&limit=50`), reduciendo drásticamente la carga de datos innecesarios del cliente.
+
+---
+
 ## [V3.9.5] - 2026-05-17
 
 ### Añadido

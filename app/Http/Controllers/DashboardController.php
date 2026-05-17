@@ -91,7 +91,7 @@ class DashboardController extends Controller
             $startSixMonths = Carbon::now()->startOfMonth()->subMonths(5)->format('Y-m-d');
             $rawMonthCounts = Appointment::where('date', '>=', $startSixMonths)
                 ->selectRaw(self::monthGroupExpr() . ' as ym, count(*) as count')
-                ->groupBy('ym')
+                ->groupBy(DB::raw(self::monthGroupExpr()))
                 ->pluck('count', 'ym');
 
             $appointments_by_month = [];
@@ -237,7 +237,7 @@ class DashboardController extends Controller
         $startSixMonths = Carbon::now()->startOfMonth()->subMonths(5)->format('Y-m-d');
         $rawMonthCounts = Appointment::where('date', '>=', $startSixMonths)
             ->selectRaw(self::monthGroupExpr() . ' as ym, count(*) as count')
-            ->groupBy('ym')
+            ->groupBy(DB::raw(self::monthGroupExpr()))
             ->pluck('count', 'ym');
 
         $appointmentsByMonth = [];
@@ -295,7 +295,7 @@ class DashboardController extends Controller
         $rawClientCounts = User::where('role', 'client')
             ->where('created_at', '>=', $startClients)
             ->selectRaw($createdAtExpr . ' as ym, count(*) as count')
-            ->groupBy('ym')
+            ->groupBy(DB::raw($createdAtExpr))
             ->pluck('count', 'ym');
 
         $newClientsByMonth = [];

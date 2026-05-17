@@ -172,6 +172,15 @@ class AppointmentController extends Controller
             abort(403, 'No autorizado');
         }
 
+        // Evitar bypass de calificación idempotente para clientes en el PATCH general
+        if ($user->role === 'client' && ($request->has('rating') || $request->has('review')) && $appointment->rating !== null) {
+            return response()->json([
+                'success' => false,
+                'error'   => 'Esta cita ya fue calificada.',
+                'message' => 'Esta cita ya fue calificada.',
+            ], 422);
+        }
+
         // Definir campos editables según el rol del usuario
         $allowedFields = [
             'notes', 
@@ -268,9 +277,10 @@ class AppointmentController extends Controller
             ], 422);
         }
 
-        if (!is_null($appointment->rating)) {
+        if ($appointment->rating !== null) {
             return response()->json([
                 'success' => false,
+                'error'   => 'Esta cita ya fue calificada.',
                 'message' => 'Esta cita ya fue calificada.',
             ], 422);
         }

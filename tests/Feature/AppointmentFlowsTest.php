@@ -303,6 +303,37 @@ class AppointmentFlowsTest extends TestCase
         ]);
     }
 
+    public function test_rating_no_se_puede_sobrescribir_via_update(): void
+    {
+        $client  = $this->makeUser();
+        $service = $this->makeService();
+        $pet     = $this->makePet($client->id);
+
+        $appointment = $this->makeAppointment([
+            'user_id'    => $client->id,
+            'pet_id'     => $pet->id,
+            'service_id' => $service->id,
+            'date'       => Carbon::today()->format('Y-m-d'),
+            'status'     => 'completed',
+            'rating'     => 4,
+        ]);
+
+        // Intentar sobrescribir la calificación usando el PATCH general de actualización
+        $res = $this->actingAs($client)->patchJson("/api/appointments/{$appointment->id}", [
+            'rating' => 1,
+            'review' => 'Malísimo',
+        ]);
+
+        $res->assertStatus(422)
+            ->assertJsonPath('success', false);
+
+        // La base de datos debe mantener el rating original de 4
+        $this->assertDatabaseHas('appointments', [
+            'id'     => $appointment->id,
+            'rating' => 4,
+        ]);
+    }
+
     public function test_rating_falla_si_cita_no_esta_completada(): void
     {
         $client  = $this->makeUser();

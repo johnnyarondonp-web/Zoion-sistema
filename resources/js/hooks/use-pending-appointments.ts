@@ -18,7 +18,7 @@ export function usePendingAppointments() {
 
     const fetchPending = async () => {
       try {
-        const res = await fetch('/api/appointments?limit=100', {
+        const res = await fetch('/api/appointments?status=pending&limit=50', {
           headers: {
             'Accept': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
@@ -27,9 +27,7 @@ export function usePendingAppointments() {
         });
         const data = await res.json();
         if (data.success) {
-          const pending = (data.data.appointments || []).filter(
-            (apt: { status: string }) => apt.status === 'pending'
-          ).length;
+          const pending = (data.data.appointments || []).length;
           setPendingCount(pending);
         }
       } catch {
