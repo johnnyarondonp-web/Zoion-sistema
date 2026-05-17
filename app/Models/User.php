@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Traits\HasCuid;
+use App\Traits\HasUlid;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
-      use HasApiTokens, HasCuid, HasFactory, Notifiable;
+      use HasApiTokens, HasUlid, HasFactory, Notifiable;
 
     public $incrementing = false;
     protected $keyType = 'string';

@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use App\Traits\HasCuid;
+use App\Traits\HasUlid;
 use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    use HasCuid;
+    use HasUlid;
 
     public $incrementing = false;
     protected $keyType = 'string';

@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
-use App\Traits\HasCuid;
+use App\Traits\HasUlid;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
-    use HasCuid;
+    use HasUlid;
 
     public $incrementing = false;
     protected $keyType = 'string';

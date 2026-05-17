@@ -4,9 +4,9 @@ namespace App\Traits;
 
 use Illuminate\Support\Str;
 
-trait HasCuid
+trait HasUlid
 {
-    protected static function bootHasCuid(): void
+    protected static function bootHasUlid(): void
     {
         static::creating(function ($model) {
             if (empty($model->{$model->getKeyName()})) {
