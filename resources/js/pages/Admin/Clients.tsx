@@ -253,8 +253,10 @@ export default function Clients() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Clientes</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Users className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Clientes
+          </h1>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {pagination

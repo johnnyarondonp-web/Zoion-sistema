@@ -161,6 +161,7 @@ class DashboardController extends Controller
             }
 
             $petsAttendedThisMonth = Appointment::where('date', '>=', Carbon::now()->startOfMonth()->format('Y-m-d'))
+                ->where('status', 'completed')
                 ->distinct('pet_id')
                 ->count('pet_id');
 

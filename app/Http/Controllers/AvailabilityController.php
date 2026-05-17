@@ -42,25 +42,38 @@ class AvailabilityController extends Controller
             ]);
         }
 
-        // 2. Verificar horario del día
-        $dayOfWeek = Carbon::parse($date)->dayOfWeek;
-        $schedule = Schedule::where('day_of_week', $dayOfWeek)->first();
+        // 2. Verificar si es un día habilitado de forma especial
+        $specialOpen = \App\Models\SpecialOpenDate::where('date', $date)->first();
+        $schedule = null;
 
-        // Si no hay horario guardado, aplicar el predeterminado: L-V disponible, fines de semana no.
-        if (!$schedule) {
-            $isWeekday = $dayOfWeek >= 1 && $dayOfWeek <= 5;
-            if (!$isWeekday) {
-                return response()->json([
-                    'success' => true,
-                    'data' => ['available' => false, 'slots' => []]
-                ]);
-            }
-            // Crear un objeto temporal con el horario predeterminado para no romper el flujo siguiente.
+        if ($specialOpen) {
+            // Si es un día habilitado especialmente, creamos un objeto temporal con su horario específico
             $schedule = (object)[
                 'is_available' => true,
-                'open_time'    => '09:00',
-                'close_time'   => '18:00',
+                'open_time'    => $specialOpen->open_time,
+                'close_time'   => $specialOpen->close_time,
             ];
+        } else {
+            // Si no, verificar horario semanal general del día
+            $dayOfWeek = Carbon::parse($date)->dayOfWeek;
+            $schedule = Schedule::where('day_of_week', $dayOfWeek)->first();
+
+            // Si no hay horario guardado, aplicar el predeterminado: L-V disponible, fines de semana no.
+            if (!$schedule) {
+                $isWeekday = $dayOfWeek >= 1 && $dayOfWeek <= 5;
+                if (!$isWeekday) {
+                    return response()->json([
+                        'success' => true,
+                        'data' => ['available' => false, 'slots' => []]
+                    ]);
+                }
+                // Crear un objeto temporal con el horario predeterminado para no romper el flujo siguiente.
+                $schedule = (object)[
+                    'is_available' => true,
+                    'open_time'    => '09:00',
+                    'close_time'   => '18:00',
+                ];
+            }
         }
 
         if (!$schedule || !$schedule->is_available) {
@@ -169,12 +182,16 @@ class AvailabilityController extends Controller
     public function schedule()
     {
         $dbSchedules = Schedule::all();
+        $specialOpenDates = \App\Models\SpecialOpenDate::orderBy('date')->pluck('date');
 
         if ($dbSchedules->isEmpty()) {
             // Tabla vacía: aplicar defaults. Sábado (6) y domingo (0) no disponibles.
             return response()->json([
                 'success' => true,
-                'data' => ['unavailableDays' => [0, 6]]
+                'data' => [
+                    'unavailableDays' => [0, 6],
+                    'specialOpenDates' => $specialOpenDates
+                ]
             ]);
         }
 
@@ -184,7 +201,10 @@ class AvailabilityController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => ['unavailableDays' => $unavailable]
+            'data' => [
+                'unavailableDays' => $unavailable,
+                'specialOpenDates' => $specialOpenDates
+            ]
         ]);
     }
 }

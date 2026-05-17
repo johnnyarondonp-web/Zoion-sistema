@@ -28,29 +28,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
-  Eye,
-  MoreHorizontal,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  UserX,
-  Filter,
-  CalendarDays,
-  Download,
-  Stethoscope,
-  Syringe,
-  Scissors,
-  ShieldCheck,
-  Activity,
-  Plus,
-  Loader2,
-  MessageCircle,
-  Send,
-} from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Eye, MoreHorizontal, CheckCircle2, XCircle, Clock, UserX, Filter, CalendarDays, Download, Stethoscope, Syringe, Scissors, ShieldCheck, Activity, Plus, Loader2, MessageCircle, Send, CalendarCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -533,7 +511,10 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Citas</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <CalendarCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Citas
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona todas las citas de la clínica</p>
         </div>
         <div className="flex items-center gap-2">

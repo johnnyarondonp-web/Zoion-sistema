@@ -112,6 +112,7 @@ Route::middleware(['auth'])->group(function () {
 
         // API: Fechas bloqueadas (lectura para cliente)
         Route::get('/blocked-dates',                [BlockedDateController::class, 'index']);
+        Route::get('/special-open-dates',           [\App\Http\Controllers\SpecialOpenDateController::class, 'index']);
 
         // API: Disponibilidad de horarios
         Route::get('/availability',                 [AvailabilityController::class, 'index']);
@@ -226,6 +227,8 @@ Route::middleware(['auth', 'ensure.staff'])->group(function () {
 
         // API Admin: Fechas bloqueadas
         Route::post('/blocked-dates',         [BlockedDateController::class, 'store']);
+        Route::post('/special-open-dates',    [\App\Http\Controllers\SpecialOpenDateController::class, 'store']);
+        Route::delete('/special-open-dates/{id}', [\App\Http\Controllers\SpecialOpenDateController::class, 'destroy']);
 
         // API Admin: Atención presencial (walk-in)
         Route::get('/admin/walk-in',                      [WalkInController::class, 'index']);

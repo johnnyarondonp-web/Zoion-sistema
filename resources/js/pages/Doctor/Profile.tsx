@@ -91,7 +91,10 @@ export default function DoctorProfile() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 pb-12">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Mi Perfil</h1>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight flex items-center gap-2">
+            <User className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Mi Perfil
+          </h1>
         <p className="text-gray-500 dark:text-gray-400 mt-1">Consulta tu información y gestiona tu seguridad</p>
       </motion.div>
 

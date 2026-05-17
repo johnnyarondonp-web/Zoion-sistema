@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, User, Phone, Pencil, Loader2, Trash2, IdCard } from 'lucide-react';
+import { Plus, User, Phone, Pencil, Loader2, Trash2, IdCard, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -201,7 +201,10 @@ export default function Receptionists() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Recepcionistas</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Users className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Recepcionistas
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona el personal de recepción de la clínica</p>
         </div>
         <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">

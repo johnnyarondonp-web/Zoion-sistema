@@ -61,19 +61,6 @@ function timeToMinutes(time: string): number {
   return h * 60 + m;
 }
 
-// Devuelve la fecha real del día de esta semana (domingo como primer día)
-function getDateOfThisWeek(dayOfWeek: number): Date {
-  const today = new Date();
-  const todayDow = today.getDay();
-  const diff = dayOfWeek - todayDow;
-  const result = new Date(today);
-  result.setDate(today.getDate() + diff);
-  return result;
-}
-
-function formatShortDate(date: Date): string {
-  return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-}
 
 function minutesToPercentage(minutes: number): number {
   return Math.min(100, Math.max(0, (minutes / (24 * 60)) * 100));
@@ -252,23 +239,27 @@ export default function Schedules() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            🕐 Horarios
+            <Clock className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Horarios
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Configura los horarios de atención de la clínica</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            Configura el horario general recurrente de la clínica (se aplica a todas las semanas).
+          </p>
         </div>
       </div>
+
+
 
       {/* Weekly Overview Cards */}
       <div>
         <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
           <CalendarDays className="h-4 w-4" />
-          Vista Semanal
+          Plantilla Semanal Recurrente
         </h2>
         <div className="grid grid-cols-7 gap-2">
           {schedules.map((schedule) => {
             const colors = dayColors[schedule.dayOfWeek];
             const isOpen = schedule.isAvailable;
-            const dayDate = getDateOfThisWeek(schedule.dayOfWeek);
 
             return (
               <motion.div
@@ -282,9 +273,6 @@ export default function Schedules() {
               >
                 <p className={`text-xs font-bold ${isOpen ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-400 dark:text-gray-500'}`}>
                   {dayShortNames[schedule.dayOfWeek]}
-                </p>
-                <p className={`text-[9px] mt-0.5 ${isOpen ? 'text-emerald-500' : 'text-gray-400'}`}>
-                  {formatShortDate(dayDate)}
                 </p>
                 {isOpen ? (
                   <>
@@ -423,6 +411,16 @@ export default function Schedules() {
           </div>
         </CardContent>
       </Card>
+
+      {/* General Advice Alert Moved to Bottom */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sky-800 dark:bg-sky-950/20 dark:border-sky-900/50 dark:text-sky-300 text-sm w-full mt-4"
+      >
+        <span className="font-semibold">💡 Consejo de gestión:</span> Este panel define el horario de apertura fijo que se repite <strong>todas las semanas</strong>. Si necesitas abrir o cerrar un día específico (como un feriado o habilitar un sábado de guardia único), no alteres este horario general; en su lugar, utiliza el nuevo módulo de <a href="/admin/blocked-dates" className="underline font-medium hover:text-sky-700 dark:hover:text-sky-400">📅 Excepciones del Calendario</a> para gestionar fechas especiales sin afectar al resto del año.
+      </motion.div>
     </motion.div>
   );
 }

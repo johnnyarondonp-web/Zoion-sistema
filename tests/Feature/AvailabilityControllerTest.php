@@ -425,4 +425,50 @@ class AvailabilityControllerTest extends TestCase
         $slots = $res->json('data.slots');
         $this->assertNotContains('09:00', collect($slots)->pluck('time')->all());
     }
+
+    /** @test */
+    public function test_availability_returns_slots_for_special_open_date_even_if_it_is_weekend(): void
+    {
+        $this->createDefaultSchedules();
+        $saturday = $this->nextWeekday(6); // Sábado está deshabilitado en default schedule
+
+        \App\Models\SpecialOpenDate::create([
+            'id' => (string) Str::ulid(),
+            'date' => $saturday,
+            'open_time' => '10:00',
+            'close_time' => '14:00',
+            'reason' => 'Sábado extra',
+        ]);
+
+        $res = $this->actingAs($this->user)->getJson("/api/availability?date={$saturday}&serviceId={$this->service->id}");
+
+        $res->assertOk()
+            ->assertJsonPath('data.available', true);
+
+        $slots = $res->json('data.slots');
+        $this->assertNotEmpty($slots);
+        $this->assertEquals('10:00', $slots[0]['time']);
+        $this->assertEquals('13:00', $slots[count($slots) - 1]['time']);
+    }
+
+    /** @test */
+    public function test_schedule_endpoint_returns_special_open_dates(): void
+    {
+        $this->createDefaultSchedules();
+        $saturday = $this->nextWeekday(6);
+
+        \App\Models\SpecialOpenDate::create([
+            'id' => (string) Str::ulid(),
+            'date' => $saturday,
+            'open_time' => '09:00',
+            'close_time' => '18:00',
+        ]);
+
+        $res = $this->actingAs($this->user)->getJson('/api/availability/schedule');
+
+        $res->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.specialOpenDates.0', $saturday);
+    }
 }
+

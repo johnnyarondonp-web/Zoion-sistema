@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, UserPlus, Clock, Loader2, CheckCircle2, Stethoscope } from 'lucide-react';
+import { Search, UserPlus, Clock, Loader2, CheckCircle2, Stethoscope, DoorOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import AdminLayout from '@/components/layout/AdminLayout';
@@ -244,7 +244,10 @@ export default function WalkIn() {
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6 max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Atención presencial</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <DoorOpen className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Atención presencial
+          </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Registra una atención walk-in para hoy</p>
       </div>
 

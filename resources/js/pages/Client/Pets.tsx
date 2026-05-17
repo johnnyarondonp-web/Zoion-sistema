@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ClientLayout from '@/components/layout/ClientLayout';
 
-import { Plus, Search, Filter, X, PawPrint } from 'lucide-react';
+import { Plus, Search, Filter, X, PawPrint, Dog } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface Pet {
@@ -137,7 +137,10 @@ export default function Pets() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mis Mascotas</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Dog className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Mis Mascotas
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona los perfiles de tus mascotas</p>
         </div>
         <Button

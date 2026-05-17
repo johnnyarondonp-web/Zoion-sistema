@@ -202,9 +202,11 @@ export default function Reports() {
     <motion.div variants={container} initial="hidden" animate="visible" className="space-y-6">
       <motion.div variants={item}>
         <div className="flex items-center gap-3">
-          <BarChart3 className="h-7 w-7 text-emerald-600" />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Reportes y Analíticas</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <BarChart3 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Reportes y Analíticas
+          </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Resumen general de la clínica</p>
           </div>
         </div>

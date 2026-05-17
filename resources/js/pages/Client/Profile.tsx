@@ -309,7 +309,10 @@ export default function Profile() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Mi Perfil</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <User className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Mi Perfil
+          </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Gestiona la información de tu cuenta
         </p>

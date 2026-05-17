@@ -243,7 +243,10 @@ export default function Doctors() {
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Equipo médico</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Stethoscope className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Equipo médico
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona los médicos y sus servicios asignados</p>
         </div>
         <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">

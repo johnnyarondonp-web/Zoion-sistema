@@ -601,7 +601,7 @@ export default function Settings() {
                     <Code2 className="h-5 w-5 text-sky-500" />
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Versión</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">3.9.8</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">3.9.11</p>
                     </div>
                   </div>
                   <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none">

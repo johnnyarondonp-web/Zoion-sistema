@@ -390,7 +390,10 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
       <div className="max-w-5xl mx-auto space-y-8 pb-12">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">Mi Agenda Médica</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+            <CalendarDays className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+            Mi Agenda Médica
+          </h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Gestión clínica y atención de pacientes</p>
           </div>
           <div className="flex flex-col sm:flex-row items-center gap-3">

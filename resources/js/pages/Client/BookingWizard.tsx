@@ -268,6 +268,7 @@ export default function BookingWizard() {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [unavailableDays, setUnavailableDays] = useState<number[]>([]);
+  const [specialOpenDates, setSpecialOpenDates] = useState<string[]>([]);
 
   const [loadingServices, setLoadingServices] = useState(true);
   const [loadingPets, setLoadingPets] = useState(false);
@@ -329,7 +330,12 @@ export default function BookingWizard() {
 
       const fetchSchedule = fetch('/api/availability/schedule', { headers })
         .then(r => r.json())
-        .then(data => { if (data.success) setUnavailableDays(data.data.unavailableDays); })
+        .then(data => {
+          if (data.success) {
+            setUnavailableDays(data.data.unavailableDays || []);
+            setSpecialOpenDates(data.data.specialOpenDates || []);
+          }
+        })
         .catch(() => {});
 
       Promise.all([fetchBlocked, fetchSchedule]);
@@ -390,6 +396,11 @@ export default function BookingWizard() {
   const isDateBlocked = (date: Date): boolean => {
     const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     return blockedDates.some((bd) => bd.date === dateStr);
+  };
+
+  const isDateSpecialOpen = (date: Date): boolean => {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    return specialOpenDates.includes(dateStr);
   };
 
   const isDatePast = (date: Date): boolean => {
@@ -756,17 +767,17 @@ export default function BookingWizard() {
             isDatePast(date) ||
             isDateBlocked(date) ||
             isDateTooFar(date) ||
-            unavailableDays.includes(date.getDay())
+            (unavailableDays.includes(date.getDay()) && !isDateSpecialOpen(date))
           }
           className="rounded-lg border shadow-sm dark:border-gray-700"
           modifiers={{
             blocked: (date) => isDateBlocked(date),
-            unavailable: (date) => unavailableDays.includes(date.getDay()),
+            unavailable: (date) => unavailableDays.includes(date.getDay()) && !isDateSpecialOpen(date),
             available: (date) =>
               !isDatePast(date) &&
               !isDateBlocked(date) &&
               !isDateTooFar(date) &&
-              !unavailableDays.includes(date.getDay()) &&
+              (!unavailableDays.includes(date.getDay()) || isDateSpecialOpen(date)) &&
               (!selectedDate || selectedDate.toDateString() !== date.toDateString()),
           }}
           modifiersClassNames={{
