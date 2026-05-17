@@ -477,15 +477,20 @@ class AppointmentController extends Controller
             ]);
         }
 
-        // Manejar campos de pago en camelCase que vienen del frontend
-        if ($request->has('paymentMethod')) $appointment->update(['payment_method' => $request->paymentMethod]);
-        if ($request->has('paymentStatus')) $appointment->update(['payment_status' => $request->paymentStatus]);
-        if ($request->has('paymentAmount')) $appointment->update(['payment_amount' => $request->paymentAmount]);
+        // El frontend manda estos campos en camelCase. La verificación de rol ya cubre
+        // payment_method/payment_status en snake_case mediante $allowedFields, pero este
+        // bloque los aplicaba sin importar quién era el usuario — cualquier cliente
+        // podía marcar su propia cita como pagada enviando paymentStatus=paid.
+        if (in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
+            if ($request->has('paymentMethod')) $appointment->update(['payment_method' => $request->paymentMethod]);
+            if ($request->has('paymentStatus')) $appointment->update(['payment_status' => $request->paymentStatus]);
+            if ($request->has('paymentAmount')) $appointment->update(['payment_amount' => $request->paymentAmount]);
 
-        // Registrar el momento exacto del pago aquí en lugar de confiar en el frontend
-        if ($request->has('paymentStatus') && $request->paymentStatus === 'paid' && !$appointment->paid_at) {
-            $appointment->update(['paid_at' => now()]);
+            if ($request->has('paymentStatus') && $request->paymentStatus === 'paid' && !$appointment->paid_at) {
+                $appointment->update(['paid_at' => now()]);
+            }
         }
+
 
         if ($user->role === 'admin' && $request->has('status') && $request->status === 'confirmed') {
             \App\Models\Notification::create([
@@ -542,16 +547,24 @@ class AppointmentController extends Controller
 
         $appointment = Appointment::findOrFail($id);
 
-        // Solo el dueño de la cita puede calificar
         if ($appointment->user_id !== $request->user()->id) {
             abort(403);
         }
 
-        // Solo se puede calificar una cita completada
         if ($appointment->status !== 'completed') {
             return response()->json([
                 'success' => false,
                 'message' => 'Solo puedes calificar citas completadas.',
+            ], 422);
+        }
+
+        // Si ya tiene rating, no permitir sobreescribirlo. El cliente podría enviar
+        // esta request dos veces (doble click, retry) y terminaríamos con ratings
+        // distintos dependiendo del timing. Una calificación es definitiva.
+        if (!is_null($appointment->rating)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta cita ya fue calificada.',
             ], 422);
         }
 

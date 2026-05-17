@@ -50,6 +50,18 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
   },
 
   markAsRead: async (id: string) => {
+    // Actualización optimista: actualizar el estado local sincrónicamente
+    set((state) => {
+      const updatedNotifications = state.notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      );
+      const wasUnread = state.notifications.find((n) => n.id === id)?.read === false;
+      return {
+        notifications: updatedNotifications,
+        unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+      };
+    });
+
     try {
       const res = await fetch(`/api/notifications/${id}/read`, {
         method: 'POST',
@@ -61,21 +73,19 @@ export const useNotificationStore = create<NotificationState>((set, get) => ({
       });
 
       if (!res.ok) throw new Error('Failed to mark as read');
-
-      const data = await res.json();
-      if (data.success) {
-        set((state) => {
-          const updatedNotifications = state.notifications.map((n) =>
-            n.id === id ? { ...n, read: true } : n
-          );
-          return {
-            notifications: updatedNotifications,
-            unreadCount: Math.max(0, state.unreadCount - 1),
-          };
-        });
-      }
     } catch (error) {
       console.error('Error marking notification as read:', error);
+      // Revertir el estado si la llamada al backend falló
+      set((state) => {
+        const updatedNotifications = state.notifications.map((n) =>
+          n.id === id ? { ...n, read: false } : n
+        );
+        const wasRead = state.notifications.find((n) => n.id === id)?.read === true;
+        return {
+          notifications: updatedNotifications,
+          unreadCount: wasRead ? state.unreadCount + 1 : state.unreadCount,
+        };
+      });
     }
   },
 

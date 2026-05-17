@@ -27,6 +27,14 @@ class Appointment extends Model
         'payment_amount' => 'decimal:2',
     ];
 
+    // El campo date está definido como string en la migración original (error de diseño).
+    // Lo normalizamos aquí para que siempre devuelva Y-m-d. Si algún día se migra a
+    // tipo date real en PostgreSQL, este accessor se puede eliminar sin tocar el resto.
+    public function getDateAttribute($value): string
+    {
+        return $value ? \Carbon\Carbon::parse($value)->format('Y-m-d') : $value;
+    }
+
     public function doctor() {
         return $this->belongsTo(Doctor::class);
     }
