@@ -9,6 +9,14 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.5] - 2026-05-17
+
+### Añadido
+- **Pruebas**: Adición del test unitario de cola en `tests/Unit/NotifyAdminsJobTest.php` para asegurar la correcta y única inserción en lote de notificaciones dirigidas a perfiles administrativos.
+- **Pruebas**: Consolidación y validación del test de robustez/idempotencia `test_rating_no_se_puede_calificar_dos_veces` en `tests/Feature/AppointmentFlowsTest.php` para evitar dobles solicitudes de calificación en citas completadas.
+
+---
+
 ## [V3.9.4] - 2026-05-17
 
 ### Añadido
