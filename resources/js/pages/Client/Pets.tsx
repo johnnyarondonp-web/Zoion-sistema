@@ -293,7 +293,7 @@ export default function Pets() {
                           <img 
                             src={pet.photo} 
                             alt={pet.name}
-                            className="h-full w-full object-contain group-hover:scale-105 transition-transform duration-300" 
+                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
                           />
                         )
                         : (

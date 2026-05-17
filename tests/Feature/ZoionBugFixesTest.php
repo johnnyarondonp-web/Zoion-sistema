@@ -577,4 +577,27 @@ class ZoionBugFixesTest extends TestCase
         $res->assertStatus(422);
         $res->assertJsonValidationErrors(['date']);
     }
+
+    public function test_doctor_can_register_vaccination_record(): void
+    {
+        $doctor = $this->makeUser('doctor');
+        $client = $this->makeUser();
+        $pet    = $this->makePet($client->id);
+
+        $res = $this->actingAs($doctor)->postJson("/api/pets/{$pet->id}/vaccinations", [
+            'name'    => 'Triple Felina',
+            'date'    => '2026-05-17',
+            'nextDue' => '2027-05-17',
+            'vet'     => 'Dr. Gregory House',
+            'notes'   => 'Lote 123',
+        ]);
+
+        $res->assertStatus(200);
+        $res->assertJsonPath('success', true);
+        
+        $pet->refresh();
+        $this->assertCount(1, $pet->vaccinations);
+        $this->assertEquals('Triple Felina', $pet->vaccinations[0]['name']);
+        $this->assertEquals('Dr. Gregory House', $pet->vaccinations[0]['vet']);
+    }
 }

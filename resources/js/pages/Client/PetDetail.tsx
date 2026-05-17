@@ -558,14 +558,9 @@ export default function PetDetail() {
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <button onClick={() => setHealthExpanded(!healthExpanded)} className="flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
-                <Heart className="h-5 w-5 text-emerald-600" /> Resumen de Salud
+                <Heart className="h-5 w-5 text-emerald-600" /> Resumen Clínico
                 <motion.span animate={{ rotate: healthExpanded ? 180 : 0 }} transition={{ duration: 0.2 }}> <ChevronDown className="h-4 w-4 text-gray-400" /> </motion.span>
               </button>
-              {healthSummary && (
-                <Button variant="ghost" size="sm" onClick={() => window.print()} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 gap-1">
-                  <Printer className="h-4 w-4" /> <span className="hidden sm:inline">Imprimir</span>
-                </Button>
-              )}
             </div>
           </CardHeader>
           <AnimatePresence initial={false}>
@@ -573,68 +568,36 @@ export default function PetDetail() {
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: 'easeInOut' }} className="overflow-hidden">
                 <CardContent className="space-y-4 pt-0">
                   {healthSummary ? (
-                    <>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Puntuación de Salud</span>
-                          <span className={`text-sm font-bold ${healthSummary?.healthStatus === 'bueno' ? 'text-emerald-600 dark:text-emerald-400' : healthSummary?.healthStatus === 'regular' ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
-                            {healthSummary?.healthScore ?? 0}/100
-                          </span>
-                        </div>
-                        <div className="h-3 w-full rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden">
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${healthSummary?.healthScore ?? 0}%` }} transition={{ duration: 1, ease: 'easeOut' }} className={`h-full rounded-full ${healthSummary?.healthStatus === 'bueno' ? 'bg-gradient-to-r from-emerald-400 to-emerald-600' : healthSummary?.healthStatus === 'regular' ? 'bg-gradient-to-r from-amber-400 to-amber-600' : 'bg-gradient-to-r from-red-400 to-red-600'}`} />
-                        </div>
-                        <div className="flex justify-center">
-                          <Badge className={`text-xs gap-1 ${healthSummary?.healthStatus === 'bueno' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : healthSummary?.healthStatus === 'regular' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                            {healthSummary?.healthStatus === 'bueno' && <CheckCircle2 className="h-3 w-3" />}
-                            {healthSummary?.healthStatus === 'regular' && <AlertCircle className="h-3 w-3" />}
-                            {healthSummary?.healthStatus === 'necesita_atencion' && <AlertCircle className="h-3 w-3" />}
-                            {healthSummary?.healthStatus === 'bueno' ? 'Bueno' : healthSummary?.healthStatus === 'regular' ? 'Regular' : 'Necesita atención'}
-                          </Badge>
-                        </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center flex flex-col justify-center">
+                        <Calendar className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
+                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healthSummary?.totalAppointments ?? 0}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Citas</p>
                       </div>
-                      <Separator />
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          <Calendar className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healthSummary?.totalAppointments ?? 0}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Citas</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          <DollarSign className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">${(healthSummary?.totalSpent != null ? Number(healthSummary?.totalSpent).toFixed(0) : '—')}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Gastado</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          <Syringe className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healthSummary?.vaccinationSummary?.upToDate ?? 0}/{healthSummary?.vaccinationSummary?.total ?? 0}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vacunas al día</p>
-                          {((healthSummary?.vaccinationSummary?.overdue ?? 0) > 0 || (healthSummary?.vaccinationSummary?.dueSoon ?? 0) > 0) && (
-                            <div className="flex items-center justify-center gap-1 mt-1">
-                              {(healthSummary?.vaccinationSummary?.overdue ?? 0) > 0 && <span className="text-[9px] text-red-600 dark:text-red-400 font-medium">{healthSummary?.vaccinationSummary?.overdue} vencida(s)</span>}
-                              {(healthSummary?.vaccinationSummary?.dueSoon ?? 0) > 0 && <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">{healthSummary?.vaccinationSummary?.dueSoon} próxima(s)</span>}
-                            </div>
-                          )}
-                        </div>
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          {healthSummary?.weightTrend === 'up' ? <TrendingUp className="h-5 w-5 mx-auto text-amber-500 dark:text-amber-400 mb-1" /> : healthSummary?.weightTrend === 'down' ? <TrendingDown className="h-5 w-5 mx-auto text-sky-500 dark:text-sky-400 mb-1" /> : <Minus className="h-5 w-5 mx-auto text-gray-400 dark:text-gray-500 mb-1" />}
-                          <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healthSummary?.currentWeight != null ? `${healthSummary?.currentWeight} kg` : '—'}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">{healthSummary?.weightTrend === 'up' ? 'Subiendo' : healthSummary?.weightTrend === 'down' ? 'Bajando' : 'Estable'}</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          <CalendarCheck className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
-                          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{healthSummary?.lastVisitDate ? formatShortDate(healthSummary?.lastVisitDate) : '—'}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Última visita</p>
-                        </div>
-                        <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center">
-                          <CalendarClock className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
-                          <p className="text-sm font-bold text-gray-900 dark:text-gray-100">{healthSummary?.nextAppointmentDate ? formatShortDate(healthSummary?.nextAppointmentDate) : '—'}</p>
-                          <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Próxima cita</p>
-                        </div>
+                      <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center flex flex-col justify-center">
+                        <Syringe className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
+                        <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{healthSummary?.vaccinationSummary?.upToDate ?? 0}/{healthSummary?.vaccinationSummary?.total ?? 0}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Vacunas al día</p>
+                        {((healthSummary?.vaccinationSummary?.overdue ?? 0) > 0 || (healthSummary?.vaccinationSummary?.dueSoon ?? 0) > 0) && (
+                          <div className="flex items-center justify-center gap-1 mt-1">
+                            {(healthSummary?.vaccinationSummary?.overdue ?? 0) > 0 && <span className="text-[9px] text-red-600 dark:text-red-400 font-medium">{healthSummary?.vaccinationSummary?.overdue} vencida(s)</span>}
+                            {(healthSummary?.vaccinationSummary?.dueSoon ?? 0) > 0 && <span className="text-[9px] text-amber-600 dark:text-amber-400 font-medium">{healthSummary?.vaccinationSummary?.dueSoon} próxima(s)</span>}
+                          </div>
+                        )}
                       </div>
-                    </>
+                      <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center flex flex-col justify-center">
+                        <CalendarCheck className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 mb-1">{healthSummary?.lastVisitDate ? formatShortDate(healthSummary?.lastVisitDate) : '—'}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Última visita</p>
+                      </div>
+                      <div className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-3 text-center flex flex-col justify-center">
+                        <CalendarClock className="h-5 w-5 mx-auto text-emerald-500 dark:text-emerald-400 mb-1" />
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 mt-1 mb-1">{healthSummary?.nextAppointmentDate ? formatShortDate(healthSummary?.nextAppointmentDate) : '—'}</p>
+                        <p className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Próxima cita</p>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex flex-col items-center py-6 text-center"> <Stethoscope className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" /> <p className="text-sm text-gray-500 dark:text-gray-400">Cargando resumen de salud...</p> </div>
+                    <div className="flex flex-col items-center py-6 text-center"> <Stethoscope className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" /> <p className="text-sm text-gray-500 dark:text-gray-400">Cargando resumen clínico...</p> </div>
                   )}
                 </CardContent>
               </motion.div>

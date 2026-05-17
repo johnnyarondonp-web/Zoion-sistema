@@ -9,6 +9,19 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.10] - 2026-05-17
+
+### Añadido
+- **Médico**: Lógica completa para el registro de vacunaciones clínicas desde el detalle del paciente en la Agenda del doctor (`Agenda.tsx`), con un formulario de aplicación interactivo (nombre, fecha, próxima dosis, veterinario y notas/lote) y pre-poblamiento automático del veterinario aplicante.
+- **Diseño**: Visualización responsiva y premium de dos columnas en la sección inferior del detalle del paciente, separando claramente el "Historial Clínico" de consultas del nuevo "Registro de Vacunas" para una legibilidad superior.
+- **Pruebas**: Suite de pruebas unitarias automatizada `test_doctor_can_register_vaccination_record` en `ZoionBugFixesTest.php` que valida el registro exitoso de vacunaciones por parte del personal clínico y su persistencia correcta en base de datos.
+
+### Corregido
+- **Diseño**: Remoción de márgenes grises en las tarjetas de mascotas en `Pets.tsx` empleando `object-cover` para un rellenado fluido edge-to-edge.
+- **Diseño**: Simplificación del "Resumen de Salud" en `PetDetail.tsx` a un elegante "Resumen Clínico" con una grilla de 4 columnas, eliminando elementos innecesarios como la barra de progreso, botón de imprimir, dinero gastado y peso/estabilidad.
+
+---
+
 ## [V3.9.9] - 2026-05-17
 
 ### Añadido

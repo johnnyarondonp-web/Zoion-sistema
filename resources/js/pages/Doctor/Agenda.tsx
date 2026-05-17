@@ -7,11 +7,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePage } from '@inertiajs/react';
 import {
   CalendarDays, Clock, User, MessageCircle, 
   Stethoscope, Activity, ClipboardList, CheckCircle2,
   ChevronRight, ArrowRight, Save, History,
-  AlertCircle, Plus, Search, Weight
+  AlertCircle, Plus, Search, Weight, Syringe, X, ShieldCheck
 } from 'lucide-react';
 import {
   Dialog,
@@ -102,6 +103,31 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
   const [newWeight, setNewWeight] = useState('');
   const [submittingWeight, setSubmittingWeight] = useState(false);
 
+  // Vacunación
+  const { auth } = usePage().props as any;
+  const doctorName = auth?.user?.name || '';
+  const [vaccinations, setVaccinations] = useState<any[]>([]);
+  const [isVaccModalOpen, setIsVaccModalOpen] = useState(false);
+  const [vaccForm, setVaccForm] = useState({
+    name: '',
+    date: new Date().toLocaleDateString('en-CA'),
+    nextDue: '',
+    notes: '',
+    vet: '',
+  });
+  const [submittingVacc, setSubmittingVacc] = useState(false);
+
+  const handleOpenVaccModal = () => {
+    setVaccForm({
+      name: '',
+      date: new Date().toLocaleDateString('en-CA'),
+      nextDue: '',
+      notes: '',
+      vet: doctorName,
+    });
+    setIsVaccModalOpen(true);
+  };
+
   // Auto-open appointment from notification
   useEffect(() => {
     if (selectedAppointmentId && appointments.length > 0) {
@@ -158,10 +184,7 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
       const data = await res.json();
       if (data.success) {
         setNotes(data.data.notes || []);
-        // Si queremos actualizar el peso actual con el más reciente del historial
-        if (data.data.notes?.length > 0) {
-           // Opcional: sincronizar datos
-        }
+        setVaccinations(data.data.vaccinations || []);
       }
     } catch {
       toast.error('Error al cargar historial clínico');
@@ -291,6 +314,43 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
       toast.error('Error de conexión al actualizar peso');
     } finally {
       setSubmittingWeight(false);
+    }
+  };
+
+  const submitVaccination = async () => {
+    const activePet = selectedAppointment?.pet || selectedGlobalPet;
+    if (!activePet || !vaccForm.name.trim()) return;
+
+    setSubmittingVacc(true);
+    try {
+      const res = await fetch(`/api/pets/${activePet.id}/vaccinations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': getCsrfToken(),
+        },
+        body: JSON.stringify(vaccForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Vacuna registrada correctamente');
+        setVaccinations(data.data.vaccinations || []);
+        setIsVaccModalOpen(false);
+        setVaccForm({
+          name: '',
+          date: new Date().toLocaleDateString('en-CA'),
+          nextDue: '',
+          notes: '',
+          vet: doctorName,
+        });
+      } else {
+        toast.error(data.error || 'Error al guardar la vacuna');
+      }
+    } catch {
+      toast.error('Error de conexión al guardar la vacuna');
+    } finally {
+      setSubmittingVacc(false);
     }
   };
 
@@ -598,7 +658,9 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
                     </div>
                   </div>
 
-                  {/* History */}
+                  {/* Bottom History Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Left Column: Historial Clínico */}
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h4 className="font-black text-gray-900 dark:text-white text-xs tracking-widest uppercase flex items-center gap-2">
@@ -611,11 +673,11 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                         {loadingNotes ? (
                           <>
-                            <Skeleton className="h-32 rounded-2xl" />
-                            <Skeleton className="h-32 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
                           </>
                         ) : notes.length > 0 ? (
                           notes.map((note) => (
@@ -640,11 +702,70 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
                             </motion.div>
                           ))
                         ) : (
-                          <div className="col-span-full py-12 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                          <div className="py-12 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
                             <ClipboardList className="h-8 w-8 text-gray-300 mb-2" />
                             <p className="text-xs text-gray-400 font-medium">No hay registros previos</p>
                           </div>
                         )}
+                      </div>
+                    </div>
+
+                    {/* Right Column: Registro de Vacunas */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-black text-gray-900 dark:text-white text-xs tracking-widest uppercase flex items-center gap-2">
+                          <Syringe className="h-4 w-4 text-emerald-500" /> Registro de Vacunas
+                        </h4>
+                        {selectedAppointment && selectedAppointment.status === 'confirmed' && !isFutureAppointment(selectedAppointment) && (
+                          <Button size="sm" onClick={handleOpenVaccModal} className="bg-emerald-600 hover:bg-emerald-700 h-8 rounded-full px-4 text-[10px] font-black tracking-widest">
+                            + APLICAR VACUNA
+                          </Button>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
+                        {loadingNotes ? (
+                          <>
+                            <Skeleton className="h-24 rounded-2xl" />
+                            <Skeleton className="h-24 rounded-2xl" />
+                          </>
+                        ) : vaccinations.length > 0 ? (
+                          vaccinations.map((vacc, idx) => (
+                            <motion.div 
+                              key={`vacc-${idx}`}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="p-4 rounded-2xl bg-gray-50 dark:bg-gray-800/40 border border-gray-100 dark:border-gray-800 space-y-2 group hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <Badge className="bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300 border-none font-bold text-[9px]">
+                                  {vacc.date ? new Date(vacc.date + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                                </Badge>
+                                {vacc.nextDue && (
+                                  <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">
+                                    Próxima: {new Date(vacc.nextDue + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Syringe className="h-3.5 w-3.5 text-emerald-500" />
+                                <p className="text-xs font-bold text-gray-900 dark:text-white">{vacc.name}</p>
+                              </div>
+                              {vacc.vet && (
+                                <p className="text-[9px] font-medium text-gray-400">Aplicada por: {vacc.vet}</p>
+                              )}
+                              {vacc.notes && (
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 italic">Nota: {vacc.notes}</p>
+                              )}
+                            </motion.div>
+                          ))
+                        ) : (
+                          <div className="py-12 flex flex-col items-center justify-center bg-gray-50/50 dark:bg-gray-800/20 rounded-2xl border-2 border-dashed border-gray-100 dark:border-gray-800">
+                            <Syringe className="h-8 w-8 text-gray-300 mb-2" />
+                            <p className="text-xs text-gray-400 font-medium">Sin vacunas registradas</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -777,6 +898,77 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
                 disabled={submittingWeight || !newWeight}
               >
                 {submittingWeight ? 'Guardando...' : 'Guardar Peso'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Register Vaccination Modal */}
+        <Dialog open={isVaccModalOpen} onOpenChange={setIsVaccModalOpen}>
+          <DialogContent className="sm:max-w-md rounded-[2rem]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 font-black text-gray-900 dark:text-white uppercase tracking-tight">
+                <Syringe className="h-5 w-5 text-emerald-500" /> Aplicar Vacuna
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Nombre de la Vacuna *</Label>
+                <Input 
+                  placeholder="Ej: Triple Felina, Rabia, Parvovirus..."
+                  value={vaccForm.name}
+                  onChange={e => setVaccForm({ ...vaccForm, name: e.target.value })}
+                  className="h-12 rounded-xl bg-gray-50/50"
+                  autoFocus
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Fecha Aplicación *</Label>
+                  <Input 
+                    type="date"
+                    value={vaccForm.date}
+                    onChange={e => setVaccForm({ ...vaccForm, date: e.target.value })}
+                    className="h-12 rounded-xl bg-gray-50/50"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Próxima Dosis</Label>
+                  <Input 
+                    type="date"
+                    value={vaccForm.nextDue}
+                    onChange={e => setVaccForm({ ...vaccForm, nextDue: e.target.value })}
+                    className="h-12 rounded-xl bg-gray-50/50"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Veterinario</Label>
+                <Input 
+                  placeholder="Nombre del veterinario..."
+                  value={vaccForm.vet}
+                  onChange={e => setVaccForm({ ...vaccForm, vet: e.target.value })}
+                  className="h-12 rounded-xl bg-gray-50/50"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold text-gray-500 uppercase tracking-widest">Notas / Lote</Label>
+                <Input 
+                  placeholder="Ej: Lote 4598-B, sin reacciones adversas..."
+                  value={vaccForm.notes}
+                  onChange={e => setVaccForm({ ...vaccForm, notes: e.target.value })}
+                  className="h-12 rounded-xl bg-gray-50/50"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" onClick={() => setIsVaccModalOpen(false)} className="rounded-full font-bold">Cancelar</Button>
+              <Button 
+                className="bg-emerald-600 hover:bg-emerald-700 px-8 rounded-full font-bold"
+                onClick={submitVaccination}
+                disabled={submittingVacc || !vaccForm.name.trim()}
+              >
+                {submittingVacc ? 'Registrando...' : 'Registrar Vacuna'}
               </Button>
             </DialogFooter>
           </DialogContent>
