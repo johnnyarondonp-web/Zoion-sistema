@@ -99,11 +99,23 @@ class ClinicalNoteController extends Controller
             ->where('appointment_id', $appointmentId)
             ->firstOrFail();
 
+        $request->validate([
+            'note'      => 'sometimes|required|string|max:500',
+            'diagnosis' => 'nullable|string|max:100',
+            'treatment' => 'nullable|string|max:150',
+            'follow_up' => 'nullable|string|max:150',
+        ], [
+            'note.max'      => 'La observación no puede exceder los 500 caracteres.',
+            'diagnosis.max' => 'El diagnóstico no puede exceder los 100 caracteres.',
+            'treatment.max' => 'El tratamiento no puede exceder los 150 caracteres.',
+            'follow_up.max' => 'El seguimiento no puede exceder los 150 caracteres.',
+        ]);
+
         $note->update([
-            'note'      => $request->note ?? $note->note,
-            'diagnosis' => $request->diagnosis ?? $note->diagnosis,
-            'treatment' => $request->treatment ?? $note->treatment,
-            'follow_up' => $request->followUp ?? $note->follow_up,
+            'note'      => $request->has('note') ? $request->note : $note->note,
+            'diagnosis' => $request->has('diagnosis') ? $request->diagnosis : $note->diagnosis,
+            'treatment' => $request->has('treatment') ? $request->treatment : $note->treatment,
+            'follow_up' => $request->has('follow_up') ? $request->follow_up : $note->follow_up,
         ]);
 
         return response()->json(['success' => true, 'data' => $note]);

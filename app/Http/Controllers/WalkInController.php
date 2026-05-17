@@ -37,13 +37,13 @@ class WalkInController extends Controller
         // Sanitización para dejar solo números y +
         $phone = preg_replace('/[^0-9+]/', '', $phone);
 
-        // Mayor seguridad: Mínimo 7 caracteres para evitar exposición masiva
-        if (!$phone || strlen($phone) < 7) {
+        // Validar el formato exacto de teléfono venezolano (+58 o 58 seguido de 9 dígitos)
+        if (!$phone || !preg_match('/^\+?58\d{9}$/', $phone)) {
             return response()->json(['success' => true, 'data' => null]);
         }
 
-        // Primero buscar en walk_in_clients (clientes presenciales frecuentes)
-        $walkIn = WalkInClient::where('phone', 'like', "%{$phone}%")->limit(5)->get();
+        // Primero buscar en walk_in_clients (clientes presenciales frecuentes) usando búsqueda por prefijo para aprovechar índices
+        $walkIn = WalkInClient::where('phone', 'like', "{$phone}%")->limit(5)->get();
         if ($walkIn->isNotEmpty()) {
             $w = $walkIn->first();
             return response()->json([
@@ -60,8 +60,8 @@ class WalkInController extends Controller
             ]);
         }
 
-        // Luego buscar en usuarios registrados
-        $user = User::where('phone', 'like', "%{$phone}%")
+        // Luego buscar en usuarios registrados usando búsqueda por prefijo para aprovechar índices
+        $user = User::where('phone', 'like', "{$phone}%")
             ->where('role', 'client')
             ->limit(5)
             ->get();
