@@ -133,4 +133,113 @@ class AppointmentServiceTest extends TestCase
         $time = $minutesToTime->invokeArgs($this->service, [0]);
         $this->assertEquals('00:00', $time);
     }
+
+    /**
+     * @test
+     * Prueba que hasCapacityFor() retorne false cuando no hay médicos asignados al servicio.
+     */
+    public function test_has_capacity_returns_false_when_no_doctors_assigned()
+    {
+        $service = Service::create([
+            'id' => '01H7X1234567890ABCDEFGH009',
+            'name' => 'Servicio Sin Médicos',
+            'price' => 20.00,
+            'duration_minutes' => 30,
+            'is_active' => true,
+        ]);
+
+        $reflection = new \ReflectionClass(AppointmentService::class);
+        $hasCapacityFor = $reflection->getMethod('hasCapacityFor');
+        $hasCapacityFor->setAccessible(true);
+
+        $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:00', '10:30']);
+        $this->assertFalse($result);
+    }
+
+    /**
+     * @test
+     * Prueba que hasCapacityFor() gestione correctamente la disponibilidad:
+     * - Retorna true si hay al menos un médico libre.
+     * - Retorna false cuando todos los médicos asignados están ocupados en el rango horario o con overlap parcial.
+     */
+    public function test_has_capacity_with_doctors_availability_and_overlaps()
+    {
+        $service = Service::create([
+            'id' => '01H7X1234567890ABCDEFGH010',
+            'name' => 'Peluquería Canina',
+            'price' => 30.00,
+            'duration_minutes' => 30,
+            'is_active' => true,
+        ]);
+
+        // Crear 2 médicos
+        $doctorA = Doctor::create(['id' => '01H7X1234567890ABCDEFGH011', 'name' => 'Dr. A', 'is_active' => true]);
+        $doctorB = Doctor::create(['id' => '01H7X1234567890ABCDEFGH012', 'name' => 'Dr. B', 'is_active' => true]);
+
+        // Asignar ambos médicos al servicio
+        $doctorA->services()->attach($service->id);
+        $doctorB->services()->attach($service->id);
+
+        $reflection = new \ReflectionClass(AppointmentService::class);
+        $hasCapacityFor = $reflection->getMethod('hasCapacityFor');
+        $hasCapacityFor->setAccessible(true);
+
+        // Caso 1: Ambos médicos libres -> debe haber capacidad
+        $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:00', '10:30']);
+        $this->assertTrue($result);
+
+        // Crear cita para Doctor A de 10:00 a 10:30
+        $client = User::factory()->create(['role' => 'client']);
+        $pet = Pet::create([
+            'id' => '01H7X1234567890ABCDEFGH013',
+            'user_id' => $client->id,
+            'name' => 'Puppy',
+            'species' => 'dog',
+            'is_active' => true,
+        ]);
+
+        Appointment::create([
+            'id' => '01H7X1234567890ABCDEFGH014',
+            'user_id' => $client->id,
+            'pet_id' => $pet->id,
+            'service_id' => $service->id,
+            'doctor_id' => $doctorA->id,
+            'date' => '2026-06-01',
+            'start_time' => '10:00',
+            'end_time' => '10:30',
+            'status' => 'confirmed',
+        ]);
+
+        // Caso 2: Doctor A ocupado de 10:00-10:30, pero Doctor B libre -> debe haber capacidad
+        $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:00', '10:30']);
+        $this->assertTrue($result);
+
+        // Caso 3: Overlap parcial. Doctor A ocupado de 10:00-10:30, Doctor B libre.
+        // Consultar de 10:15 a 10:45 -> debe haber capacidad porque B sigue libre.
+        $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:15', '10:45']);
+        $this->assertTrue($result);
+
+        // Ahora ocupamos a Doctor B de 10:15 a 10:45
+        Appointment::create([
+            'id' => '01H7X1234567890ABCDEFGH015',
+            'user_id' => $client->id,
+            'pet_id' => $pet->id,
+            'service_id' => $service->id,
+            'doctor_id' => $doctorB->id,
+            'date' => '2026-06-01',
+            'start_time' => '10:15',
+            'end_time' => '10:45',
+            'status' => 'confirmed',
+        ]);
+
+        // Caso 4: Todos los médicos ocupados (overlap).
+        // Doctor A está en cita (10:00 - 10:30).
+        // Doctor B está en cita (10:15 - 10:45).
+        // Si pedimos un slot de 10:20 a 10:50:
+        // - Doctor A solapa (10:20 < 10:30 y 10:50 > 10:00) -> ocupado.
+        // - Doctor B solapa (10:20 < 10:45 y 10:50 > 10:15) -> ocupado.
+        // Por ende, no debe haber capacidad (retornar false).
+        $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:20', '10:50']);
+        $this->assertFalse($result);
+    }
 }
