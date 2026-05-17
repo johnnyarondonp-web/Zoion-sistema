@@ -17,7 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth'         => \Illuminate\Auth\Middleware\Authenticate::class,
-            'ensure.admin' => \App\Http\Middleware\EnsureAdmin::class,
+            'ensure.admin' => \App\Http\Middleware\EnsureStaff::class,
+            'ensure.staff' => \App\Http\Middleware\EnsureStaff::class,
             'role'         => \App\Http\Middleware\EnsureRole::class,
         ]);
     })

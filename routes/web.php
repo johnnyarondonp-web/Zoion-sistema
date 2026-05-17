@@ -61,8 +61,9 @@ Route::middleware(['auth'])->group(function () {
     // Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // General APIs
+    // General APIs (Backward compatibility + versioning)
     Route::get('/api/user/clinic-info', [UserController::class, 'clinicInfo']);
+    Route::get('/api/v1/user/clinic-info', [UserController::class, 'clinicInfo']);
 
     // ── Verificación de Email ───────────────────────────────────────────
     Route::get('/email/verify', [EmailVerificationController::class, 'notice'])->name('verification.notice');
@@ -89,78 +90,81 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/about',                              fn () => Inertia::render('About'));
     });
 
-    // ── API: Mascotas ────────────────────────────────────────────────────
-    Route::get('/api/pets',                              [PetController::class, 'index']);
-    Route::post('/api/pets',                             [PetController::class, 'store']);
-    Route::get('/api/pets/{id}',                         [PetController::class, 'show']);
-    
-    // ✅ CAMBIO 3: Ruta específica para toggle ANTES del PATCH genérico
-    Route::patch('/api/pets/{id}/toggle',                [PetController::class, 'toggleActive']);
-    
-    Route::patch('/api/pets/{id}',                       [PetController::class, 'update']);
-    Route::put('/api/pets/{id}',                         [PetController::class, 'update']);
-    Route::delete('/api/pets/{id}',                      [PetController::class, 'destroy']);
-    Route::get('/api/pets/{id}/weight',                  [PetController::class, 'getWeight']);
-    Route::post('/api/pets/{id}/weight',                 [PetController::class, 'addWeight']);
-    Route::get('/api/pets/{id}/vaccinations',            [PetController::class, 'getVaccinations']);
-    Route::post('/api/pets/{id}/vaccinations',           [PetController::class, 'addVaccination']);
-    Route::get('/api/pets/{id}/health-summary',          [PetController::class, 'healthSummary']);
+    // ── APIs Generales (Compatibilidad /api/ y /api/v1/) ──────────────────
+    $registerGeneralApis = function () {
+        // API: Mascotas
+        Route::get('/pets',                              [PetController::class, 'index']);
+        Route::post('/pets',                             [PetController::class, 'store']);
+        Route::get('/pets/{id}',                         [PetController::class, 'show']);
+        Route::patch('/pets/{id}/toggle',                [PetController::class, 'toggleActive']);
+        Route::patch('/pets/{id}',                       [PetController::class, 'update']);
+        Route::put('/pets/{id}',                         [PetController::class, 'update']);
+        Route::delete('/pets/{id}',                      [PetController::class, 'destroy']);
+        Route::get('/pets/{id}/weight',                  [PetController::class, 'getWeight']);
+        Route::post('/pets/{id}/weight',                 [PetController::class, 'addWeight']);
+        Route::get('/pets/{id}/vaccinations',            [PetController::class, 'getVaccinations']);
+        Route::post('/pets/{id}/vaccinations',           [PetController::class, 'addVaccination']);
+        Route::get('/pets/{id}/health-summary',          [PetController::class, 'healthSummary']);
 
-    // ── API: Servicios ───────────────────────────────────────────────────
-    Route::get('/api/services',                     [ServiceController::class, 'index']);
-    Route::get('/api/services/{id}',                [ServiceController::class, 'show']);
+        // API: Servicios
+        Route::get('/services',                     [ServiceController::class, 'index']);
+        Route::get('/services/{id}',                [ServiceController::class, 'show']);
 
-    // ── API: Fechas bloqueadas (lectura para cliente) ─────────────────────
-    Route::get('/api/blocked-dates',                [BlockedDateController::class, 'index']);
+        // API: Fechas bloqueadas (lectura para cliente)
+        Route::get('/blocked-dates',                [BlockedDateController::class, 'index']);
 
-    // ── API: Disponibilidad de horarios ──────────────────────────────────
-    Route::get('/api/availability',                 [AvailabilityController::class, 'index']);
-    Route::get('/api/availability/schedule',        [AvailabilityController::class, 'schedule']);
-    Route::get('/api/schedules',                    [ScheduleController::class, 'index']);
+        // API: Disponibilidad de horarios
+        Route::get('/availability',                 [AvailabilityController::class, 'index']);
+        Route::get('/availability/schedule',        [AvailabilityController::class, 'schedule']);
+        Route::get('/schedules',                    [ScheduleController::class, 'index']);
 
-    // ── API: Citas ───────────────────────────────────────────────────────
-    Route::get('/api/appointments',                 [AppointmentController::class, 'index']);
-    Route::post('/api/appointments',                [AppointmentController::class, 'store']);
-    Route::get('/api/appointments/{id}',            [AppointmentController::class, 'show']);
-    Route::patch('/api/appointments/{id}',          [AppointmentController::class, 'update']);
-    Route::delete('/api/appointments/{id}',         [AppointmentController::class, 'destroy']);
-    Route::post('/api/appointments/{id}/rating',    [AppointmentController::class, 'rate']);
+        // API: Citas
+        Route::get('/appointments',                 [AppointmentController::class, 'index']);
+        Route::post('/appointments',                [AppointmentController::class, 'store']);
+        Route::get('/appointments/{id}',            [AppointmentController::class, 'show']);
+        Route::patch('/appointments/{id}',          [AppointmentController::class, 'update']);
+        Route::delete('/appointments/{id}',         [AppointmentController::class, 'destroy']);
+        Route::post('/appointments/{id}/rating',    [AppointmentController::class, 'rate']);
 
-    // ── API: Mensajes de citas ───────────────────────────────────────────
-    Route::get('/api/appointments/{appointmentId}/messages',  [AppointmentMessageController::class, 'index']);
-    Route::post('/api/appointments/{appointmentId}/messages', [AppointmentMessageController::class, 'store']);
-    Route::patch('/api/appointments/{appointmentId}/messages/read', [AppointmentMessageController::class, 'markAsRead']);
+        // API: Mensajes de citas
+        Route::get('/appointments/{appointmentId}/messages',  [AppointmentMessageController::class, 'index']);
+        Route::post('/appointments/{appointmentId}/messages', [AppointmentMessageController::class, 'store']);
+        Route::patch('/appointments/{appointmentId}/messages/read', [AppointmentMessageController::class, 'markAsRead']);
 
-    // ── API: Notas clínicas ───────────────────────
-    Route::get('/api/appointments/{appointmentId}/clinical-notes', [ClinicalNoteController::class, 'index']);
-    Route::post('/api/appointments/{appointmentId}/clinical-notes',        [ClinicalNoteController::class, 'store']);
-    Route::patch('/api/appointments/{appointmentId}/clinical-notes/{id}',  [ClinicalNoteController::class, 'update']);
-    Route::delete('/api/appointments/{appointmentId}/clinical-notes/{id}', [ClinicalNoteController::class, 'destroy']);
+        // API: Notas clínicas
+        Route::get('/appointments/{appointmentId}/clinical-notes', [ClinicalNoteController::class, 'index']);
+        Route::post('/appointments/{appointmentId}/clinical-notes',        [ClinicalNoteController::class, 'store']);
+        Route::patch('/appointments/{appointmentId}/clinical-notes/{id}',  [ClinicalNoteController::class, 'update']);
+        Route::delete('/appointments/{appointmentId}/clinical-notes/{id}', [ClinicalNoteController::class, 'destroy']);
 
-    // ── API: Notificaciones ──────────────────────────────────────────────
-    Route::get('/api/notifications',                         [NotificationController::class, 'index']);
-    Route::post('/api/notifications/read-all',               [NotificationController::class, 'markAllAsRead']);
-    Route::post('/api/notifications/{id}/read',              [NotificationController::class, 'markAsRead']);
+        // API: Notificaciones
+        Route::get('/notifications',                         [NotificationController::class, 'index']);
+        Route::post('/notifications/read-all',               [NotificationController::class, 'markAllAsRead']);
+        Route::post('/notifications/{id}/read',              [NotificationController::class, 'markAsRead']);
 
-    // ── API: Perfil de usuario ───────────────────────────────────────────
-    Route::get('/api/user/profile',                          [UserController::class, 'profile']);
-    Route::patch('/api/user/profile',                        [UserController::class, 'updateProfile']);
-    Route::post('/api/user/change-password',                 [UserController::class, 'changePassword']);
+        // API: Perfil de usuario
+        Route::get('/user/profile',                          [UserController::class, 'profile']);
+        Route::patch('/user/profile',                        [UserController::class, 'updateProfile']);
+        Route::post('/user/change-password',                 [UserController::class, 'changePassword']);
 
-    // ── API: Preferencias de usuario ─────────────────────────────────────
-    Route::get('/api/user/preferences',                      [UserPreferenceController::class, 'index']);
-    Route::put('/api/user/preferences',                      [UserPreferenceController::class, 'update']);
+        // API: Preferencias de usuario
+        Route::get('/user/preferences',                      [UserPreferenceController::class, 'index']);
+        Route::put('/user/preferences',                      [UserPreferenceController::class, 'update']);
 
-    // ── API: Upload ──────────────────────────────────────────────────────
-    Route::post('/api/upload',                               [UploadController::class, 'upload']);
+        // API: Upload
+        Route::post('/upload',                               [UploadController::class, 'upload']);
+    };
+
+    Route::prefix('api')->group($registerGeneralApis);
+    Route::prefix('api/v1')->group($registerGeneralApis);
 });
 
 /*
 |--------------------------------------------------------------------------
-| 3. Rutas de Administración (auth + ensure.admin)
+| 3. Rutas de Administración (auth + ensure.staff)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'ensure.admin'])->group(function () {
+Route::middleware(['auth', 'ensure.staff'])->group(function () {
     // ── Vistas admin ─────────────────────────────────────────────────────
     Route::get('/admin/dashboard',     fn () => Inertia::render('Admin/Dashboard'));
     Route::get('/admin/notifications', fn () => Inertia::render('Admin/Notifications'));
@@ -176,57 +180,62 @@ Route::middleware(['auth', 'ensure.admin'])->group(function () {
     Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'));
     Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'));
 
-    Route::middleware('role:admin')->group(function () {
-        Route::delete('/api/admin/clients/{id}',    [AdminClientController::class, 'destroy']);
-        Route::delete('/api/blocked-dates/{id}',    [BlockedDateController::class, 'destroy']);
-
-        // Gestión de servicios (Solo admin)
-        Route::post('/api/services',                    [ServiceController::class, 'store']);
-        Route::patch('/api/services/{id}',              [ServiceController::class, 'update']);
-        Route::delete('/api/services/{id}',             [ServiceController::class, 'destroy']);
-
-        // Gestión de médicos (Solo admin)
-        Route::get('/api/admin/doctors',                      [DoctorController::class, 'index']);
-        Route::post('/api/admin/doctors',                     [DoctorController::class, 'store']);
-        Route::patch('/api/admin/doctors/{id}',               [DoctorController::class, 'update']);
-        Route::delete('/api/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
-        Route::patch('/api/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
-
-        // Gestión de recepcionistas (Solo admin)
-        Route::get('/api/admin/receptionists',                      [\App\Http\Controllers\ReceptionistController::class, 'index']);
-        Route::post('/api/admin/receptionists',                     [\App\Http\Controllers\ReceptionistController::class, 'store']);
-        Route::patch('/api/admin/receptionists/{id}',               [\App\Http\Controllers\ReceptionistController::class, 'update']);
-        Route::delete('/api/admin/receptionists/{id}',              [\App\Http\Controllers\ReceptionistController::class, 'destroy']);
-    });
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
     Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'));
-
-    // ── API Admin: Dashboard & Reports ───────────────────────────────────
-    Route::get('/api/dashboard', [DashboardController::class, 'index']);
-    Route::get('/api/reports', [DashboardController::class, 'reports']);
-
-    // ── API Admin: Clientes ──────────────────────────────────────────────
-    Route::get('/api/admin/clients',         [AdminClientController::class, 'index']);
-    Route::get('/api/admin/clients/{id}',    [AdminClientController::class, 'show']);
-    Route::patch('/api/admin/clients/{id}',  [AdminClientController::class, 'update']);
-
-    // ── API Admin: Horarios ──────────────────────────────────────────────
-    Route::put('/api/schedules',  [ScheduleController::class, 'update']);
-
-    // ── API Admin: Fechas bloqueadas ─────────────────────────────────────
-    Route::post('/api/blocked-dates',         [BlockedDateController::class, 'store']);
-
-    // ── Vistas Admin Extras ─────────────────────────────────────────────
     Route::get('/admin/doctors',        fn () => Inertia::render('Admin/Doctors'));
     Route::get('/admin/receptionists',  fn () => Inertia::render('Admin/Receptionists'));
+    Route::get('/admin/walk-in',        fn () => Inertia::render('Admin/WalkIn'));
 
-    // ── Vista + API Admin: Atención presencial (walk-in) ─────────────────
-    Route::get('/admin/walk-in',                          fn () => Inertia::render('Admin/WalkIn'));
-    Route::get('/api/admin/walk-in',                      [WalkInController::class, 'index']);
-    Route::get('/api/admin/walk-in/search',               [WalkInController::class, 'search']);
-    Route::post('/api/admin/walk-in',                     [WalkInController::class, 'store']);
-    Route::patch('/api/admin/walk-in/{id}/payment',       [WalkInController::class, 'confirmPayment']);
+    // ── APIs Administrativas (Compatibilidad /api/ y /api/v1/) ────────────
+    $registerAdminApis = function () {
+        Route::middleware('role:admin')->group(function () {
+            Route::delete('/admin/clients/{id}',    [AdminClientController::class, 'destroy']);
+            Route::delete('/blocked-dates/{id}',    [BlockedDateController::class, 'destroy']);
+
+            // Gestión de servicios (Solo admin)
+            Route::post('/services',                    [ServiceController::class, 'store']);
+            Route::patch('/services/{id}',              [ServiceController::class, 'update']);
+            Route::delete('/services/{id}',             [ServiceController::class, 'destroy']);
+
+            // Gestión de médicos (Solo admin)
+            Route::get('/admin/doctors',                      [DoctorController::class, 'index']);
+            Route::post('/admin/doctors',                     [DoctorController::class, 'store']);
+            Route::patch('/admin/doctors/{id}',               [DoctorController::class, 'update']);
+            Route::delete('/admin/doctors/{id}',              [DoctorController::class, 'destroy']);
+            Route::patch('/admin/doctors/{id}/toggle',        [DoctorController::class, 'toggleActive']);
+
+            // Gestión de recepcionistas (Solo admin)
+            Route::get('/admin/receptionists',                      [\App\Http\Controllers\ReceptionistController::class, 'index']);
+            Route::post('/admin/receptionists',                     [\App\Http\Controllers\ReceptionistController::class, 'store']);
+            Route::patch('/admin/receptionists/{id}',               [\App\Http\Controllers\ReceptionistController::class, 'update']);
+            Route::delete('/admin/receptionists/{id}',              [\App\Http\Controllers\ReceptionistController::class, 'destroy']);
+        });
+
+        // API Admin: Dashboard & Reports
+        Route::get('/dashboard', [DashboardController::class, 'index']);
+        Route::get('/reports', [DashboardController::class, 'reports']);
+
+        // API Admin: Clientes
+        Route::get('/admin/clients',         [AdminClientController::class, 'index']);
+        Route::get('/admin/clients/{id}',    [AdminClientController::class, 'show']);
+        Route::patch('/admin/clients/{id}',  [AdminClientController::class, 'update']);
+
+        // API Admin: Horarios
+        Route::put('/schedules',  [ScheduleController::class, 'update']);
+
+        // API Admin: Fechas bloqueadas
+        Route::post('/blocked-dates',         [BlockedDateController::class, 'store']);
+
+        // API Admin: Atención presencial (walk-in)
+        Route::get('/admin/walk-in',                      [WalkInController::class, 'index']);
+        Route::get('/admin/walk-in/search',               [WalkInController::class, 'search']);
+        Route::post('/admin/walk-in',                     [WalkInController::class, 'store']);
+        Route::patch('/admin/walk-in/{id}/payment',       [WalkInController::class, 'confirmPayment']);
+    };
+
+    Route::prefix('api')->group($registerAdminApis);
+    Route::prefix('api/v1')->group($registerAdminApis);
 });
 
 // ── Panel del médico (rutas propias, solo role:doctor) ───────────────────────
