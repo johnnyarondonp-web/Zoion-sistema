@@ -207,6 +207,42 @@ class AppointmentFlowsTest extends TestCase
         ]);
     }
 
+    public function test_medico_no_puede_actualizar_pago(): void
+    {
+        $doctorUser = $this->makeUser('doctor');
+        $client     = $this->makeUser();
+        $service    = $this->makeService();
+        $pet        = $this->makePet($client->id);
+
+        // Crear perfil Doctor
+        $doctor = Doctor::create([
+            'id'        => (string) Str::ulid(),
+            'name'      => 'Dr. Test',
+            'is_active' => true,
+        ]);
+        // Vincular usuario doctor con perfil
+        $doctorUser->update(['id' => $doctor->id]); 
+
+        $appointment = $this->makeAppointment([
+            'user_id'    => $client->id,
+            'pet_id'     => $pet->id,
+            'service_id' => $service->id,
+            'doctor_id'  => $doctor->id,
+            'date'       => Carbon::today()->format('Y-m-d'),
+        ]);
+
+        $this->actingAs($doctorUser)->patchJson("/api/appointments/{$appointment->id}", [
+            'paymentStatus' => 'paid',
+        ]);
+
+        // El médico no debe poder modificar la parte administrativa (pagos),
+        // por lo que la BD debe conservar 'pending'
+        $this->assertDatabaseHas('appointments', [
+            'id'             => $appointment->id,
+            'payment_status' => 'pending',
+        ]);
+    }
+
     // ─── Rating de citas ─────────────────────────────────────────────────────
 
     public function test_cliente_puede_calificar_cita_completada(): void

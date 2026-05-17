@@ -73,11 +73,16 @@ class AppointmentController extends Controller
                   }]);
         } elseif ($user->role === 'doctor') {
             // El médico solo ve las citas que tiene asignadas
-            $query->where('doctor_id', $user->doctor->id)
-                  ->with(['user:id,name,email,phone'])
-                  ->withCount(['messages as unread_messages' => function ($query) {
-                      $query->where('is_read_by_admin', false);
-                  }]);
+            $doctorId = $user->doctor?->id;
+            if ($doctorId) {
+                $query->where('doctor_id', $doctorId)
+                      ->with(['user:id,name,email,phone'])
+                      ->withCount(['messages as unread_messages' => function ($query) {
+                          $query->where('is_read_by_admin', false);
+                      }]);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         } else {
             // El cliente solo ve sus propias citas
             $query->where('user_id', $user->id)
@@ -355,7 +360,7 @@ class AppointmentController extends Controller
 
         // Seguridad: El usuario debe ser el dueño, el médico asignado o personal administrativo.
         $isClientOwner = $appointment->user_id === $user->id;
-        $isAssignedDoc = ($user->role === 'doctor' && $appointment->doctor_id === $user->doctor?->id);
+        $isAssignedDoc = ($user->role === 'doctor' && $user->doctor?->id !== null && $appointment->doctor_id === $user->doctor?->id);
         $isStaff       = in_array($user->role, ['admin', 'receptionist']);
 
         if (!$isClientOwner && !$isAssignedDoc && !$isStaff) {
@@ -452,6 +457,11 @@ class AppointmentController extends Controller
         // Los médicos necesitan esto para marcar citas como completadas tras la consulta.
         if (in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
             $allowedFields[] = 'status';
+        }
+
+        // Solo personal administrativo (admin, recepcionista) puede gestionar pagos.
+        // Los médicos no deben tocar la parte financiera de las citas.
+        if (in_array($user->role, ['admin', 'receptionist'])) {
             $allowedFields[] = 'payment_method';
             $allowedFields[] = 'payment_status';
             $allowedFields[] = 'payment_amount';
@@ -479,9 +489,9 @@ class AppointmentController extends Controller
 
         // El frontend manda estos campos en camelCase. La verificación de rol ya cubre
         // payment_method/payment_status en snake_case mediante $allowedFields, pero este
-        // bloque los aplicaba sin importar quién era el usuario — cualquier cliente
-        // podía marcar su propia cita como pagada enviando paymentStatus=paid.
-        if (in_array($user->role, ['admin', 'receptionist', 'doctor'])) {
+        // bloque los aplicaba sin importar quién era el usuario.
+        // Solo administradores y recepcionistas pueden realizar modificaciones financieras.
+        if (in_array($user->role, ['admin', 'receptionist'])) {
             if ($request->has('paymentMethod')) $appointment->update(['payment_method' => $request->paymentMethod]);
             if ($request->has('paymentStatus')) $appointment->update(['payment_status' => $request->paymentStatus]);
             if ($request->has('paymentAmount')) $appointment->update(['payment_amount' => $request->paymentAmount]);

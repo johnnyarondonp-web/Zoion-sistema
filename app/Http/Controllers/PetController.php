@@ -232,6 +232,17 @@ class PetController extends Controller
             return $oldPhoto;
         }
 
+        // Validate MIME type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_buffer($finfo, $imageData);
+        finfo_close($finfo);
+
+        if (!in_array($mimeType, ['image/jpeg', 'image/png', 'image/webp'])) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'photo' => 'El formato de imagen no es válido. Solo se permiten JPG, PNG y WEBP.'
+            ]);
+        }
+
         $image = imagecreatefromstring($imageData);
         if ($image === false) {
             return $oldPhoto;

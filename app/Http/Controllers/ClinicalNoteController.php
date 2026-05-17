@@ -18,7 +18,7 @@ class ClinicalNoteController extends Controller
         // 2. Verificar permisos: Admin, Médico asignado o Dueño de la mascota
         $user = $request->user();
         $isStaff    = $user->role === 'admin' || $user->role === 'receptionist';
-        $isAssigned = $user->role === 'doctor' && $appointment->doctor_id === $user->doctor?->id;
+        $isAssigned = $user->role === 'doctor' && $user->doctor?->id !== null && $appointment->doctor_id === $user->doctor?->id;
         $isOwner    = $appointment->user_id === $user->id;
 
         if (!$isStaff && !$isAssigned && !$isOwner) {
@@ -41,7 +41,7 @@ class ClinicalNoteController extends Controller
 
         // Solo admin y el médico que atiende la cita pueden registrar notas
         $isStaff    = $user->role === 'admin';
-        $isAssigned = $user->role === 'doctor' && $appointment->doctor_id === $user->doctor?->id;
+        $isAssigned = $user->role === 'doctor' && $user->doctor?->id !== null && $appointment->doctor_id === $user->doctor?->id;
 
         if (!$isStaff && !$isAssigned) {
             abort(403, 'Solo el médico asignado o un administrador pueden registrar notas clínicas.');
@@ -89,7 +89,7 @@ class ClinicalNoteController extends Controller
 
         // Solo admin y el médico asignado pueden editar la nota
         $isStaff    = $user->role === 'admin';
-        $isAssigned = $user->role === 'doctor' && $appointment->doctor_id === $user->doctor?->id;
+        $isAssigned = $user->role === 'doctor' && $user->doctor?->id !== null && $appointment->doctor_id === $user->doctor?->id;
 
         if (!$isStaff && !$isAssigned) {
             abort(403, 'No tienes permiso para editar esta nota clínica.');
