@@ -242,4 +242,62 @@ class AppointmentServiceTest extends TestCase
         $result = $hasCapacityFor->invokeArgs($this->service, [$service->id, '2026-06-01', '10:20', '10:50']);
         $this->assertFalse($result);
     }
+
+    /**
+     * @test
+     * Prueba que se lance una excepción si no se puede adquirir el lock (LockTimeoutException).
+     */
+    public function test_lock_timeout_exception_during_creation()
+    {
+        $serviceModel = Service::create([
+            'id' => '01H7X1234567890ABCDEFGH016',
+            'name' => 'Servicio Ocupado',
+            'price' => 50.00,
+            'duration_minutes' => 30,
+            'is_active' => true,
+        ]);
+
+        \App\Models\Schedule::create([
+            'day_of_week' => \Carbon\Carbon::parse('2026-06-02')->dayOfWeek,
+            'open_time' => '09:00',
+            'close_time' => '18:00',
+            'is_available' => true,
+        ]);
+
+        $doctor = Doctor::create(['id' => '01H7X1234567890ABCDEFGH017', 'name' => 'Dr. C', 'is_active' => true]);
+        $doctor->services()->attach($serviceModel->id);
+
+        $user = User::factory()->create(['role' => 'client']);
+        $pet = Pet::create([
+            'id' => '01H7X1234567890ABCDEFGH018',
+            'user_id' => $user->id,
+            'name' => 'Kitty',
+            'species' => 'cat',
+            'is_active' => true,
+        ]);
+
+        $data = [
+            'userId' => $user->id,
+            'petId' => $pet->id,
+            'serviceId' => $serviceModel->id,
+            'date' => '2026-06-02',
+            'startTime' => '11:00',
+            'notes' => ''
+        ];
+
+        // Mock Cache lock to throw LockTimeoutException
+        $lockMock = \Mockery::mock(\Illuminate\Contracts\Cache\Lock::class);
+        $lockMock->shouldReceive('block')->with(5)->andThrow(new \Illuminate\Contracts\Cache\LockTimeoutException());
+        $lockMock->shouldReceive('release');
+
+        \Illuminate\Support\Facades\Cache::shouldReceive('lock')
+            ->once()
+            ->with('appointment_lock_2026-06-02_11:00', 10)
+            ->andReturn($lockMock);
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectExceptionMessage('El sistema está procesando demasiadas solicitudes');
+
+        $this->service->createAppointment($data, $user);
+    }
 }

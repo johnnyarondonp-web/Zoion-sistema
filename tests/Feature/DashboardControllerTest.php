@@ -160,11 +160,12 @@ class DashboardControllerTest extends TestCase
 
         // Una cita completada y otra pending — solo la primera debe sumar revenue
         $this->makeAppointment([
-            'user_id'    => $client->id,
-            'pet_id'     => $pet->id,
-            'service_id' => $service->id,
-            'date'       => Carbon::today()->format('Y-m-d'),
-            'status'     => 'completed',
+            'user_id'        => $client->id,
+            'pet_id'         => $pet->id,
+            'service_id'     => $service->id,
+            'date'           => Carbon::today()->format('Y-m-d'),
+            'status'         => 'completed',
+            'payment_status' => 'paid',
         ]);
 
         $this->makeAppointment([
@@ -290,19 +291,21 @@ class DashboardControllerTest extends TestCase
         $today = Carbon::today()->format('Y-m-d');
 
         $this->makeAppointment([
-            'user_id'    => $client->id,
-            'pet_id'     => $pet->id,
-            'service_id' => $service1->id,
-            'date'       => $today,
-            'status'     => 'completed',
+            'user_id'        => $client->id,
+            'pet_id'         => $pet->id,
+            'service_id'     => $service1->id,
+            'date'           => $today,
+            'status'         => 'completed',
+            'payment_status' => 'paid',
         ]);
 
         $this->makeAppointment([
-            'user_id'    => $client->id,
-            'pet_id'     => $pet->id,
-            'service_id' => $service2->id,
-            'date'       => $today,
-            'status'     => 'completed',
+            'user_id'        => $client->id,
+            'pet_id'         => $pet->id,
+            'service_id'     => $service2->id,
+            'date'           => $today,
+            'status'         => 'completed',
+            'payment_status' => 'paid',
         ]);
 
         // Una pending que NO debe sumar al revenue
@@ -333,11 +336,12 @@ class DashboardControllerTest extends TestCase
         $today = Carbon::today()->format('Y-m-d');
 
         $this->makeAppointment([
-            'user_id'    => $client->id,
-            'pet_id'     => $pet->id,
-            'service_id' => $service->id,
-            'date'       => $today,
-            'status'     => 'completed',
+            'user_id'        => $client->id,
+            'pet_id'         => $pet->id,
+            'service_id'     => $service->id,
+            'date'           => $today,
+            'status'         => 'completed',
+            'payment_status' => 'paid',
         ]);
 
         $from = Carbon::now()->startOfMonth()->format('Y-m-d');

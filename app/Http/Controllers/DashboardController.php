@@ -39,6 +39,7 @@ class DashboardController extends Controller
 
             $revenue_month = Appointment::join('services', 'appointments.service_id', '=', 'services.id')
                 ->where('appointments.status', 'completed')
+                ->where('appointments.payment_status', 'paid')
                 ->where('appointments.date', '>=', $startOfMonth->format('Y-m-d'))
                 ->sum('services.price');
 
@@ -187,6 +188,7 @@ class DashboardController extends Controller
         $totalRevenue = (clone $query)
             ->join('services', 'appointments.service_id', '=', 'services.id')
             ->where('appointments.status', 'completed')
+            ->where('appointments.payment_status', 'paid')
             ->sum('services.price');
 
         $completionRate = $totalAppointments > 0
@@ -234,7 +236,7 @@ class DashboardController extends Controller
         // JOIN y el SUM dentro de la misma query agrupada.
         $topServices = (clone $query)
             ->join('services', 'appointments.service_id', '=', 'services.id')
-            ->selectRaw('appointments.service_id, services.name, count(*) as count, sum(case when appointments.status = \'completed\' then services.price else 0 end) as revenue')
+            ->selectRaw('appointments.service_id, services.name, count(*) as count, sum(case when appointments.status = \'completed\' and appointments.payment_status = \'paid\' then services.price else 0 end) as revenue')
             ->groupBy('appointments.service_id', 'services.name')
             ->orderByDesc('count')
             ->take(5)

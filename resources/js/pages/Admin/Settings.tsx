@@ -638,10 +638,7 @@ export default function Settings() {
 
                 <Separator />
 
-                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Heart className="h-4 w-4 text-rose-400" />
-                  <span>Hecho con amor para mascotas</span>
-                </div>
+
 
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-emerald-500" />

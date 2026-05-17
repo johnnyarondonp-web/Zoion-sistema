@@ -1,10 +1,10 @@
-# 🐾 Zoion — Sistema de Gestión Veterinaria Premium
+# Zoion — Sistema de Gestión Veterinaria
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Zoion Logo">
 </p>
 
-Zoion es una plataforma integral y moderna diseñada para revolucionar la gestión de clínicas veterinarias y el cuidado de mascotas. Construida con tecnologías de vanguardia, ofrece una experiencia de usuario fluida, segura y visualmente impactante tanto para administradores como para clientes.
+Zoion es una plataforma integral diseñada para optimizar la gestión de clínicas veterinarias. Construida con tecnologías de vanguardia, ofrece una experiencia de usuario fluida, segura y visualmente impactante tanto para administradores como para clientes.
 
 ---
 
@@ -98,6 +98,9 @@ MAIL_HOST=sandbox.smtp.mailtrap.io
 MAIL_PORT=2525
 MAIL_USERNAME=tu_usuario_mailtrap
 MAIL_PASSWORD=tu_password_mailtrap
+
+# Sesiones (Para Producción)
+SESSION_DOMAIN=null # Al deployar: SESSION_DOMAIN=.tu-dominio.com para restringir cookies al dominio.
 MAIL_FROM_ADDRESS="noreply@zoion.app"
 MAIL_FROM_NAME="Zoion"
 
