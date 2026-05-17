@@ -27,7 +27,7 @@ class StoreAppointmentRequest extends FormRequest
         return [
             'petId'         => 'required|string',
             'serviceId'     => 'required|string',
-            'date'          => 'required|date_format:Y-m-d',
+            'date'          => 'required|date_format:Y-m-d|after_or_equal:today|before_or_equal:+3 months',
             'startTime'     => 'required|date_format:H:i',
             'userId'        => 'nullable|string|exists:users,id',
             'paymentMethod' => 'nullable|string|in:cash,transfer,card,pago_movil',

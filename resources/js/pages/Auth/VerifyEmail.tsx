@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { router } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { router, usePage } from '@inertiajs/react';
 import { motion } from 'framer-motion';
 import { Mail, Loader2, LogOut, Send } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,17 +7,30 @@ import { Button } from '@/components/ui/button';
 import { Navbar } from '@/components/layout/navbar';
 
 export default function VerifyEmail() {
+    const { errors } = usePage().props as any;
     const [isLoading, setIsLoading] = useState(false);
     const [status, setStatus] = useState('');
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        if (errors && errors.email) {
+            setError(errors.email);
+        }
+    }, [errors]);
 
     const handleResend = (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
         setStatus('');
+        setError('');
 
         router.post('/email/verification-notification', {}, {
             onSuccess: () => {
                 setStatus('Hemos enviado un nuevo enlace de verificación a tu correo.');
+                setIsLoading(false);
+            },
+            onError: (errs) => {
+                setError(errs.email || 'Ocurrió un error al enviar el correo.');
                 setIsLoading(false);
             },
             onFinish: () => setIsLoading(false),
@@ -52,6 +65,11 @@ export default function VerifyEmail() {
                         {status && (
                             <div className="bg-emerald-600 px-4 py-2 text-center text-xs font-medium text-white">
                                 {status}
+                            </div>
+                        )}
+                        {error && (
+                            <div className="bg-rose-50 border-b border-rose-100 dark:bg-rose-950/20 dark:border-rose-900/30 px-4 py-3 text-center text-xs font-medium text-rose-600 dark:text-rose-400">
+                                {error}
                             </div>
                         )}
                         <CardHeader className="text-center">

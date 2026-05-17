@@ -28,8 +28,13 @@ class EmailVerificationController extends Controller
 
     public function resend(Request $request)
     {
-        $request->user()->sendEmailVerificationNotification();
-
-        return back()->with('status', 'verification-link-sent');
+        try {
+            $request->user()->sendEmailVerificationNotification();
+            return back()->with('status', 'verification-link-sent');
+        } catch (\Throwable $e) {
+            return back()->withErrors([
+                'email' => 'No se pudo enviar el correo de verificación. Por favor, verifica la configuración del servidor SMTP en el archivo .env o cámbialo a MAIL_MAILER=log.',
+            ]);
+        }
     }
 }

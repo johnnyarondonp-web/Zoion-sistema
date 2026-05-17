@@ -559,4 +559,22 @@ class ZoionBugFixesTest extends TestCase
 
         $res->assertStatus(422);
     }
+
+    public function test_crear_cita_rechaza_fecha_mas_de_tres_meses_en_el_futuro(): void
+    {
+        $date    = now()->addMonths(3)->addDay()->format('Y-m-d');
+        $service = $this->makeService(60);
+        $client  = $this->makeUser();
+        $pet     = $this->makePet($client->id);
+
+        $res = $this->actingAs($client)->postJson('/api/appointments', [
+            'petId'     => $pet->id,
+            'serviceId' => $service->id,
+            'date'      => $date,
+            'startTime' => '09:00',
+        ]);
+
+        $res->assertStatus(422);
+        $res->assertJsonValidationErrors(['date']);
+    }
 }

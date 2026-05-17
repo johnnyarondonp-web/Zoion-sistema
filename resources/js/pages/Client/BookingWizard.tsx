@@ -398,6 +398,13 @@ export default function BookingWizard() {
     return date < today;
   };
 
+  const isDateTooFar = (date: Date): boolean => {
+    const maxDate = new Date();
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    maxDate.setHours(23, 59, 59, 999);
+    return date > maxDate;
+  };
+
   const handleNext = () => {
     if (currentStep < 4) {
       setDirection(1);
@@ -748,19 +755,31 @@ export default function BookingWizard() {
           disabled={(date) =>
             isDatePast(date) ||
             isDateBlocked(date) ||
+            isDateTooFar(date) ||
             unavailableDays.includes(date.getDay())
           }
           className="rounded-lg border shadow-sm dark:border-gray-700"
           modifiers={{
             blocked: (date) => isDateBlocked(date),
             unavailable: (date) => unavailableDays.includes(date.getDay()),
+            available: (date) =>
+              !isDatePast(date) &&
+              !isDateBlocked(date) &&
+              !isDateTooFar(date) &&
+              !unavailableDays.includes(date.getDay()) &&
+              (!selectedDate || selectedDate.toDateString() !== date.toDateString()),
           }}
           modifiersClassNames={{
             blocked: 'text-red-400 line-through opacity-60 cursor-not-allowed',
             unavailable: 'text-gray-300 opacity-40 cursor-not-allowed',
+            available: 'bg-emerald-50/70 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:hover:bg-emerald-900/30 rounded-md font-semibold border border-emerald-100/70 dark:border-emerald-900/30 shadow-xs transition-all duration-150',
           }}
         />
-        <div className="flex items-center justify-center gap-5 mt-3">
+        <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-5 mt-4">
+          <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 dark:bg-emerald-400 inline-block shadow-sm" />
+            Día disponible
+          </span>
           <span className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
             <span className="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600 inline-block" />
             Fecha pasada

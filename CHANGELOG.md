@@ -9,6 +9,18 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.9] - 2026-05-17
+
+### Añadido
+- **Citas**: Restricción técnica de reserva para un máximo de 3 meses en el futuro, tanto en la validación del backend (`StoreAppointmentRequest.php`) como en el control dinámico del calendario en el frontend (`BookingWizard.tsx`).
+- **Diseño**: Contenedores verdes HSL altamente estilizados para destacar de forma premium y estética los días disponibles en el calendario de citas, incluyendo una nueva leyenda informativa "Día disponible".
+- **Pruebas**: Nueva suite de pruebas automatizadas en `ZoionBugFixesTest.php` para validar el rechazo de reservas con más de 3 meses de anticipación.
+
+### Corregido
+- **Autenticación**: Captura robusta de excepciones del mailer SMTP en `EmailVerificationController.php` bajo bloques `try-catch`, y despliegue reactivo de banners de alerta amigables en `VerifyEmail.tsx` para evitar caídas de servidor si las credenciales fallan o expiran.
+
+---
+
 ## [V3.9.8] - 2026-05-17
 
 ### Corregido
