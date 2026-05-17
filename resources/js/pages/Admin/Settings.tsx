@@ -413,7 +413,7 @@ export default function Settings() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3.5 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30">
                   <div className="flex items-center gap-3">
                     {theme === 'dark' ? (
                       <Moon className="h-5 w-5 text-sky-500" />
@@ -427,11 +427,11 @@ export default function Settings() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto sm:justify-end">
                     {/* Botón Claro */}
                     <button
                       onClick={() => setTheme('light')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         theme === 'light'
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -443,7 +443,7 @@ export default function Settings() {
                     {/* Botón Oscuro */}
                     <button
                       onClick={() => setTheme('dark')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         theme === 'dark'
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -455,7 +455,7 @@ export default function Settings() {
                     {/* Botón Sistema */}
                     <button
                       onClick={() => setTheme('system')}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                      className={`flex flex-1 sm:flex-initial items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-colors ${
                         theme === 'system'
                           ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400'
                           : 'bg-gray-100 text-gray-500 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-400 dark:hover:bg-gray-600'
@@ -601,7 +601,7 @@ export default function Settings() {
                     <Code2 className="h-5 w-5 text-sky-500" />
                     <div>
                       <p className="text-sm font-medium text-gray-900 dark:text-gray-100">Versión</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">3.8.8</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">3.8.9</p>
                     </div>
                   </div>
                   <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-none">

@@ -328,12 +328,6 @@ export default function Reports() {
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
-                      label={(entry) => {
-                        if (!entry || !entry.name) return '';
-                        const percent = entry.percent ?? 0;
-                        return `${entry.name} ${(percent * 100).toFixed(0)}%`;
-                      }}
-                      labelLine={false}
                     >
                       {statusBreakdown.map((entry) => (
                         <Cell key={entry.status} fill={STATUS_COLORS[entry.status] || '#6b7280'} />
@@ -341,7 +335,15 @@ export default function Reports() {
                     </Pie>
                     <Tooltip content={<ChartTooltip />} />
                     <Legend
-                      formatter={(value) => <span className="text-xs text-gray-600 dark:text-gray-400">{value}</span>}
+                      formatter={(value) => {
+                        const total = statusBreakdown.reduce((sum, item) => sum + item.count, 0);
+                        const item = statusBreakdown.find(x => x.label === value);
+                        if (item && total > 0) {
+                          const percentage = ((item.count / total) * 100).toFixed(0);
+                          return <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">{value} ({percentage}%)</span>;
+                        }
+                        return <span className="text-xs text-gray-600 dark:text-gray-400">{value}</span>;
+                      }}
                     />
                   </PieChart>
                 </ResponsiveContainer>

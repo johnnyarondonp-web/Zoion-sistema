@@ -454,7 +454,7 @@ function DoctorCard({ doctor, onEdit, onToggle }: { doctor: Doctor; onEdit: (d: 
               </p>
             )}
             {doctor.email && (
-              <p className="text-xs text-gray-400 mt-0.5">{doctor.email}</p>
+              <p className="text-xs text-gray-400 mt-0.5 truncate" title={doctor.email}>{doctor.email}</p>
             )}
           </div>
         </div>

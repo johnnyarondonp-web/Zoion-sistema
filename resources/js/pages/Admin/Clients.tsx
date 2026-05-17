@@ -394,7 +394,7 @@ export default function Clients() {
                         )}
                         <div className="flex items-center gap-1.5 mt-1 text-gray-500 dark:text-gray-400">
                           <Mail className="h-3.5 w-3.5 shrink-0" />
-                          <span className="text-xs truncate">{client.email}</span>
+                          <span className="text-xs truncate" title={client.email}>{client.email}</span>
                         </div>
                         {client.phone && (
                           <div className="flex items-center gap-1.5 mt-0.5 text-gray-500 dark:text-gray-400">

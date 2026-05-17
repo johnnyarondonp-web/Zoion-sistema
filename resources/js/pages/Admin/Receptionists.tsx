@@ -384,7 +384,7 @@ function ReceptionistCard({
               <IdCard className="h-3 w-3 text-gray-400" />
               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">{receptionist.cedula}</p>
             </div>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate">{receptionist.email}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 truncate" title={receptionist.email}>{receptionist.email}</p>
             {receptionist.phone && (
               <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
                 <Phone className="h-3 w-3" /> {receptionist.phone}
