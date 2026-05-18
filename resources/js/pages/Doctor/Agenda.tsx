@@ -515,37 +515,40 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
 
         {/* Dashboard de Estadísticas Médicas */}
         {!loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                  <CalendarDays className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-xl sm:rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
+              <CardContent className="p-2 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center sm:text-left">
+                <div className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <CalendarDays className="h-3 w-3 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Citas Hoy</p>
-                  <p className="text-2xl font-black text-gray-900 dark:text-white leading-none">{totalToday}</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-2xl bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-gray-950">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest">Completadas</p>
-                  <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400 leading-none">{completedToday}</p>
+                <div className="min-w-0 w-full">
+                  <p className="hidden sm:block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Citas Hoy</p>
+                  <p className="text-sm sm:text-2xl font-black text-gray-900 dark:text-white leading-none truncate">{totalToday}</p>
+                  <p className="sm:hidden text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Hoy</p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-2xl bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-gray-950">
-              <CardContent className="p-4 flex items-center gap-4">
-                <div className="h-10 w-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-gray-950">
+              <CardContent className="p-2 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center sm:text-left">
+                <div className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                  <CheckCircle2 className="h-3 w-3 sm:h-5 sm:w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <div>
-                  <p className="text-[10px] font-bold text-amber-600/70 dark:text-amber-400/70 uppercase tracking-widest">Pendientes</p>
-                  <p className="text-2xl font-black text-amber-700 dark:text-amber-400 leading-none">{pendingToday}</p>
+                <div className="min-w-0 w-full">
+                  <p className="hidden sm:block text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mb-1">Completadas</p>
+                  <p className="text-sm sm:text-2xl font-black text-emerald-700 dark:text-emerald-400 leading-none truncate">{completedToday}</p>
+                  <p className="sm:hidden text-[8px] font-bold text-emerald-600/70 dark:text-emerald-400/70 uppercase tracking-widest mt-0.5">Listas</p>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-gray-950">
+              <CardContent className="p-2 sm:p-4 flex flex-col sm:flex-row items-center gap-1 sm:gap-4 text-center sm:text-left">
+                <div className="h-6 w-6 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Clock className="h-3 w-3 sm:h-5 sm:w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="min-w-0 w-full">
+                  <p className="hidden sm:block text-[10px] font-bold text-amber-600/70 dark:text-amber-400/70 uppercase tracking-widest mb-1">Pendientes</p>
+                  <p className="text-sm sm:text-2xl font-black text-amber-700 dark:text-amber-400 leading-none truncate">{pendingToday}</p>
+                  <p className="sm:hidden text-[8px] font-bold text-amber-600/70 dark:text-amber-400/70 uppercase tracking-widest mt-0.5">Espera</p>
                 </div>
               </CardContent>
             </Card>
