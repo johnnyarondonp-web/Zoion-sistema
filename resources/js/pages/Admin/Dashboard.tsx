@@ -406,42 +406,49 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {/* Quick Actions — 2x2 compact grid */}
+      {/* Quick Actions — compact on mobile, large on desktop */}
       <motion.div variants={item}>
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
           {quickActions.map((action) => (
             <motion.button
               key={action.label}
               onClick={() => router.visit(action.href)}
-              className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200 ${action.bg} ${action.color} border ${action.borderColor} shadow-sm hover:shadow-md active:scale-[0.98] w-full`}
+              className={`flex items-center gap-2.5 sm:gap-3 rounded-xl px-3 py-2.5 sm:p-3.5 sm:h-16 text-sm sm:text-base font-semibold transition-all duration-200 ${action.bg} ${action.color} border ${action.borderColor} shadow-sm hover:shadow-md active:scale-[0.98] w-full`}
               whileHover={{ scale: 1.015, y: -1 }}
               whileTap={{ scale: 0.985 }}
             >
-              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${action.iconBg}`}>
-                <action.icon className="h-4 w-4" />
+              <div className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg ${action.iconBg}`}>
+                <action.icon className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <span className="truncate text-left text-gray-900 dark:text-gray-100 font-semibold text-sm">{action.label}</span>
+              <span className="truncate text-left text-gray-900 dark:text-gray-100 font-semibold text-sm sm:text-base">{action.label}</span>
             </motion.button>
           ))}
         </div>
       </motion.div>
 
-      {/* Metric Cards — always 3-col dense grid */}
+      {/* Metric Cards — 3-col dense grid, scales up on desktop */}
       <motion.div variants={item}>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
           {metrics.map((metric) => (
-            <Card key={metric.label} className={`overflow-hidden relative ${metric.borderColor} bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm`}>
-              <div className={`absolute -right-2 -bottom-2 opacity-[0.08] ${metric.iconColor} pointer-events-none`}>
-                <metric.icon className="h-14 w-14" />
+            <Card key={metric.label} className={`overflow-hidden relative ${metric.borderColor} bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm sm:hover:shadow-md transition-all duration-300`}>
+              <div className={`absolute -right-2 -bottom-2 sm:-right-3 sm:-bottom-3 opacity-[0.08] sm:opacity-[0.09] dark:opacity-[0.07] ${metric.iconColor} pointer-events-none`}>
+                <metric.icon className="h-14 w-14 sm:h-24 sm:w-24" />
               </div>
-              <CardContent className="p-2.5 relative z-10">
-                <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${metric.iconBg} mb-1.5`}>
-                  <metric.icon className={`h-3.5 w-3.5 ${metric.iconColor}`} />
+              <CardContent className="p-2.5 sm:p-5 relative z-10 w-full">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-4">
+                  <div className={`flex h-7 w-7 sm:h-12 sm:w-12 items-center justify-center rounded-lg sm:rounded-xl ${metric.iconBg}`}>
+                    <metric.icon className={`h-3.5 w-3.5 sm:h-6 sm:w-6 ${metric.iconColor}`} />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 leading-none tracking-tight">
+                      {metric.value}
+                    </div>
+                    <div className="text-[10px] sm:text-sm font-medium text-gray-500 dark:text-gray-400 mt-1 leading-tight">{metric.label}</div>
+                    {metric.sub && (
+                      <div className="hidden sm:block text-xs text-gray-400 dark:text-gray-500 mt-0.5">{metric.sub}</div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xl font-bold text-gray-900 dark:text-gray-100 leading-none">
-                  {metric.value}
-                </div>
-                <div className="text-[10px] font-medium text-gray-500 dark:text-gray-400 mt-1 leading-tight">{metric.label}</div>
               </CardContent>
             </Card>
           ))}
@@ -456,29 +463,29 @@ export default function Dashboard() {
           <div className="min-w-[80vw] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink">
             <Card className="border-gray-200 dark:border-gray-700 shadow-sm h-full">
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
                   Citas por servicio
                 </CardTitle>
                 <button
                   onClick={() => router.visit('/admin/appointments')}
-                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline whitespace-nowrap"
+                  className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline whitespace-nowrap"
                 >
                   Ver gráfico completo
                 </button>
               </CardHeader>
               <CardContent className="pt-0">
                 {data.appointmentsByService.length > 0 ? (
-                  <ChartContainer config={barChartConfig} className="h-52 w-full">
+                  <ChartContainer config={barChartConfig} className="h-52 sm:h-64 w-full">
                     <BarChart layout="vertical" data={data.appointmentsByService} margin={{ top: 4, right: 12, bottom: 4, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis type="number" tick={{ fontSize: 10 }} allowDecimals={false} />
-                      <YAxis type="category" dataKey="name" tick={{ fontSize: 10 }} width={110} tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 19) + '…' : v} />
+                      <XAxis type="number" tick={{ fontSize: 11 }} allowDecimals={false} />
+                      <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} tickFormatter={(v: string) => v.length > 20 ? v.substring(0, 19) + '…' : v} />
                       <ChartTooltip content={<ChartTooltipContent />} />
                       <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ChartContainer>
                 ) : (
-                  <div className="flex h-52 items-center justify-center text-gray-400 text-sm">Sin datos</div>
+                  <div className="flex h-52 sm:h-64 items-center justify-center text-gray-400 text-sm">Sin datos</div>
                 )}
               </CardContent>
             </Card>
@@ -488,29 +495,29 @@ export default function Dashboard() {
           <div className="min-w-[80vw] sm:min-w-0 snap-start flex-shrink-0 sm:flex-shrink">
             <Card className="border-gray-200 dark:border-gray-700 shadow-sm h-full">
               <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                <CardTitle className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
                   Actividad de citas (14 días)
                 </CardTitle>
                 <button
                   onClick={() => router.visit('/admin/appointments')}
-                  className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium hover:underline whitespace-nowrap"
+                  className="text-[10px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-medium hover:underline whitespace-nowrap"
                 >
                   Ver gráfico completo
                 </button>
               </CardHeader>
               <CardContent className="pt-0">
                 {data.appointmentsByDay.length > 0 ? (
-                  <ChartContainer config={lineChartConfig} className="h-52 w-full">
+                  <ChartContainer config={lineChartConfig} className="h-52 sm:h-64 w-full">
                     <LineChart data={data.appointmentsByDay} margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="date" tick={{ fontSize: 10 }} tickFormatter={(v: string) => formatDate(v)} />
-                      <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                      <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v: string) => formatDate(v)} />
+                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                       <ChartTooltip content={<ChartTooltipContent labelFormatter={(l) => formatFullDate(l as string)} />} />
                       <Line type="monotone" dataKey="count" stroke="#14b8a6" strokeWidth={2} dot={{ fill: '#14b8a6', r: 3 }} activeDot={{ r: 5, fill: '#0d9488' }} />
                     </LineChart>
                   </ChartContainer>
                 ) : (
-                  <div className="flex h-52 items-center justify-center text-gray-400 text-sm">Sin datos</div>
+                  <div className="flex h-52 sm:h-64 items-center justify-center text-gray-400 text-sm">Sin datos</div>
                 )}
               </CardContent>
             </Card>
