@@ -183,7 +183,7 @@ Route::middleware(['auth', 'ensure.staff'])->group(function () {
 
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
-    Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'))->middleware('role:admin');
+    Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'));
     Route::get('/admin/doctors',        fn () => Inertia::render('Admin/Doctors'))->middleware('role:admin');
     Route::get('/admin/receptionists',  fn () => Inertia::render('Admin/Receptionists'))->middleware('role:admin');
     Route::get('/admin/walk-in',        fn () => Inertia::render('Admin/WalkIn'));
@@ -192,7 +192,6 @@ Route::middleware(['auth', 'ensure.staff'])->group(function () {
     $registerAdminApis = function () {
         Route::middleware('role:admin')->group(function () {
             Route::delete('/admin/clients/{id}',    [AdminClientController::class, 'destroy']);
-            Route::delete('/blocked-dates/{id}',    [BlockedDateController::class, 'destroy']);
 
             // Gestión de servicios (Solo admin)
             Route::post('/services',                    [ServiceController::class, 'store']);
@@ -227,6 +226,7 @@ Route::middleware(['auth', 'ensure.staff'])->group(function () {
 
         // API Admin: Fechas bloqueadas
         Route::post('/blocked-dates',         [BlockedDateController::class, 'store']);
+        Route::delete('/blocked-dates/{id}',  [BlockedDateController::class, 'destroy']);
         Route::post('/special-open-dates',    [\App\Http\Controllers\SpecialOpenDateController::class, 'store']);
         Route::delete('/special-open-dates/{id}', [\App\Http\Controllers\SpecialOpenDateController::class, 'destroy']);
 

@@ -9,6 +9,21 @@ El proyecto sigue una convención de **Versionamiento Semántico Adaptado**:
 
 ---
 
+## [V3.9.16] - 2026-05-18
+
+### Añadido
+- **Recepcionista**: Habilitación completa de la vista "Fechas Bloqueadas" (Excepciones del Calendario) para el rol de recepcionista, removiendo el control `adminOnly` del menú lateral y adaptando la seguridad de las rutas y endpoints de Laravel.
+- **Recepcionista**: Incorporación del rol de recepcionista en la recepción de notificaciones generales en tiempo real (nuevas citas, cancelaciones, nuevos mensajes) mediante la optimización de `NotifyAdminsJob`.
+- **Notificaciones**: Redirección inteligente y robusta en la campana de notificaciones del frontend basada en el rol del usuario (`isStaff`, `isDoctor`, `isClient`), dirigiendo a la recepcionista a las vistas correctas de administración.
+
+### Corregido
+- **Recepcionista**: Autorización completa del rol de recepcionista para confirmar, cancelar o actualizar el estado de citas y realizar el envío y recepción de mensajes de chat en citas, eliminando bloqueos de código 403.
+- **Recepcionista**: Corrección en el redireccionamiento del botón "Mi Perfil" en la barra de navegación para usuarios del staff, apuntando a `/admin/profile` en lugar de la ruta de cliente y permitiendo la actualización de claves.
+- **Horarios**: Alineación visual responsiva del banner informativo de consejos de gestión (`💡 Consejo de gestión...`) fijando su ancho con `max-w-4xl` para un acabado estético de primer nivel.
+- **Base de Datos**: Corrección de incompatibilidad SQL en el gráfico de citas diarias de `DashboardController` convirtiendo el casteo Postgres-specific `date::varchar` en una expresión adaptativa que tolera SQLite de manera transparente en los tests.
+
+---
+
 ## [V3.9.10] - 2026-05-17
 
 ### Añadido

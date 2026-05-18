@@ -47,7 +47,7 @@ class NotifyAdminsJob implements ShouldQueue
         // con el create() dentro del bucle. Esto reduce drásticamente la carga en la BD.
         // Como insert() no dispara eventos de Eloquent, generamos los ULIDs a mano aquí mismo.
         $now = now();
-        $notifications = User::where('role', 'admin')->pluck('id')
+        $notifications = User::whereIn('role', ['admin', 'receptionist'])->pluck('id')
             ->map(fn($id) => [
                 'id'         => (string) \Illuminate\Support\Str::ulid(),
                 'user_id'    => $id,

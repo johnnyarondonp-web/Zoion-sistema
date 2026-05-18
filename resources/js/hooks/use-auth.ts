@@ -4,7 +4,7 @@ interface AuthUser {
   id: string
   name: string
   email: string
-  role: 'admin' | 'client' | 'doctor'
+  role: 'admin' | 'client' | 'doctor' | 'receptionist'
   phone?: string
   specialty?: string
 }
@@ -22,6 +22,8 @@ export function useAuth() {
   return {
     user: auth?.user ?? null,
     isAdmin: auth?.user?.role === 'admin',
+    isReceptionist: auth?.user?.role === 'receptionist',
+    isStaff: auth?.user?.role === 'admin' || auth?.user?.role === 'receptionist',
     isClient: auth?.user?.role === 'client',
     isDoctor: auth?.user?.role === 'doctor',
     isAuthenticated: !!auth?.user,

@@ -62,6 +62,7 @@ function NotificationItem({
   onMarkRead: (id: string) => void;
   onClose: () => void;
 }) {
+  const { user } = useAuth();
   const handleClick = () => {
     if (!notification.read) onMarkRead(notification.id);
     
@@ -70,12 +71,12 @@ function NotificationItem({
     
     if (appointmentId) {
       // Redirección inteligente según el rol
-      const isAdmin = window.location.pathname.startsWith('/admin');
-      const isDoctor = window.location.pathname.startsWith('/doctor');
+      const isStaff = user?.role === 'admin' || user?.role === 'receptionist';
+      const isDoctor = user?.role === 'doctor';
       
       let baseRoute = '/client/appointments';
-      if (isAdmin) baseRoute = '/admin/appointments';
-      if (isDoctor) baseRoute = '/doctor/agenda'; // Los doctores ven los detalles en la agenda
+      if (isStaff) baseRoute = '/admin/appointments';
+      else if (isDoctor) baseRoute = '/doctor/agenda'; // Los doctores ven los detalles en la agenda
       
       router.visit(`${baseRoute}/${appointmentId}`);
     }
@@ -118,7 +119,7 @@ function NotificationItem({
 }
 
 export function NotificationBell() {
-  const { user, isAdmin, isDoctor } = useAuth();
+  const { user, isAdmin, isDoctor, isStaff } = useAuth();
   const { notifications, unreadCount, fetchNotifications, markAsRead, markAllAsRead } = useNotificationStore();
   const [open, setOpen] = useState(false);
   const prevUnreadCount = useRef(unreadCount);
@@ -145,7 +146,7 @@ export function NotificationBell() {
   const displayNotifications = notifications.slice(0, 5);
   const hasMore = notifications.length > 5;
 
-  const viewAllHref = isAdmin 
+  const viewAllHref = isStaff 
     ? '/admin/notifications' 
     : (isDoctor ? '/doctor/notifications' : '/client/appointments');
 

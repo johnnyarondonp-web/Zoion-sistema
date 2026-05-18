@@ -14,7 +14,7 @@ class AppointmentMessageController extends Controller
         $appointment = Appointment::findOrFail($appointmentId);
         $user = $request->user();
 
-        if ($user->role !== 'admin' && $appointment->user_id !== $user->id) {
+        if (!in_array($user->role, ['admin', 'receptionist']) && $appointment->user_id !== $user->id) {
             abort(403);
         }
 
@@ -43,7 +43,7 @@ class AppointmentMessageController extends Controller
         $appointment = Appointment::findOrFail($appointmentId);
         $user = $request->user();
 
-        if ($user->role !== 'admin' && $appointment->user_id !== $user->id) {
+        if (!in_array($user->role, ['admin', 'receptionist']) && $appointment->user_id !== $user->id) {
             abort(403);
         }
 
@@ -102,7 +102,7 @@ class AppointmentMessageController extends Controller
         $appointment = Appointment::findOrFail($appointmentId);
         $user = $request->user();
 
-        if ($user->role !== 'admin' && $appointment->user_id !== $user->id) {
+        if (!in_array($user->role, ['admin', 'receptionist']) && $appointment->user_id !== $user->id) {
             abort(403);
         }
 

@@ -19,7 +19,7 @@ class BlockedDateController extends Controller
 
     public function store(Request $request)
     {
-        abort_if($request->user()->role !== 'admin', 403);
+        abort_if(!in_array($request->user()->role, ['admin', 'receptionist']), 403);
         $request->validate([
             'date'   => 'required|date_format:Y-m-d|after_or_equal:today',
             'reason' => 'nullable|string|max:200',
@@ -71,7 +71,7 @@ class BlockedDateController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        abort_if($request->user()->role !== 'admin', 403);
+        abort_if(!in_array($request->user()->role, ['admin', 'receptionist']), 403);
         BlockedDate::findOrFail($id)->delete();
         return response()->json(['success' => true]);
     }

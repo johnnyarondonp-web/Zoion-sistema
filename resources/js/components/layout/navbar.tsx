@@ -60,7 +60,7 @@ const publicNavItems: { label: string; href: string }[] = [
 ];
 
 export function Navbar() {
-  const { user, isAuthenticated, isAdmin } = useAuth();
+  const { user, isAuthenticated, isAdmin, isStaff, isDoctor } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -81,10 +81,12 @@ export function Navbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const navItems = isAdmin ? adminNavItems : clientNavItems;
-  const roleLabel = isAdmin ? 'Admin' : 'Cliente';
-  const roleBadgeVariant = isAdmin ? 'default' : 'secondary';
-  const profileHref = isAdmin ? '/admin/profile' : '/client/profile';
+  const navItems = isStaff ? adminNavItems : clientNavItems;
+  const roleLabel = user?.role === 'admin' ? 'Admin' : (user?.role === 'receptionist' ? 'Recepcionista' : 'Cliente');
+  const roleBadgeVariant = isStaff ? 'default' : 'secondary';
+  const profileHref = isStaff
+    ? '/admin/profile'
+    : (user?.role === 'doctor' ? '/doctor/profile' : '/client/profile');
   const isActive = (href: string) => url.startsWith(href) && href !== '/';
   const isExactActive = (href: string) => url === href;
 
@@ -119,7 +121,12 @@ export function Navbar() {
         <div className="flex items-center gap-6">
           {/* Logo */}
           <button
-            onClick={() => router.visit(isAuthenticated ? (isAdmin ? '/admin/dashboard' : '/client/pets') : '/')}
+            onClick={() => {
+              if (!isAuthenticated) router.visit('/');
+              else if (isStaff) router.visit('/admin/dashboard');
+              else if (isDoctor) router.visit('/doctor/agenda');
+              else router.visit('/client/pets');
+            }}
             className="flex items-center gap-2 transition-opacity hover:opacity-80 group"
           >
             <motion.div
@@ -288,32 +295,39 @@ export function Navbar() {
                   <Separator />
 
                   <nav className="flex flex-col gap-1">
-                    {isAdmin ? (
+                    {isStaff ? (
                       // Menú administrativo completo para móvil
                       <div className="space-y-4">
-                        {sidebarSections.map((section) => (
-                          <div key={section.title} className="space-y-1">
-                            <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                              {section.title}
+                        {sidebarSections.map((section) => {
+                          if (section.adminOnly && user?.role !== 'admin') return null;
+                          
+                          const filteredItems = section.items.filter(item => !item.adminOnly || user?.role === 'admin');
+                          if (filteredItems.length === 0) return null;
+
+                          return (
+                            <div key={section.title} className="space-y-1">
+                              <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                                {section.title}
+                              </div>
+                              {filteredItems.map((item) => (
+                                <SheetClose key={item.href} asChild>
+                                  <button
+                                    onClick={() => handleNavClick(item.href)}
+                                    className={cn(
+                                      "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                      url.startsWith(item.href)
+                                        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
+                                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                    )}
+                                  >
+                                    {item.icon}
+                                    {item.label}
+                                  </button>
+                                </SheetClose>
+                              ))}
                             </div>
-                            {section.items.map((item) => (
-                              <SheetClose key={item.href} asChild>
-                                <button
-                                  onClick={() => handleNavClick(item.href)}
-                                  className={cn(
-                                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                                    url.startsWith(item.href)
-                                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
-                                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                  )}
-                                >
-                                  {item.icon}
-                                  {item.label}
-                                </button>
-                              </SheetClose>
-                            ))}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     ) : (
                       // Menú para clientes organizado por sección
@@ -344,29 +358,31 @@ export function Navbar() {
                     
                     <Separator className="my-2" />
 
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                        Explorar
+                    {!isAuthenticated && (
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                          Explorar
+                        </div>
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => handleNavClick('/')}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          >
+                            <PawPrint className="h-4 w-4" />
+                            Inicio
+                          </button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => handleNavClick('/about')}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          >
+                            <Info className="h-4 w-4" />
+                            Nosotros
+                          </button>
+                        </SheetClose>
                       </div>
-                      <SheetClose asChild>
-                        <button
-                          onClick={() => handleNavClick('/')}
-                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                          <PawPrint className="h-4 w-4" />
-                          Inicio
-                        </button>
-                      </SheetClose>
-                      <SheetClose asChild>
-                        <button
-                          onClick={() => handleNavClick('/about')}
-                          className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                        >
-                          <Info className="h-4 w-4" />
-                          Nosotros
-                        </button>
-                      </SheetClose>
-                    </div>
+                    )}
                     
                     <Separator className="my-2" />
                     

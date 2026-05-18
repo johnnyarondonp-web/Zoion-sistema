@@ -36,7 +36,7 @@ export const sidebarSections: SidebarSection[] = [
       { label: 'Clientes',         href: '/admin/clients',       icon: <Users className="h-4 w-4" />,          matchPrefixes: ['/admin/clients'] },
       { label: 'Servicios',        href: '/admin/services',      icon: <Settings2 className="h-4 w-4" />,      matchPrefixes: ['/admin/services'], adminOnly: true },
       { label: 'Horarios',         href: '/admin/schedules',     icon: <Clock className="h-4 w-4" />,          matchPrefixes: ['/admin/schedules'] },
-      { label: 'Fechas Bloqueadas',href: '/admin/blocked-dates', icon: <Ban className="h-4 w-4" />,            matchPrefixes: ['/admin/blocked-dates'], adminOnly: true },
+      { label: 'Fechas Bloqueadas',href: '/admin/blocked-dates', icon: <Ban className="h-4 w-4" />,            matchPrefixes: ['/admin/blocked-dates'] },
     ],
   },
   {
@@ -106,8 +106,8 @@ export const AdminSidebar = memo(function AdminSidebar() {
             <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
               {user?.name || 'Admin'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate capitalize">
-              {user?.role || 'admin@zoion.vet'}
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {user?.role === 'admin' ? 'Administrador' : (user?.role === 'receptionist' ? 'Recepcionista' : user?.role)}
             </p>
           </div>
         </div>

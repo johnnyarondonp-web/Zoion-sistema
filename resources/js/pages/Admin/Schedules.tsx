@@ -417,7 +417,7 @@ export default function Schedules() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
-        className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sky-800 dark:bg-sky-950/20 dark:border-sky-900/50 dark:text-sky-300 text-sm w-full mt-4"
+        className="bg-sky-50 border border-sky-200 rounded-xl p-4 text-sky-800 dark:bg-sky-950/20 dark:border-sky-900/50 dark:text-sky-300 text-sm w-full max-w-4xl mt-4"
       >
         <span className="font-semibold">💡 Consejo de gestión:</span> Este panel define el horario de apertura fijo que se repite <strong>todas las semanas</strong>. Si necesitas abrir o cerrar un día específico (como un feriado o habilitar un sábado de guardia único), no alteres este horario general; en su lugar, utiliza el nuevo módulo de <a href="/admin/blocked-dates" className="underline font-medium hover:text-sky-700 dark:hover:text-sky-400">📅 Excepciones del Calendario</a> para gestionar fechas especiales sin afectar al resto del año.
       </motion.div>

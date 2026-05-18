@@ -220,7 +220,9 @@ export default function AdminProfile() {
                </div>
                <div className="p-3 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                  <p className="text-xs text-gray-500 mb-1">Rol de Acceso</p>
-                 <p className="text-sm font-medium capitalize">{user.role}</p>
+                 <p className="text-sm font-medium">
+                   {user.role === 'admin' ? 'Administrador' : (user.role === 'receptionist' ? 'Recepcionista' : user.role)}
+                 </p>
                </div>
             </div>
           )}

@@ -167,8 +167,12 @@ class AppointmentController extends Controller
         $appointment = Appointment::findOrFail($id);
         $user = $request->user();
 
-        // Seguridad: Verificar autorización básica
-        if ($user->role !== 'admin' && $appointment->user_id !== $user->id) {
+        // Seguridad: El usuario debe ser el dueño, el médico asignado o personal administrativo.
+        $isClientOwner = $appointment->user_id === $user->id;
+        $isAssignedDoc = ($user->role === 'doctor' && $user->doctor?->id !== null && $appointment->doctor_id === $user->doctor?->id);
+        $isStaff       = in_array($user->role, ['admin', 'receptionist']);
+
+        if (!$isClientOwner && !$isAssignedDoc && !$isStaff) {
             abort(403, 'No autorizado');
         }
 
@@ -239,7 +243,7 @@ class AppointmentController extends Controller
         }
 
         // Enviar notificación al confirmar una cita
-        if ($user->role === 'admin' && $request->has('status') && $request->status === 'confirmed') {
+        if (in_array($user->role, ['admin', 'receptionist']) && $request->has('status') && $request->status === 'confirmed') {
             \App\Models\Notification::create([
                 'user_id' => $appointment->user_id,
                 'title'   => 'Cita confirmada',

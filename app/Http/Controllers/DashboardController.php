@@ -147,9 +147,13 @@ class DashboardController extends Controller
             // cuando todas las citas eran futuras.
             $startWindow = Carbon::now()->subDays(7)->format('Y-m-d');
             $endWindow   = Carbon::now()->addDays(6)->format('Y-m-d');
+            $dateCastExpr = match (config('database.default')) {
+                'pgsql'  => 'date::varchar',
+                default  => 'date',
+            };
             $rawDayCounts = Appointment::where('date', '>=', $startWindow)
                 ->where('date', '<=', $endWindow)
-                ->selectRaw('date::varchar as date_str, count(*) as count')
+                ->selectRaw($dateCastExpr . ' as date_str, count(*) as count')
                 ->groupBy('date')
                 ->pluck('count', 'date_str');
 
