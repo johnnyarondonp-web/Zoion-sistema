@@ -470,5 +470,86 @@ class AvailabilityControllerTest extends TestCase
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.specialOpenDates.0', $saturday);
     }
+
+    /** @test */
+    public function test_cannot_create_special_open_date_if_blocked(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $date = Carbon::tomorrow()->format('Y-m-d');
+
+        // Bloquear fecha
+        BlockedDate::create([
+            'id' => (string) Str::ulid(),
+            'date' => $date,
+            'reason' => 'Bloqueado',
+        ]);
+
+        // Intentar crear apertura especial en la misma fecha
+        $res = $this->actingAs($admin)->postJson('/api/special-open-dates', [
+            'date' => $date,
+            'open_time' => '09:00',
+            'close_time' => '17:00',
+            'reason' => 'Apertura',
+        ]);
+
+        $res->assertStatus(422);
+        $this->assertEquals('Esta fecha está bloqueada. Elimina el bloqueo primero.', $res->json('message'));
+    }
+
+    /** @test */
+    public function test_cannot_create_blocked_date_if_special_open(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $date = Carbon::tomorrow()->format('Y-m-d');
+
+        // Crear apertura especial
+        \App\Models\SpecialOpenDate::create([
+            'id' => (string) Str::ulid(),
+            'date' => $date,
+            'open_time' => '09:00',
+            'close_time' => '17:00',
+            'reason' => 'Apertura',
+        ]);
+
+        // Intentar bloquear la misma fecha
+        $res = $this->actingAs($admin)->postJson('/api/blocked-dates', [
+            'date' => $date,
+            'reason' => 'Bloqueado',
+        ]);
+
+        $res->assertStatus(422);
+        $this->assertEquals('Esta fecha tiene una apertura especial activa. Elimina la apertura primero.', $res->json('message'));
+    }
+
+    /** @test */
+    public function test_can_book_appointment_on_special_open_date_even_on_weekend(): void
+    {
+        $this->createDefaultSchedules();
+        $saturday = $this->nextWeekday(6); // Sábado (normalmente cerrado)
+
+        // Crear apertura especial para el sábado
+        \App\Models\SpecialOpenDate::create([
+            'id' => (string) Str::ulid(),
+            'date' => $saturday,
+            'open_time' => '09:00',
+            'close_time' => '18:00',
+            'reason' => 'Apertura especial',
+        ]);
+
+        // Agendar cita el sábado en el horario permitido de la apertura especial
+        $res = $this->actingAs($this->user)->postJson('/api/appointments', [
+            'date' => $saturday,
+            'startTime' => '10:00',
+            'petId' => $this->pet->id,
+            'serviceId' => $this->service->id,
+            'paymentMethod' => 'cash',
+        ]);
+
+        $res->assertStatus(201);
+        $this->assertEquals('pending', $res->json('data.status'));
+        $this->assertEquals($saturday, $res->json('data.date'));
+        $this->assertEquals('10:00', $res->json('data.startTime'));
+    }
 }
+
 

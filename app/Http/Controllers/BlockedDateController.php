@@ -24,6 +24,8 @@ class BlockedDateController extends Controller
             'date'   => 'required|date_format:Y-m-d|after_or_equal:today',
             'reason' => 'nullable|string|max:200',
         ]);
+        $isSpecialOpen = \App\Models\SpecialOpenDate::where('date', $request->date)->exists();
+        abort_if($isSpecialOpen, 422, 'Esta fecha tiene una apertura especial activa. Elimina la apertura primero.');
 
         $blocked = null;
         DB::transaction(function () use ($request, &$blocked) {

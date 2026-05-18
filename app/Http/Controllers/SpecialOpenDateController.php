@@ -22,6 +22,8 @@ class SpecialOpenDateController extends Controller
             'close_time' => 'required|date_format:H:i|after:open_time',
             'reason'     => 'nullable|string|max:200',
         ]);
+        $isBlocked = \App\Models\BlockedDate::where('date', $request->date)->exists();
+        abort_if($isBlocked, 422, 'Esta fecha está bloqueada. Elimina el bloqueo primero.');
 
         $special = SpecialOpenDate::create([
             'id'         => (string) Str::ulid(),

@@ -61,20 +61,48 @@ class AppointmentService
             abort(400, 'Esta fecha está bloqueada por la clínica');
         }
 
-        // 5. Verificar horario de atención laboral
-        $dayOfWeek = \Carbon\Carbon::parse($data['date'])->dayOfWeek;
-        $schedule  = Schedule::where('day_of_week', $dayOfWeek)->first();
-        if (!$schedule || !$schedule->is_available) {
+        // 5. Verificar horario de atención laboral (Integrando apertura especial)
+        $specialOpen = \App\Models\SpecialOpenDate::where('date', $data['date'])->first();
+        $scheduleObj = null;
+
+        if ($specialOpen) {
+            $scheduleObj = (object)[
+                'is_available' => true,
+                'open_time'    => $specialOpen->open_time,
+                'close_time'   => $specialOpen->close_time,
+            ];
+        } else {
+            $dayOfWeek = \Carbon\Carbon::parse($data['date'])->dayOfWeek;
+            $dbSchedule  = Schedule::where('day_of_week', $dayOfWeek)->first();
+            if ($dbSchedule) {
+                $scheduleObj = (object)[
+                    'is_available' => $dbSchedule->is_available,
+                    'open_time'    => $dbSchedule->open_time,
+                    'close_time'   => $dbSchedule->close_time,
+                ];
+            } else {
+                $isWeekday = $dayOfWeek >= 1 && $dayOfWeek <= 5;
+                if ($isWeekday) {
+                    $scheduleObj = (object)[
+                        'is_available' => true,
+                        'open_time'    => '09:00',
+                        'close_time'   => '18:00',
+                    ];
+                }
+            }
+        }
+
+        if (!$scheduleObj || !$scheduleObj->is_available) {
             abort(400, 'No hay horario disponible para este día');
         }
 
         $startMinutes = $this->timeToMinutes($data['startTime']);
         $endMinutes   = $startMinutes + $service->duration_minutes;
-        $openMinutes  = $this->timeToMinutes($schedule->open_time);
-        $closeMinutes = $this->timeToMinutes($schedule->close_time);
+        $openMinutes  = $this->timeToMinutes($scheduleObj->open_time);
+        $closeMinutes = $this->timeToMinutes($scheduleObj->close_time);
 
         if ($startMinutes < $openMinutes || $endMinutes > $closeMinutes) {
-            abort(400, "El horario solicitado está fuera del horario de atención ({$schedule->open_time} – {$schedule->close_time})");
+            abort(400, "El horario solicitado está fuera del horario de atención ({$scheduleObj->open_time} – {$scheduleObj->close_time})");
         }
 
         $source = ($isStaff && isset($data['userId']) && $data['userId'] !== $user->id) ? 'admin_booked' : 'online';
