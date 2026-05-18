@@ -676,57 +676,49 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
                         {activePet.breed || 'Mestizo'} • {calculateAge(activePet.birthdate)}
                       </p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="ml-auto text-white hover:bg-white/10 rounded-full"
-                      onClick={() => setIsDetailOpen(false)}
-                    >
-                      <Plus className="h-5 w-5 rotate-45" />
-                    </Button>
                   </div>
                   <div className="absolute top-0 right-0 h-32 w-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl opacity-30" />
                 </div>
 
                 <div className="p-6 space-y-6">
                   {/* Vitals Grid - More Streamlined */}
-                  <div className="grid grid-cols-3 gap-6">
-                    <div className="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center flex-shrink-0">
-                        <CalendarDays className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                  <div className="grid grid-cols-3 gap-2 sm:gap-6">
+                    <div className="bg-gray-50 dark:bg-gray-800/40 p-2 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 text-center sm:text-left">
+                      <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-950/30 flex items-center justify-center flex-shrink-0">
+                        <CalendarDays className="h-3.5 w-3.5 sm:h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">EDAD</p>
-                        <p className="text-lg font-black text-gray-900 dark:text-white leading-none">{calculateAge(activePet.birthdate)}</p>
+                      <div className="min-w-0 w-full">
+                        <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">EDAD</p>
+                        <p className="text-xs sm:text-lg font-black text-gray-900 dark:text-white leading-none truncate">{calculateAge(activePet.birthdate)}</p>
                       </div>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-sky-100 dark:bg-sky-950/30 flex items-center justify-center flex-shrink-0">
-                        <Activity className="h-5 w-5 text-sky-600 dark:text-sky-400" />
+                    <div className="relative bg-gray-50 dark:bg-gray-800/40 p-2 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 text-center sm:text-left">
+                      <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-sky-100 dark:bg-sky-950/30 flex items-center justify-center flex-shrink-0">
+                        <Activity className="h-3.5 w-3.5 sm:h-5 w-5 text-sky-600 dark:text-sky-400" />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">PESO</p>
-                        <p className="text-lg font-black text-gray-900 dark:text-white leading-none">{activePet.weight ? `${activePet.weight} kg` : 'N/A'}</p>
+                      <div className="min-w-0 w-full">
+                        <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">PESO</p>
+                        <p className="text-xs sm:text-lg font-black text-gray-900 dark:text-white leading-none truncate">{activePet.weight ? `${activePet.weight} kg` : 'N/A'}</p>
                       </div>
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="h-8 w-8 text-sky-500 hover:text-sky-600 hover:bg-sky-50" 
+                        className="absolute top-0.5 right-0.5 sm:static h-6 w-6 sm:h-8 sm:w-8 text-sky-500 hover:text-sky-600 hover:bg-sky-50" 
                         onClick={() => {
                           setNewWeight(activePet.weight ? String(activePet.weight) : '');
                           setIsWeightModalOpen(true);
                         }}
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
-                    <div className="bg-gray-50 dark:bg-gray-800/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center gap-4">
-                      <div className="h-10 w-10 rounded-xl bg-rose-100 dark:bg-rose-950/30 flex items-center justify-center flex-shrink-0">
-                        <User className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+                    <div className="bg-gray-50 dark:bg-gray-800/40 p-2 sm:p-4 rounded-xl sm:rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row items-center gap-1.5 sm:gap-4 text-center sm:text-left">
+                      <div className="h-7 w-7 sm:h-10 sm:w-10 rounded-lg sm:rounded-xl bg-rose-100 dark:bg-rose-950/30 flex items-center justify-center flex-shrink-0">
+                        <User className="h-3.5 w-3.5 sm:h-5 w-5 text-rose-600 dark:text-rose-400" />
                       </div>
-                      <div>
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">SEXO</p>
-                        <p className="text-lg font-black text-gray-900 dark:text-white leading-none">{activePet.gender === 'male' ? 'Macho' : 'Hembra'}</p>
+                      <div className="min-w-0 w-full">
+                        <p className="text-[8px] sm:text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">SEXO</p>
+                        <p className="text-xs sm:text-lg font-black text-gray-900 dark:text-white leading-none truncate">{activePet.gender === 'male' ? 'Macho' : 'Hembra'}</p>
                       </div>
                     </div>
                   </div>
