@@ -45,6 +45,11 @@ const clientNavItems: NavItem[] = [
   { label: 'Mi Perfil', href: '/client/profile', icon: <User className="h-4 w-4" /> },
 ];
 
+const doctorNavItems: NavItem[] = [
+  { label: 'Mi Agenda', href: '/doctor/agenda', icon: <Calendar className="h-4 w-4" /> },
+  { label: 'Mi Perfil', href: '/doctor/profile', icon: <User className="h-4 w-4" /> },
+];
+
 const adminNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/admin/dashboard', icon: <LayoutDashboard className="h-4 w-4" /> },
   { label: 'Servicios', href: '/admin/services', icon: <Settings2 className="h-4 w-4" /> },
@@ -328,6 +333,31 @@ export function Navbar() {
                             </div>
                           );
                         })}
+                      </div>
+                    ) : isDoctor ? (
+                      // Menú para doctor
+                      <div className="space-y-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                            Mi Agenda Médica
+                          </div>
+                          {doctorNavItems.map((item) => (
+                            <SheetClose key={item.href} asChild>
+                              <button
+                                onClick={() => handleNavClick(item.href)}
+                                className={cn(
+                                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                                  url.startsWith(item.href)
+                                    ? "bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400"
+                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                                )}
+                              >
+                                {item.icon}
+                                {item.label}
+                              </button>
+                            </SheetClose>
+                          ))}
+                        </div>
                       </div>
                     ) : (
                       // Menú para clientes organizado por sección

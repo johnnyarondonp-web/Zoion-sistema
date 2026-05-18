@@ -515,7 +515,7 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
 
         {/* Dashboard de Estadísticas Médicas */}
         {!loading && (
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
             <Card className="border-none shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-950">
               <CardContent className="p-4 flex items-center gap-4">
                 <div className="h-10 w-10 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
