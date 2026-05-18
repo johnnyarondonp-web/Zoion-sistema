@@ -269,55 +269,49 @@ export default function Dashboard() {
       label: 'Citas este mes',
       value: data.appointmentsThisMonth,
       icon: CalendarCheck,
-      cardBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-emerald-100',
+      borderColor: 'border-l-4 border-l-emerald-500 dark:border-l-emerald-400',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/40',
+      iconColor: 'text-emerald-600 dark:text-emerald-400',
     },
     {
       label: 'Citas mes anterior',
       value: data.appointmentsLastMonth,
       icon: CalendarDays,
-      cardBg: 'bg-gradient-to-br from-teal-500 to-cyan-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-teal-100',
+      borderColor: 'border-l-4 border-l-teal-500 dark:border-l-teal-400',
+      iconBg: 'bg-teal-50 dark:bg-teal-950/40',
+      iconColor: 'text-teal-600 dark:text-teal-400',
     },
     {
       label: 'Mascotas atendidas',
       value: data.petsAttendedThisMonth,
       icon: PawPrint,
-      cardBg: 'bg-gradient-to-br from-rose-500 to-pink-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-rose-100',
+      borderColor: 'border-l-4 border-l-rose-500 dark:border-l-rose-400',
+      iconBg: 'bg-rose-50 dark:bg-rose-950/40',
+      iconColor: 'text-rose-600 dark:text-rose-400',
     },
     {
       label: 'Citas hoy pendientes',
       value: data.upcomingToday,
       icon: Clock,
-      cardBg: 'bg-gradient-to-br from-amber-500 to-yellow-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-amber-100',
+      borderColor: 'border-l-4 border-l-amber-500 dark:border-l-amber-400',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/40',
+      iconColor: 'text-amber-600 dark:text-amber-400',
     },
     {
       label: 'Tasa de cancelación',
       value: `${data.cancellationRate}%`,
       icon: TrendingDown,
-      cardBg: 'bg-gradient-to-br from-orange-500 to-amber-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-orange-100',
+      borderColor: 'border-l-4 border-l-orange-500 dark:border-l-orange-400',
+      iconBg: 'bg-orange-50 dark:bg-orange-950/40',
+      iconColor: 'text-orange-600 dark:text-orange-400',
     },
     {
       label: 'Mensajes sin responder',
       value: data.unreadMessages,
       icon: MessageCircle,
-      cardBg: 'bg-gradient-to-br from-violet-500 to-purple-600',
-      iconBg: 'bg-white/20',
-      textColor: 'text-white',
-      subTextColor: 'text-violet-100',
+      borderColor: 'border-l-4 border-l-violet-500 dark:border-l-violet-400',
+      iconBg: 'bg-violet-50 dark:bg-violet-950/40',
+      iconColor: 'text-violet-600 dark:text-violet-400',
       sub: data.unreadMessages === 1 ? '1 mensaje nuevo' : `${data.unreadMessages} mensajes nuevos`,
     },
   ];
@@ -328,28 +322,36 @@ export default function Dashboard() {
       icon: CalendarPlus,
       href: '/admin/appointments',
       color: 'text-emerald-600 dark:text-emerald-400',
-      bg: 'bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:hover:bg-emerald-900/50',
+      bg: 'bg-white dark:bg-zinc-900 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/20',
+      borderColor: 'border-gray-200 dark:border-zinc-800 hover:border-emerald-300 dark:hover:border-emerald-800/80',
+      iconBg: 'bg-emerald-50 dark:bg-emerald-950/50',
     },
     {
       label: 'Nuevo Servicio',
       icon: Settings2,
       href: '/admin/services/new',
       color: 'text-teal-600 dark:text-teal-400',
-      bg: 'bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/40 dark:hover:bg-teal-900/50',
+      bg: 'bg-white dark:bg-zinc-900 hover:bg-teal-50/30 dark:hover:bg-teal-950/20',
+      borderColor: 'border-gray-200 dark:border-zinc-800 hover:border-teal-300 dark:hover:border-teal-800/80',
+      iconBg: 'bg-teal-50 dark:bg-teal-950/50',
     },
     {
       label: 'Ver Calendario',
       icon: Calendar,
       href: '/admin/calendar',
       color: 'text-amber-600 dark:text-amber-400',
-      bg: 'bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-900/50',
+      bg: 'bg-white dark:bg-zinc-900 hover:bg-amber-50/30 dark:hover:bg-amber-950/20',
+      borderColor: 'border-gray-200 dark:border-zinc-800 hover:border-amber-300 dark:hover:border-amber-800/80',
+      iconBg: 'bg-amber-50 dark:bg-amber-950/50',
     },
     {
       label: 'Clientes',
       icon: Users,
       href: '/admin/clients',
       color: 'text-rose-600 dark:text-rose-400',
-      bg: 'bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50',
+      bg: 'bg-white dark:bg-zinc-900 hover:bg-rose-50/30 dark:hover:bg-rose-950/20',
+      borderColor: 'border-gray-200 dark:border-zinc-800 hover:border-rose-300 dark:hover:border-rose-800/80',
+      iconBg: 'bg-rose-50 dark:bg-rose-950/50',
     },
   ];
 
@@ -364,33 +366,18 @@ export default function Dashboard() {
 
       {/* Welcome Banner */}
       <motion.div variants={item}>
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-800 dark:via-teal-800 dark:to-cyan-800 p-6 sm:p-8 text-white shadow-xl shadow-emerald-200/30 dark:shadow-emerald-900/30">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-800 dark:via-teal-800 dark:to-cyan-800 p-4 sm:p-5 text-white shadow-md shadow-emerald-200/20 dark:shadow-emerald-900/20">
           {/* Decorative elements */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute -top-24 -right-24 w-48 h-48 rounded-full bg-white/5 blur-sm" />
-            <div className="absolute -bottom-16 -left-16 w-32 h-32 rounded-full bg-white/5 blur-sm" />
-            <div className="absolute top-1/2 right-1/4 w-2 h-2 rounded-full bg-white/20" />
-            <div className="absolute top-1/4 right-1/3 w-1.5 h-1.5 rounded-full bg-white/15" />
-            <div className="absolute bottom-1/4 left-1/3 w-2 h-2 rounded-full bg-white/10" />
+            <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-white/5 blur-sm" />
+            <div className="absolute -bottom-8 -left-8 w-20 h-20 rounded-full bg-white/5 blur-sm" />
             {/* Animated paw prints */}
             <motion.div
-              className="absolute top-4 right-8 opacity-[0.06]"
-              animate={{ y: [0, -6, 0] }}
+              className="absolute top-2 right-4 opacity-[0.05]"
+              animate={{ y: [0, -4, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <svg className="w-20 h-20" viewBox="0 0 100 100" fill="currentColor">
-                <ellipse cx="50" cy="65" rx="20" ry="25" />
-                <ellipse cx="25" cy="35" rx="10" ry="12" />
-                <ellipse cx="50" cy="25" rx="10" ry="12" />
-                <ellipse cx="75" cy="35" rx="10" ry="12" />
-              </svg>
-            </motion.div>
-            <motion.div
-              className="absolute bottom-4 right-20 opacity-[0.04]"
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-            >
-              <svg className="w-14 h-14 rotate-45" viewBox="0 0 100 100" fill="currentColor">
+              <svg className="w-12 h-12" viewBox="0 0 100 100" fill="currentColor">
                 <ellipse cx="50" cy="65" rx="20" ry="25" />
                 <ellipse cx="25" cy="35" rx="10" ry="12" />
                 <ellipse cx="50" cy="25" rx="10" ry="12" />
@@ -399,21 +386,21 @@ export default function Dashboard() {
             </motion.div>
           </div>
 
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="h-6 w-6 text-emerald-200" />
-                <h1 className="text-2xl sm:text-3xl font-bold">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-emerald-200" />
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
                   ¡Bienvenido, {user?.name || 'Admin'}!
                 </h1>
               </div>
-              <div className="text-emerald-100 mt-2 text-sm sm:text-base capitalize">
+              <div className="text-emerald-100/90 mt-0.5 text-xs sm:text-sm capitalize font-medium">
                 {getSpanishDate()}
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-white/10">
-              <Clock className="h-5 w-5 text-emerald-200" />
-              <span className="text-lg font-semibold tabular-nums">{currentTime}</span>
+            <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3.5 py-1.5 border border-white/10 self-start sm:self-auto">
+              <Clock className="h-4.5 w-4.5 text-emerald-200" />
+              <span className="text-sm sm:text-base font-semibold tabular-nums">{currentTime}</span>
             </div>
           </div>
         </div>
@@ -421,17 +408,19 @@ export default function Dashboard() {
 
       {/* Quick Actions */}
       <motion.div variants={item}>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActions.map((action) => (
             <motion.button
               key={action.label}
               onClick={() => router.visit(action.href)}
-              className={`flex flex-col items-center justify-center text-center gap-1.5 rounded-xl px-2 min-h-[72px] h-[72px] text-xs sm:text-sm font-medium transition-all duration-200 ${action.bg} ${action.color} border border-transparent hover:shadow-sm active:scale-[0.98]`}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className={`flex items-center gap-3 rounded-xl p-3.5 h-16 text-sm font-semibold transition-all duration-200 ${action.bg} ${action.color} border ${action.borderColor} shadow-sm hover:shadow-md active:scale-[0.98] w-full`}
+              whileHover={{ scale: 1.015, y: -1 }}
+              whileTap={{ scale: 0.985 }}
             >
-              <action.icon className="h-5 w-5 shrink-0" />
-              <span className="truncate w-full">{action.label}</span>
+              <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${action.iconBg} shadow-sm`}>
+                <action.icon className="h-5 w-5" />
+              </div>
+              <span className="truncate text-left text-gray-900 dark:text-gray-100 font-semibold">{action.label}</span>
             </motion.button>
           ))}
         </div>
@@ -441,23 +430,23 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => (
           <motion.div key={metric.label} variants={item} className="h-full">
-            <Card className={`overflow-hidden relative border-0 ${metric.cardBg} shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex items-center`}>
+            <Card className={`overflow-hidden relative ${metric.borderColor} bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all duration-300 h-full flex items-center`}>
               {/* Large faded icon background */}
-              <div className="absolute -right-3 -bottom-3 opacity-10">
+              <div className={`absolute -right-3 -bottom-3 opacity-[0.09] dark:opacity-[0.07] ${metric.iconColor} pointer-events-none`}>
                 <metric.icon className="h-24 w-24" />
               </div>
-              {/* Shine effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none" />
               <CardContent className="p-5 relative z-10 w-full">
                 <div className="flex items-center gap-4">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${metric.iconBg} backdrop-blur-sm`}>
-                    <metric.icon className={`h-6 w-6 ${metric.textColor}`} />
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${metric.iconBg}`}>
+                    <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className={`text-lg font-bold ${metric.textColor} leading-tight`}>{metric.value}</div>
-                    <div className={`text-sm ${metric.subTextColor}`}>{metric.label}</div>
+                    <div className="text-2xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-none">
+                      {metric.value}
+                    </div>
+                    <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mt-1">{metric.label}</div>
                     {metric.sub && (
-                      <div className="text-xs text-white/70 mt-0.5">{metric.sub}</div>
+                      <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{metric.sub}</div>
                     )}
                   </div>
                 </div>
@@ -480,19 +469,22 @@ export default function Dashboard() {
             <CardContent className="pt-0">
               {data.appointmentsByService.length > 0 ? (
                 <ChartContainer config={barChartConfig} className="h-64 w-full">
-                  <BarChart data={data.appointmentsByService} margin={{ top: 10, right: 10, bottom: 20, left: 0 }}>
+                  <BarChart
+                    layout="vertical"
+                    data={data.appointmentsByService}
+                    margin={{ top: 10, right: 20, bottom: 5, left: 0 }}
+                  >
                     <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis
+                    <XAxis type="number" tick={{ fontSize: 12 }} allowDecimals={false} />
+                    <YAxis
+                      type="category"
                       dataKey="name"
-                      tick={{ fontSize: 12 }}
-                      tickFormatter={(val: string) => val.length > 10 ? val.substring(0, 10) + '…' : val}
-                      interval={0}
-                      angle={-25}
-                      textAnchor="end"
+                      tick={{ fontSize: 11 }}
+                      width={140}
+                      tickFormatter={(val: string) => val.length > 25 ? val.substring(0, 24) + '…' : val}
                     />
-                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <ChartTooltip content={<ChartTooltipContent />} />
-                    <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="count" fill="#10b981" radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ChartContainer>
               ) : (
