@@ -172,15 +172,19 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(getSpanishTime());
 
+  const [error, setError] = useState(false);
+
   const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   useEffect(() => {
     fetchDashboard();
     const timer = setInterval(() => setCurrentTime(getSpanishTime()), 60000);
-    return () => clearInterval(timer);
+    // Refrescar datos cada 2 minutos mientras el tab esté activo
+    const refreshTimer = setInterval(() => fetchDashboard(), 120000);
+    return () => { clearInterval(timer); clearInterval(refreshTimer); };
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (isRetry = false) => {
     try {
       const res = await fetch('/api/dashboard', {
         headers: {
@@ -189,16 +193,47 @@ export default function Dashboard() {
           'X-CSRF-TOKEN': getCsrfToken(),
         },
       });
+      if (!res.ok) {
+        // Si falla la autenticación o hay un error del servidor, reintentamos una vez
+        if (!isRetry) {
+          setTimeout(() => fetchDashboard(true), 1500);
+        } else {
+          setError(true);
+        }
+        return;
+      }
       const json = await res.json();
       if (json.success) {
         setData(json.data);
+        setError(false);
+      } else if (!isRetry) {
+        setTimeout(() => fetchDashboard(true), 1500);
       }
     } catch {
-      // silent
+      if (!isRetry) {
+        setTimeout(() => fetchDashboard(true), 1500);
+      } else {
+        setError(true);
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (!loading && !data) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center">
+        <CalendarCheck className="h-12 w-12 text-gray-300 dark:text-gray-600" />
+        <p className="text-gray-500 dark:text-gray-400 text-sm">No se pudo cargar el panel. Verifica tu conexión.</p>
+        <button
+          onClick={() => { setLoading(true); fetchDashboard(); }}
+          className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   if (loading || !data) {
     return (
@@ -474,7 +509,7 @@ export default function Dashboard() {
           <Card className="border-gray-200 dark:border-gray-700 shadow-sm">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                Citas últimos 14 días
+                Actividad de citas (14 días)
               </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">

@@ -43,7 +43,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $data = Cache::remember('dashboard_stats', 60, function () {
+        $data = Cache::remember('dashboard_stats', 10, function () {
             $today        = Carbon::today();
             $startOfMonth = Carbon::now()->startOfMonth();
             $now          = Carbon::now();
@@ -141,19 +141,21 @@ class DashboardController extends Controller
                     'count'     => $item->count,
                 ]);
 
-            // Mismo enfoque que para los meses: una sola query que trae los conteos
-            // de los últimos 14 días, eliminando el loop de 14 queries independientes.
-            // (Nota: Este bloque resuelve el pendiente de las 20 queries en el dashboard).
-            $start14Days = Carbon::now()->subDays(13)->format('Y-m-d');
-            $rawDayCounts = Appointment::where('date', '>=', $start14Days)
-                ->where('date', '<=', Carbon::now()->format('Y-m-d'))
-                ->selectRaw('date, count(*) as count')
+            // Mostramos una ventana de 7 días atrás hasta 7 días adelante para que
+            // las citas futuras (confirmadas, pendientes) también aparezcan en el gráfico.
+            // Antes el filtro solo miraba hacia atrás y el gráfico siempre aparecía vacío
+            // cuando todas las citas eran futuras.
+            $startWindow = Carbon::now()->subDays(7)->format('Y-m-d');
+            $endWindow   = Carbon::now()->addDays(6)->format('Y-m-d');
+            $rawDayCounts = Appointment::where('date', '>=', $startWindow)
+                ->where('date', '<=', $endWindow)
+                ->selectRaw('date::varchar as date_str, count(*) as count')
                 ->groupBy('date')
-                ->pluck('count', 'date');
+                ->pluck('count', 'date_str');
 
             $appointmentsByDay = [];
-            for ($i = 13; $i >= 0; $i--) {
-                $dayDate = Carbon::now()->subDays($i)->format('Y-m-d');
+            for ($i = -7; $i <= 6; $i++) {
+                $dayDate = Carbon::now()->addDays($i)->format('Y-m-d');
                 $appointmentsByDay[] = [
                     'date'  => $dayDate,
                     'count' => (int) ($rawDayCounts[$dayDate] ?? 0),
