@@ -48,7 +48,7 @@ class AuthController extends Controller
 
             $redirects = [
                 'admin'        => '/admin/dashboard',
-                'receptionist' => '/admin/appointments',
+                'receptionist' => '/admin/dashboard',
                 'doctor'       => '/doctor/agenda',
                 'client'       => '/client/pets',
             ];

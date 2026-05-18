@@ -61,6 +61,7 @@ class ClinicalNoteController extends Controller
             'diagnosis' => 'nullable|string|max:100',
             'treatment' => 'nullable|string|max:150',
             'follow_up' => 'nullable|string|max:150',
+            'followUp'  => 'nullable|string|max:150',
         ], [
             'note.max'      => 'La observación no puede exceder los 500 caracteres.',
             'diagnosis.max' => 'El diagnóstico no puede exceder los 100 caracteres.',
@@ -75,7 +76,7 @@ class ClinicalNoteController extends Controller
             'note'           => $request->note,
             'diagnosis'      => $request->diagnosis ?? null,
             'treatment'      => $request->treatment ?? null,
-            'follow_up'      => $request->follow_up ?? null,
+            'follow_up'      => $request->follow_up ?? $request->followUp ?? null,
         ]);
 
         return response()->json(['success' => true, 'data' => $note], 201);
@@ -104,6 +105,7 @@ class ClinicalNoteController extends Controller
             'diagnosis' => 'nullable|string|max:100',
             'treatment' => 'nullable|string|max:150',
             'follow_up' => 'nullable|string|max:150',
+            'followUp'  => 'nullable|string|max:150',
         ], [
             'note.max'      => 'La observación no puede exceder los 500 caracteres.',
             'diagnosis.max' => 'El diagnóstico no puede exceder los 100 caracteres.',
@@ -111,11 +113,15 @@ class ClinicalNoteController extends Controller
             'follow_up.max' => 'El seguimiento no puede exceder los 150 caracteres.',
         ]);
 
+        $followUpValue = $request->has('follow_up') 
+            ? $request->follow_up 
+            : ($request->has('followUp') ? $request->followUp : $note->follow_up);
+
         $note->update([
             'note'      => $request->has('note') ? $request->note : $note->note,
             'diagnosis' => $request->has('diagnosis') ? $request->diagnosis : $note->diagnosis,
             'treatment' => $request->has('treatment') ? $request->treatment : $note->treatment,
-            'follow_up' => $request->has('follow_up') ? $request->follow_up : $note->follow_up,
+            'follow_up' => $followUpValue,
         ]);
 
         return response()->json(['success' => true, 'data' => $note]);

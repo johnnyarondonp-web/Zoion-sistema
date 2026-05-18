@@ -284,10 +284,13 @@ class PetController extends Controller
         }
         $pet = $pet->firstOrFail();
 
-        // Obtener todas las notas clínicas de TODAS las citas de esta mascota
-        $notes = \App\Models\ClinicalNote::with('doctor:id,name')->whereHas('appointment', function($q) use ($id) {
-            $q->where('pet_id', $id);
-        })->orderBy('created_at', 'desc')->get();
+        // Obtener todas las notas clínicas de TODAS las citas de esta mascota usando un JOIN optimizado
+        $notes = \App\Models\ClinicalNote::select('clinical_notes.*')
+            ->join('appointments', 'appointments.id', '=', 'clinical_notes.appointment_id')
+            ->where('appointments.pet_id', $id)
+            ->with('doctor:id,name')
+            ->orderBy('clinical_notes.created_at', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
