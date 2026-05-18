@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Models\Appointment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminClientController extends Controller
 {
@@ -112,16 +113,26 @@ class AdminClientController extends Controller
                 'pets',
                 'appointments' => function ($q) {
                     $q->with(['pet:id,name', 'service:id,name'])
+                      ->orderByRaw("CASE status
+                          WHEN 'pending' THEN 1
+                          WHEN 'confirmed' THEN 2
+                          WHEN 'completed' THEN 3
+                          WHEN 'cancelled' THEN 4
+                          WHEN 'no_show' THEN 5
+                          ELSE 6
+                      END ASC")
                       ->orderBy('date', 'desc')
+                      ->orderBy('start_time', 'desc')
                       ->limit(20);
                 },
             ])
             ->findOrFail($id);
 
-        $client->totalSpent = Appointment::where('user_id', $id)
-            ->where('status', 'completed')
+        $client->totalSpent = Appointment::where('appointments.user_id', $id)
+            ->where('appointments.status', 'completed')
+            ->where('appointments.payment_status', 'paid')
             ->join('services', 'appointments.service_id', '=', 'services.id')
-            ->sum('services.price');
+            ->sum(DB::raw('COALESCE(appointments.payment_amount, services.price)'));
 
         $data = [
             'id'           => $client->id,
@@ -155,6 +166,8 @@ class AdminClientController extends Controller
                 'startTime' => $a->start_time,
                 'endTime'   => $a->end_time,
                 'status'    => $a->status,
+                'paymentStatus' => $a->payment_status,
+                'paymentAmount' => $a->payment_amount,
                 'service' => $a->service ? [
                     'name'  => $a->service->name,
                     'price' => $a->service->price,

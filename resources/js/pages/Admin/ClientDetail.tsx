@@ -160,10 +160,20 @@ function calculateAge(birthdate: string | null): string {
 function formatFullDate(dateStr: string | null): string {
   if (!dateStr) return '—';
   try {
-    const [y, m, d] = dateStr.split('-').map(Number);
+    if (dateStr.includes('T') || dateStr.includes(' ')) {
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+    const parts = dateStr.split('-');
+    if (parts.length < 3) return dateStr;
+    const [y, m, d] = parts.map(Number);
     const date = new Date(y, m - 1, d);
+    if (isNaN(date.getTime())) return dateStr;
     return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
-  } catch { return dateStr; }
+  } catch {
+    return dateStr;
+  }
 }
 
 const container = {
@@ -186,10 +196,36 @@ interface Props {
 }
 
 export default function ClientDetail({ clientId }: Props) {
+  const { auth } = usePage().props as any;
+  const isAdmin = auth?.user?.role === 'admin';
+
   const [client, setClient] = useState<ClientDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedPet, setSelectedPet] = useState<PetData | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const [healthSummary, setHealthSummary] = useState<any>(null);
+  const [loadingHealth, setLoadingHealth] = useState(false);
+
+  useEffect(() => {
+    if (selectedPet && isAdmin) {
+      setLoadingHealth(true);
+      setHealthSummary(null);
+      fetch(`/api/pets/${selectedPet.id}/health-summary`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success) {
+            setHealthSummary(data.data);
+          }
+        })
+        .catch(() => {
+          toast.error('Error al cargar historial clínico');
+        })
+        .finally(() => {
+          setLoadingHealth(false);
+        });
+    }
+  }, [selectedPet, isAdmin]);
 
   useEffect(() => {
     if (clientId) fetchClient();
@@ -491,7 +527,7 @@ export default function ClientDetail({ clientId }: Props) {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50">
-                      {['Fecha', 'Hora', 'Mascota', 'Servicio', 'Precio', 'Estado'].map((h) => (
+                      {['Fecha', 'Hora', 'Mascota', 'Servicio', 'Total', 'Estado'].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{h}</th>
                       ))}
                     </tr>
@@ -503,7 +539,9 @@ export default function ClientDetail({ clientId }: Props) {
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{formatTime12h(apt.startTime)} - {formatTime12h(apt.endTime)}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.pet.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{apt.service.name}</td>
-                        <td className="px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                          ${Number(apt.status === 'completed' && (apt as any).paymentStatus === 'paid' ? ((apt as any).paymentAmount ?? apt.service.price) : 0).toFixed(2)}
+                        </td>
                         <td className="px-4 py-3">
                           <Badge className={`${statusColors[apt.status]} gap-1 text-xs`}>
                             {statusIcons[apt.status]}
@@ -529,7 +567,9 @@ export default function ClientDetail({ clientId }: Props) {
                     </div>
                     <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                       <span>{formatTime12h(apt.startTime)} - {formatTime12h(apt.endTime)}</span>
-                      <span className="font-medium text-emerald-600 dark:text-emerald-400">${Number(apt.service.price).toFixed(2)}</span>
+                      <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                        ${Number(apt.status === 'completed' && (apt as any).paymentStatus === 'paid' ? ((apt as any).paymentAmount ?? apt.service.price) : 0).toFixed(2)}
+                      </span>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-300">
                       {apt.service.name} · <span className="text-gray-400 dark:text-gray-500">{apt.pet.name}</span>
@@ -550,23 +590,6 @@ export default function ClientDetail({ clientId }: Props) {
           </Card>
         )}
       </motion.div>
-
-      {/* Summary footer */}
-      {completedAppointments.length > 0 && (
-        <motion.div variants={item}>
-          <Card className="border-gray-200 dark:border-gray-700 bg-emerald-50/30 dark:bg-emerald-950/10">
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <p className="text-sm text-gray-600 dark:text-gray-300">
-                  <span className="font-semibold text-gray-900 dark:text-gray-100">{completedAppointments.length}</span>{' '}
-                  {completedAppointments.length === 1 ? 'cita completada' : 'citas completadas'} con un total de{' '}
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">${Number(client.totalSpent).toFixed(2)}</span>
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
 
       {/* Pet Detail Modal */}
       <Dialog open={!!selectedPet} onOpenChange={(open) => !open && setSelectedPet(null)}>
@@ -674,6 +697,59 @@ export default function ClientDetail({ clientId }: Props) {
                        );
                     })()}
                   </div>
+
+                  {/* Historial Clínico - ONLY visible for Admin */}
+                  {isAdmin && (
+                    <div className="space-y-3 pt-2 border-t border-gray-100 dark:border-gray-800">
+                      <p className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                        <Stethoscope className="h-3.5 w-3.5" /> Historial Clínico (Médico)
+                      </p>
+                      {loadingHealth ? (
+                        <div className="space-y-2">
+                          <Skeleton className="h-16 w-full" />
+                          <Skeleton className="h-16 w-full" />
+                        </div>
+                      ) : !healthSummary?.notes || healthSummary.notes.length === 0 ? (
+                        <p className="text-xs text-gray-500 italic">No hay notas clínicas registradas para esta mascota.</p>
+                      ) : (
+                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                          {healthSummary.notes.map((n: any) => (
+                            <div key={n.id} className="p-3 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-100 dark:border-emerald-900/30 space-y-2">
+                              <div className="flex justify-between items-center text-[10px] text-gray-500 dark:text-gray-400 border-b border-emerald-100/50 dark:border-emerald-900/20 pb-1">
+                                <span className="font-semibold text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" /> {n.doctor ? n.doctor.name : 'Veterinario'}
+                                </span>
+                                <span>{formatFullDate(n.created_at || n.createdAt)}</span>
+                              </div>
+                              {n.diagnosis && (
+                                <div className="text-xs">
+                                  <span className="font-bold text-gray-700 dark:text-gray-300">Diagnóstico: </span>
+                                  <span className="text-gray-600 dark:text-gray-400">{n.diagnosis}</span>
+                                </div>
+                              )}
+                              {n.treatment && (
+                                <div className="text-xs">
+                                  <span className="font-bold text-gray-700 dark:text-gray-300">Tratamiento: </span>
+                                  <span className="text-gray-600 dark:text-gray-400">{n.treatment}</span>
+                                </div>
+                              )}
+                              {n.follow_up && (
+                                <div className="text-xs">
+                                  <span className="font-bold text-gray-700 dark:text-gray-300">Seguimiento: </span>
+                                  <span className="text-gray-600 dark:text-gray-400">{n.follow_up}</span>
+                                </div>
+                              )}
+                              {n.note && (
+                                <div className="text-xs italic bg-white/40 dark:bg-gray-900/40 p-2 rounded-lg mt-1 border border-emerald-100/30 dark:border-emerald-900/10">
+                                  <p className="text-gray-600 dark:text-gray-300">{n.note}</p>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </>

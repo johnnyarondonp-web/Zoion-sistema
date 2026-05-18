@@ -132,6 +132,21 @@ const validTransitions: Record<string, Array<{ status: string; label: string; ic
   ],
 };
 
+const paymentMethodLabels: Record<string, string> = {
+  cash: 'Efectivo',
+  transfer: 'Transferencia',
+  card: 'Tarjeta',
+  pago_movil: 'Pago Móvil',
+};
+
+function isAppointmentDayOrPast(dateStr: string): boolean {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const aptDate = new Date(year, month - 1, day);
+  return aptDate <= now;
+}
+
 function formatFullDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d);
@@ -169,6 +184,7 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMin, setPaymentMin] = useState<number | null>(null);
   const [paymentMax, setPaymentMax] = useState<number | null>(null);
+  const [onlyRegisterPayment, setOnlyRegisterPayment] = useState(false);
 
   // Modal de nueva cita (admin agenda para un cliente)
   const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
@@ -336,6 +352,20 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
     setPaymentMax(p * 1.5);
     setPaymentMethod((apt as any)?.paymentMethod || 'cash');
     setPaymentModalAppointmentId(appointmentId);
+    setOnlyRegisterPayment(false);
+    setPaymentModalOpen(true);
+  };
+
+  const handleRegisterPaymentOnly = (appointmentId: string) => {
+    const apt = appointments.find(a => a.id === appointmentId) || selectedAppointment;
+    if (!apt) return;
+    const p = parseFloat(apt.service.price.toString());
+    setPaymentAmount(p.toString());
+    setPaymentMin(p * 0.8);
+    setPaymentMax(p * 1.5);
+    setPaymentMethod((apt as any)?.paymentMethod || 'cash');
+    setPaymentModalAppointmentId(appointmentId);
+    setOnlyRegisterPayment(true);
     setPaymentModalOpen(true);
   };
 
@@ -351,23 +381,33 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
 
     setChangingStatus(paymentModalAppointmentId);
     try {
+      const payload: any = {
+        paymentMethod: paymentMethod,
+        paymentStatus: 'paid',
+        paymentAmount: parseFloat(paymentAmount) || null,
+      };
+      if (!onlyRegisterPayment) {
+        payload.status = 'completed';
+      }
+
       const res = await fetch(`/api/appointments/${paymentModalAppointmentId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': getCsrfToken() },
-        body: JSON.stringify({
-          status: 'completed',
-          paymentMethod: paymentMethod,
-          paymentStatus: 'paid',
-          paymentAmount: parseFloat(paymentAmount) || null,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.success) {
-        toast.success('Cita completada y pago registrado');
+        toast.success(onlyRegisterPayment ? 'Pago registrado con éxito' : 'Cita completada y pago registrado');
         setPaymentModalOpen(false);
         fetchAppointments(pagination.page);
         if (selectedAppointment?.id === paymentModalAppointmentId) {
-          setSelectedAppointment(prev => prev ? { ...prev, status: 'completed' } : null);
+          setSelectedAppointment(prev => prev ? { 
+            ...prev, 
+            paymentStatus: 'paid', 
+            paymentMethod: paymentMethod, 
+            paymentAmount: parseFloat(paymentAmount) || null,
+            ...(onlyRegisterPayment ? {} : { status: 'completed' })
+          } : null);
         }
       } else {
         toast.error(data.error || 'Error al registrar el pago');
@@ -855,10 +895,24 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                 <div className="flex items-center justify-between">
                   {selectedAppointment.paymentStatus === 'paid' ? (
                     <span className="text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-medium">
-                      <CheckCircle2 className="h-4 w-4" /> Pagado ({selectedAppointment.paymentMethod || 'Efectivo'})
+                      <CheckCircle2 className="h-4 w-4" /> Pagado ({paymentMethodLabels[selectedAppointment.paymentMethod] || selectedAppointment.paymentMethod || 'Efectivo'})
                     </span>
                   ) : (
-                    <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">Pendiente de pago</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-amber-600 dark:text-amber-400 font-medium">
+                        Pendiente de pago {selectedAppointment.paymentMethod ? `(${paymentMethodLabels[selectedAppointment.paymentMethod] || selectedAppointment.paymentMethod})` : ''}
+                      </span>
+                      {isAppointmentDayOrPast(selectedAppointment.date) && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleRegisterPaymentOnly(selectedAppointment.id)}
+                          className="h-7 px-2.5 text-xs border-emerald-200 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-800 dark:text-emerald-400"
+                        >
+                          Registrar Pago
+                        </Button>
+                      )}
+                    </div>
                   )}
                   <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                     ${Number(selectedAppointment.paymentAmount || selectedAppointment.service.price).toFixed(2)}
@@ -933,7 +987,7 @@ export default function Appointments({ selectedAppointmentId }: { selectedAppoin
                   <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-3">Acciones</p>
                   <div className="flex flex-wrap gap-2">
                     {validTransitions[selectedAppointment.status].map((transition) => {
-                      if ((transition.status === 'completed' || transition.status === 'no_show') && !isAppointmentOver(selectedAppointment.date, selectedAppointment.endTime)) {
+                      if ((transition.status === 'completed' || transition.status === 'no_show') && !isAppointmentDayOrPast(selectedAppointment.date)) {
                         return null;
                       }
                       return (

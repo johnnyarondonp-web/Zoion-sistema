@@ -278,9 +278,17 @@ class PetController extends Controller
      */
     public function healthSummary(Request $request, $id)
     {
+        $user = $request->user();
+        
+        // El recepcionista está explícitamente bloqueado de ver el historial clínico.
+        if ($user->role === 'receptionist') {
+            abort(403, 'No tienes permiso para ver el historial clínico.');
+        }
+
         $pet = Pet::where('id', $id);
-        if (!in_array($request->user()->role, ['admin', 'receptionist', 'doctor'])) {
-            $pet->where('user_id', $request->user()->id);
+        if (!in_array($user->role, ['admin', 'doctor'])) {
+            // Clientes solo pueden ver el historial de sus propias mascotas
+            $pet->where('user_id', $user->id);
         }
         $pet = $pet->firstOrFail();
 

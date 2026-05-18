@@ -74,8 +74,17 @@ class AppointmentController extends Controller
         $limit = (int) $request->query('limit', 15);
         
         $total = $query->count();
-        $appointments = $query->orderBy('created_at', 'desc')
-            ->skip(($page - 1) * $limit)->take($limit)->get();
+        $appointments = $query->orderByRaw("CASE status
+            WHEN 'pending' THEN 1
+            WHEN 'confirmed' THEN 2
+            WHEN 'completed' THEN 3
+            WHEN 'cancelled' THEN 4
+            WHEN 'no_show' THEN 5
+            ELSE 6
+        END ASC")
+        ->orderBy('date', 'desc')
+        ->orderBy('start_time', 'desc')
+        ->skip(($page - 1) * $limit)->take($limit)->get();
 
         // Mapeo usando la función centralizada en el servicio (ex-duplicación de recursos)
         $mappedAppointments = $appointments->map(fn($apt) => $this->appointmentService->mapAppointment($apt));
@@ -208,6 +217,7 @@ class AppointmentController extends Controller
 
         // Capturar el status antes de la actualización
         $originalStatus = $appointment->status;
+        $originalPaymentStatus = $appointment->payment_status;
 
         // Actualizar solo los campos permitidos y mapear camelCase a snake_case de forma explícita
         $data = $request->only($allowedFields);
@@ -243,7 +253,7 @@ class AppointmentController extends Controller
         }
 
         // Enviar notificación al confirmar una cita
-        if (in_array($user->role, ['admin', 'receptionist']) && $request->has('status') && $request->status === 'confirmed') {
+        if (in_array($user->role, ['admin', 'receptionist']) && $request->has('status') && $request->status === 'confirmed' && $originalStatus !== 'confirmed') {
             \App\Models\Notification::create([
                 'user_id' => $appointment->user_id,
                 'title'   => 'Cita confirmada',
@@ -251,6 +261,39 @@ class AppointmentController extends Controller
                 'type'    => 'appointment_confirmed',
                 'data'    => ['appointment_id' => $appointment->id],
             ]);
+        }
+
+        // 1. Notificación al completarse una cita por el médico (va para admin y recepcionista)
+        if ($request->has('status') && $request->status === 'completed' && $user->role === 'doctor' && $originalStatus !== 'completed') {
+            \App\Jobs\NotifyAdminsJob::dispatch(
+                'Cita completada por el médico',
+                "El médico {$user->name} completó la cita de {$appointment->pet->name} programada para el {$appointment->date}.",
+                'appointment_completed',
+                ['appointment_id' => $appointment->id]
+            );
+        }
+
+        // 2. Notificación al confirmarse un pago por la recepcionista (va para el administrador)
+        $paymentStatusInput = $request->paymentStatus ?? $request->payment_status ?? null;
+        if ($paymentStatusInput === 'paid' && $user->role === 'receptionist' && $originalPaymentStatus !== 'paid') {
+            $admins = \App\Models\User::where('role', 'admin')->pluck('id');
+            $now = now();
+            $notifications = [];
+            foreach ($admins as $adminId) {
+                $notifications[] = [
+                    'id'         => (string) \Illuminate\Support\Str::ulid(),
+                    'user_id'    => $adminId,
+                    'title'      => 'Pago confirmado por recepcionista',
+                    'message'    => "La recepcionista {$user->name} confirmó el pago de $" . number_format($appointment->payment_amount ?? $appointment->service->price, 2) . " para la cita de {$appointment->pet->name}.",
+                    'type'       => 'payment_confirmed',
+                    'data'       => json_encode(['appointment_id' => $appointment->id]),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (!empty($notifications)) {
+                \App\Models\Notification::insert($notifications);
+            }
         }
 
         $appointment->load(['pet', 'service']);
