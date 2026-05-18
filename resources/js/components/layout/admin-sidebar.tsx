@@ -14,6 +14,7 @@ interface SidebarItem {
   href: string;
   icon: React.ReactNode;
   matchPrefixes?: string[];
+  adminOnly?: boolean;
 }
 
 interface SidebarSection {
@@ -21,6 +22,7 @@ interface SidebarSection {
   icon: React.ReactNode;
   color: string;
   items: SidebarItem[];
+  adminOnly?: boolean;
 }
 
 // Estática: no se recrea en cada render
@@ -32,9 +34,9 @@ export const sidebarSections: SidebarSection[] = [
     items: [
       { label: 'Dashboard',        href: '/admin/dashboard',     icon: <LayoutDashboard className="h-4 w-4" />, matchPrefixes: ['/admin/dashboard'] },
       { label: 'Clientes',         href: '/admin/clients',       icon: <Users className="h-4 w-4" />,          matchPrefixes: ['/admin/clients'] },
-      { label: 'Servicios',        href: '/admin/services',      icon: <Settings2 className="h-4 w-4" />,      matchPrefixes: ['/admin/services'] },
+      { label: 'Servicios',        href: '/admin/services',      icon: <Settings2 className="h-4 w-4" />,      matchPrefixes: ['/admin/services'], adminOnly: true },
       { label: 'Horarios',         href: '/admin/schedules',     icon: <Clock className="h-4 w-4" />,          matchPrefixes: ['/admin/schedules'] },
-      { label: 'Fechas Bloqueadas',href: '/admin/blocked-dates', icon: <Ban className="h-4 w-4" />,            matchPrefixes: ['/admin/blocked-dates'] },
+      { label: 'Fechas Bloqueadas',href: '/admin/blocked-dates', icon: <Ban className="h-4 w-4" />,            matchPrefixes: ['/admin/blocked-dates'], adminOnly: true },
     ],
   },
   {
@@ -44,8 +46,8 @@ export const sidebarSections: SidebarSection[] = [
     items: [
       { label: 'Citas',                href: '/admin/appointments', icon: <Calendar className="h-4 w-4" />,    matchPrefixes: ['/admin/appointments'] },
       { label: 'Calendario',           href: '/admin/calendar',     icon: <CalendarDays className="h-4 w-4" />, matchPrefixes: ['/admin/calendar'] },
-      { label: 'Equipo médico',        href: '/admin/doctors',      icon: <Stethoscope className="h-4 w-4" />, matchPrefixes: ['/admin/doctors'] },
-      { label: 'Recepcionistas',       href: '/admin/receptionists', icon: <UserCircle className="h-4 w-4" />, matchPrefixes: ['/admin/receptionists'] },
+      { label: 'Equipo médico',        href: '/admin/doctors',      icon: <Stethoscope className="h-4 w-4" />, matchPrefixes: ['/admin/doctors'], adminOnly: true },
+      { label: 'Recepcionistas',       href: '/admin/receptionists', icon: <UserCircle className="h-4 w-4" />, matchPrefixes: ['/admin/receptionists'], adminOnly: true },
       { label: 'Atención presencial',  href: '/admin/walk-in',      icon: <UserPlus className="h-4 w-4" />,    matchPrefixes: ['/admin/walk-in'] },
     ],
   },
@@ -53,6 +55,7 @@ export const sidebarSections: SidebarSection[] = [
     title: 'Analíticas',
     icon: <Activity className="h-3 w-3" />,
     color: 'text-amber-500',
+    adminOnly: true,
     items: [
       { label: 'Reportes', href: '/admin/reports', icon: <BarChart3 className="h-4 w-4" />, matchPrefixes: ['/admin/reports'] },
     ],
@@ -61,12 +64,14 @@ export const sidebarSections: SidebarSection[] = [
     title: 'Configuración',
     icon: <Settings2 className="h-3 w-3" />,
     color: 'text-gray-400',
+    adminOnly: true,
     items: [],
   },
   {
     title: 'Sistema',
     icon: <Settings className="h-3 w-3" />,
     color: 'text-violet-400',
+    adminOnly: true,
     items: [
       { label: 'Configuración', href: '/admin/settings', icon: <Settings className="h-4 w-4" />, matchPrefixes: ['/admin/settings'] },
     ],
@@ -101,8 +106,8 @@ export const AdminSidebar = memo(function AdminSidebar() {
             <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
               {user?.name || 'Admin'}
             </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {user?.email || 'admin@zoion.vet'}
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate capitalize">
+              {user?.role || 'admin@zoion.vet'}
             </p>
           </div>
         </div>
@@ -110,7 +115,13 @@ export const AdminSidebar = memo(function AdminSidebar() {
 
       {/* Navigation Sections */}
       <div className="flex-1 overflow-y-auto py-2">
-        {sidebarSections.map((section, sectionIdx) => (
+        {sidebarSections.map((section, sectionIdx) => {
+          if (section.adminOnly && user?.role !== 'admin') return null;
+          
+          const filteredItems = section.items.filter(item => !item.adminOnly || user?.role === 'admin');
+          if (filteredItems.length === 0) return null;
+
+          return (
           <div key={section.title}>
             <div className="px-4 pt-4 pb-1.5 flex items-center gap-1.5">
               <span className={section.color}>{section.icon}</span>
@@ -119,7 +130,7 @@ export const AdminSidebar = memo(function AdminSidebar() {
               </p>
             </div>
             <nav className="flex flex-col gap-0.5 px-3 pb-2">
-              {section.items.map((item) => {
+              {filteredItems.map((item) => {
                 const active = isActive(item);
                 return (
                   <button
@@ -173,7 +184,8 @@ export const AdminSidebar = memo(function AdminSidebar() {
               <div className="mx-4 my-1 border-t border-gray-200/60 dark:border-gray-700/40" />
             )}
           </div>
-        ))}
+          );
+        })}
       </div>
     </aside>
   );

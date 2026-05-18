@@ -175,17 +175,17 @@ Route::middleware(['auth', 'ensure.staff'])->group(function () {
     Route::get('/admin/pets',                       fn () => Inertia::render('Admin/Pets'));
     Route::get('/admin/clients',                    fn () => Inertia::render('Admin/Clients'));
     Route::get('/admin/clients/{id}',  fn () => Inertia::render('Admin/ClientDetail', ['clientId' => request()->route('id')]));
-    Route::get('/admin/services',      fn () => Inertia::render('Admin/Services'));
-    Route::get('/admin/services/new',  fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'create']));
-    Route::get('/admin/services/{id}/edit', fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'edit', 'serviceId' => request()->route('id')]));
-    Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'));
-    Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'));
+    Route::get('/admin/services',      fn () => Inertia::render('Admin/Services'))->middleware('role:admin');
+    Route::get('/admin/services/new',  fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'create']))->middleware('role:admin');
+    Route::get('/admin/services/{id}/edit', fn () => Inertia::render('Admin/ServiceForm', ['mode' => 'edit', 'serviceId' => request()->route('id')]))->middleware('role:admin');
+    Route::get('/admin/reports',       fn () => Inertia::render('Admin/Reports'))->middleware('role:admin');
+    Route::get('/admin/settings',      fn () => Inertia::render('Admin/Settings'))->middleware('role:admin');
 
     Route::get('/admin/calendar',      fn () => Inertia::render('Admin/Calendar'));
     Route::get('/admin/schedules',     fn () => Inertia::render('Admin/Schedules'));
-    Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'));
-    Route::get('/admin/doctors',        fn () => Inertia::render('Admin/Doctors'));
-    Route::get('/admin/receptionists',  fn () => Inertia::render('Admin/Receptionists'));
+    Route::get('/admin/blocked-dates', fn () => Inertia::render('Admin/BlockedDates'))->middleware('role:admin');
+    Route::get('/admin/doctors',        fn () => Inertia::render('Admin/Doctors'))->middleware('role:admin');
+    Route::get('/admin/receptionists',  fn () => Inertia::render('Admin/Receptionists'))->middleware('role:admin');
     Route::get('/admin/walk-in',        fn () => Inertia::render('Admin/WalkIn'));
 
     // ── APIs Administrativas (Compatibilidad /api/ y /api/v1/) ────────────
