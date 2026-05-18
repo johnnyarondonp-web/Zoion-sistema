@@ -176,8 +176,8 @@ export default function Calendar() {
       {/* Status Legend */}
       <Card className="border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white to-gray-50/50 dark:from-gray-900 dark:to-gray-800/50">
         <CardContent className="p-3">
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider w-full sm:w-auto">
               Leyenda
             </span>
             <LegendItem color="bg-amber-400" label="Pendiente" />
@@ -185,31 +185,33 @@ export default function Calendar() {
             <LegendItem color="bg-sky-400" label="Completada" />
             <LegendItem color="bg-red-400" label="Cancelada" />
             <LegendItem color="bg-gray-400" label="No asistió" />
-            <div className="ml-auto flex items-center gap-3">
-              {Object.entries(statusCounts).map(([status, count]) => (
-                <Badge key={status} className={`${statusBadgeColors[status] || ''} text-[10px] px-1.5 py-0`}>
-                  {count} {statusLabels[status]}
-                </Badge>
-              ))}
-            </div>
+            {Object.keys(statusCounts).length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 sm:ml-auto">
+                {Object.entries(statusCounts).map(([status, count]) => (
+                  <Badge key={status} className={`${statusBadgeColors[status] || ''} text-[10px] px-1.5 py-0`}>
+                    {count} {statusLabels[status]}
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
       {/* Date Navigation */}
       <Card className={`border-gray-200 dark:border-gray-700 ${isToday ? 'ring-2 ring-emerald-200 dark:ring-emerald-800/50 shadow-md shadow-emerald-100/50 dark:shadow-emerald-900/20' : ''}`}>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={goToPrevDay}>
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button variant="outline" size="sm" onClick={goToPrevDay} className="flex-shrink-0">
                 <ChevronLeft className="h-4 w-4" />
               </Button>
 
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" className="gap-2 font-medium">
-                    <CalendarIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="capitalize">{formatLongDate(selectedDate)}</span>
+                  <Button variant="outline" className="gap-2 font-medium flex-1 min-w-0 overflow-hidden">
+                    <CalendarIcon className="h-4 w-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    <span className="capitalize truncate text-sm">{formatLongDate(selectedDate)}</span>
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="center">
@@ -227,12 +229,12 @@ export default function Calendar() {
                 </PopoverContent>
               </Popover>
 
-              <Button variant="outline" size="sm" onClick={goToNextDay}>
+              <Button variant="outline" size="sm" onClick={goToNextDay} className="flex-shrink-0">
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 self-end sm:self-auto">
               {!isToday && (
                 <Button variant="ghost" size="sm" onClick={goToToday} className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-400">
                   Hoy

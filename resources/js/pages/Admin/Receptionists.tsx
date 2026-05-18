@@ -199,7 +199,7 @@ export default function Receptionists() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <Users className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
@@ -207,7 +207,7 @@ export default function Receptionists() {
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona el personal de recepción de la clínica</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+        <Button onClick={openCreate} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white">
           <Plus className="h-4 w-4 mr-2" /> Agregar recepcionista
         </Button>
       </div>
@@ -285,7 +285,7 @@ export default function Receptionists() {
                 className="mt-1" 
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
                   Contraseña {editTarget ? '(Opcional)' : '*'}

@@ -316,7 +316,7 @@ export default function WalkIn() {
               <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1">Cliente encontrado</p>
             )}
 
-            <div className="grid grid-cols-2 gap-3 mt-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
               <div>
                 <Label className="text-xs text-gray-600 dark:text-gray-400">Nombre del dueño *</Label>
                 <Input value={ownerName} onChange={e => setOwnerName(e.target.value)} className="mt-1" />
@@ -396,7 +396,7 @@ export default function WalkIn() {
                 />
                 {formErrors.petBirthDate && <p className="text-xs text-red-500 mt-1">{formErrors.petBirthDate}</p>}
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 {petBreed === 'Mestizo' && (petSpecies === 'perro' || petSpecies === 'gato' || petSpecies === 'conejo') && (
                   <Input
                     value={petMixBreed}
@@ -410,7 +410,7 @@ export default function WalkIn() {
                 )}
               </div>
               {petSpecies && (
-                <div className="col-span-2">
+                <div className="col-span-1 sm:col-span-2">
                   <Label className="text-xs font-medium text-gray-600 dark:text-gray-400">
                     Peso (kg) — rango: {WEIGHT_LIMITS[petSpecies]?.min} – {WEIGHT_LIMITS[petSpecies]?.max} kg
                   </Label>
@@ -455,8 +455,8 @@ export default function WalkIn() {
           {/* Paso 2 — Servicio y hora */}
           <div className="border-t border-gray-100 dark:border-gray-800 pt-5">
             <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500 mb-4">2. Servicio y horario</p>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="col-span-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="col-span-1 sm:col-span-2">
                 <Label className="text-xs text-gray-600 dark:text-gray-400">Servicio *</Label>
                 {loading ? <Skeleton className="h-9 mt-1" /> : (
                   <Select value={serviceId} onValueChange={setServiceId}>
@@ -517,7 +517,7 @@ export default function WalkIn() {
           </div>
 
           <div className="flex justify-end pt-2">
-            <Button onClick={handleSubmit} disabled={submitting} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button onClick={handleSubmit} disabled={submitting} className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white">
               {submitting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UserPlus className="h-4 w-4 mr-2" />}
               Registrar atención
             </Button>

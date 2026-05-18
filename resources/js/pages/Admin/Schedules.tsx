@@ -256,7 +256,7 @@ export default function Schedules() {
           <CalendarDays className="h-4 w-4" />
           Plantilla Semanal Recurrente
         </h2>
-        <div className="grid grid-cols-7 gap-2">
+        <div className="flex sm:grid sm:grid-cols-7 gap-2 overflow-x-auto pb-3 sm:pb-0 scrollbar-thin -mx-4 px-4 sm:mx-0 sm:px-0">
           {schedules.map((schedule) => {
             const colors = dayColors[schedule.dayOfWeek];
             const isOpen = schedule.isAvailable;
@@ -267,7 +267,7 @@ export default function Schedules() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: schedule.dayOfWeek * 0.05 }}
-                className={`rounded-xl border-2 p-3 text-center transition-all duration-200 ${
+                className={`rounded-xl border-2 p-3 text-center transition-all duration-200 min-w-[80px] sm:min-w-0 flex-shrink-0 ${
                   isOpen ? colors.open : colors.closed
                 }`}
               >
@@ -358,29 +358,29 @@ export default function Schedules() {
                       </Badge>
                     </div>
 
-                    <div className={`flex items-center gap-3 flex-1 ${isDisabled ? 'pointer-events-none' : ''}`}>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 w-12">Apertura</Label>
+                    <div className={`grid grid-cols-2 gap-3 sm:flex sm:items-center sm:gap-3 flex-1 ${isDisabled ? 'pointer-events-none' : ''}`}>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Label className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 w-12 sm:w-auto">Apertura</Label>
                         <Input
                           type="time"
                           value={schedule.openTime}
                           onChange={(e) =>
                             updateSchedule(schedule.dayOfWeek, { openTime: e.target.value })
                           }
-                          className="w-32 h-9 text-sm dark:border-gray-700"
+                          className="w-full sm:w-32 h-9 text-sm dark:border-gray-700"
                           disabled={isDisabled}
                         />
                       </div>
-                      <span className="text-gray-400 dark:text-gray-500 text-sm">—</span>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 w-10">Cierre</Label>
+                      <span className="text-gray-400 dark:text-gray-500 text-sm hidden sm:inline">—</span>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <Label className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 w-10 sm:w-auto">Cierre</Label>
                         <Input
                           type="time"
                           value={schedule.closeTime}
                           onChange={(e) =>
                             updateSchedule(schedule.dayOfWeek, { closeTime: e.target.value })
                           }
-                          className="w-32 h-9 text-sm dark:border-gray-700"
+                          className="w-full sm:w-32 h-9 text-sm dark:border-gray-700"
                           disabled={isDisabled}
                         />
                       </div>
@@ -403,7 +403,7 @@ export default function Schedules() {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm animate-none"
             >
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Guardando...' : 'Guardar Cambios'}
