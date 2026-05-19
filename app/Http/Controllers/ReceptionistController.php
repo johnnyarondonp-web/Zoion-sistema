@@ -25,7 +25,7 @@ class ReceptionistController extends Controller
             'cedula'   => 'required|string|unique:users,cedula|numeric|between:5000000,33000000',
             'email'    => 'required|string|email|max:50|unique:users',
             'password' => 'required|string|min:6',
-            'phone'    => 'nullable|string|max:20',
+            'phone'    => 'nullable|string|max:20|unique:users,phone',
         ]);
 
         $receptionist = User::forceCreate([
@@ -52,7 +52,7 @@ class ReceptionistController extends Controller
             'name'   => 'required|string|min:4|max:40|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
             'cedula' => 'required|string|unique:users,cedula,' . $id . '|numeric|between:5000000,33000000',
             'email'  => 'required|string|email|max:50|unique:users,email,' . $id,
-            'phone'  => 'nullable|string|max:20',
+            'phone'  => 'nullable|string|max:20|unique:users,phone,' . $id,
         ]);
 
         $receptionist->update([

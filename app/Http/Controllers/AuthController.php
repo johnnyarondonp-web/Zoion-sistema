@@ -68,7 +68,7 @@ class AuthController extends Controller
         $data = $request->validate([
             'name'     => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/'],
             'email'    => ['required', 'email:rfc', 'max:60', 'unique:users'],
-            'phone'    => ['required', 'string', 'regex:/^\+58\d{9}$/'],
+            'phone'    => ['required', 'string', 'regex:/^\+58\d{9}$/', 'unique:users'],
             'password' => ['required', 'min:6', 'max:30', 'confirmed'],
         ], [
             'name.regex'  => 'El nombre solo debe contener letras.',
@@ -77,6 +77,7 @@ class AuthController extends Controller
             'email.max'   => 'El correo no puede exceder los 60 caracteres.',
             'email.regex' => 'El correo debe terminar en .com.',
             'phone.regex' => 'El teléfono debe tener el formato +58 seguido de 9 dígitos.',
+            'phone.unique'=> 'Este número de teléfono ya está registrado.',
             'password.min' => 'La contraseña debe tener al menos 6 caracteres.',
             'password.max' => 'La contraseña no puede exceder los 30 caracteres.',
         ]);

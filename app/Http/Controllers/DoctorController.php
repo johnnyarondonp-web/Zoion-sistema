@@ -40,9 +40,9 @@ class DoctorController extends Controller
     {
         $data = $request->validate([
             'name'         => 'required|string|min:4|max:40|regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/',
-            'cedula'       => 'required|integer|between:5000000,33000000|unique:doctors,cedula',
+            'cedula'       => 'required|integer|between:5000000,33000000|unique:doctors,cedula|unique:users,cedula',
             'specialty'    => 'nullable|string|max:255',
-            'phone'        => 'nullable|string|max:30',
+            'phone'        => 'nullable|string|max:30|unique:doctors,phone|unique:users,phone',
             'email'        => 'required|email|max:150|unique:doctors,email|unique:users,email',
             'photo'        => 'nullable|string',
             'isActive'     => 'boolean',
@@ -102,9 +102,9 @@ class DoctorController extends Controller
 
         $data = $request->validate([
             'name'       => 'sometimes|string|max:255',
-            'cedula'     => 'sometimes|integer|between:5000000,33000000|unique:doctors,cedula,' . $doctor->id,
+            'cedula'     => 'sometimes|integer|between:5000000,33000000|unique:doctors,cedula,' . $doctor->id . '|unique:users,cedula,' . $doctor->user_id,
             'specialty'  => 'nullable|string|max:255',
-            'phone'      => 'nullable|string|max:30',
+            'phone'      => 'nullable|string|max:30|unique:doctors,phone,' . $doctor->id . '|unique:users,phone,' . $doctor->user_id,
             'email'      => 'nullable|email|max:150|unique:doctors,email,' . $doctor->id . '|unique:users,email,' . $doctor->user_id,
             'photo'      => 'nullable|string',
             'isActive'   => 'boolean',

@@ -6,7 +6,7 @@ import { usePendingAppointments } from '@/hooks/use-pending-appointments';
 import {
   PawPrint, Menu, LogOut, User, Calendar, Heart, Clock,
   ShieldCheck, CalendarDays, Ban, LayoutDashboard, Settings2,
-  Sun, Moon, Info, Bell,
+  Sun, Moon, Info, Bell, Siren,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -384,6 +384,24 @@ export function Navbar() {
                         </SheetClose>
                         <SheetClose asChild>
                           <button
+                            onClick={() => handleNavClick('/services')}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          >
+                            <Settings2 className="h-4 w-4" />
+                            Servicios
+                          </button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
+                            onClick={() => handleNavClick('/emergency')}
+                            className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                          >
+                            <Siren className="h-4 w-4" />
+                            Urgencias
+                          </button>
+                        </SheetClose>
+                        <SheetClose asChild>
+                          <button
                             onClick={() => handleNavClick('/about')}
                             className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                           >
@@ -444,6 +462,30 @@ export function Navbar() {
                   >
                     <PawPrint className="h-4 w-4" />
                     Inicio
+                  </button>
+
+                  <button
+                    onClick={() => handleNavClick('/services')}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      url === '/services'
+                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Servicios
+                  </button>
+
+                  <button
+                    onClick={() => handleNavClick('/emergency')}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+                      url === '/emergency'
+                        ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    <Siren className="h-4 w-4" />
+                    Urgencias
                   </button>
 
                   <button

@@ -208,7 +208,7 @@ class AdminClientController extends Controller
         $validated = $request->validate([
             'name'  => 'sometimes|required|string|max:255',
             'email' => 'sometimes|required|email|unique:users,email,' . $id,
-            'phone' => 'nullable|string|max:30',
+            'phone' => 'nullable|string|max:30|unique:users,phone,' . $id,
         ]);
 
         $client->update($validated);
