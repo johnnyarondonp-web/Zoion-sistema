@@ -1,0 +1,18 @@
+providers = ["...", "php", "node"]
+
+[variables]
+APP_ENV = "production"
+NIXPACKS_PHP_ROOT_DIR = "/app/public"
+NIXPACKS_PHP_FALLBACK_PATH = "/index.php"
+
+[phases.install]
+cmds = [
+  "composer install --no-dev --optimize-autoloader --no-interaction",
+  "npm ci --no-audit"
+]
+
+[phases.build]
+cmds = [
+  "npm run build",
+  "php artisan storage:link"
+]
