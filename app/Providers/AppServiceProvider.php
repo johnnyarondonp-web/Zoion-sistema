@@ -20,5 +20,9 @@ class AppServiceProvider extends ServiceProvider
         \App\Models\WalkInAppointment::observe(\App\Observers\DashboardStatsObserver::class);
         \App\Models\Pet::observe(\App\Observers\DashboardStatsObserver::class);
         \App\Models\User::observe(\App\Observers\DashboardStatsObserver::class);
+
+        if (config('app.env') === 'production' || env('APP_ENV') === 'production') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
     }
 }
