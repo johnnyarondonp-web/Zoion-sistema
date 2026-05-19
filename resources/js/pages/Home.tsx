@@ -204,12 +204,12 @@ export default function Home() {
         {/* Stats Section */}
         <section className="border-t bg-white dark:bg-gray-900/50">
           <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
-            <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
               {stats.map((stat, i) => (
                 <motion.div key={stat.label} initial="hidden" whileInView="visible" viewport={{ once: true, margin: '-50px' }} variants={fadeInUp} transition={{ delay: i * 0.1 }} className="flex flex-col items-center text-center">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/40 dark:to-emerald-900/30 text-emerald-600 dark:text-emerald-400 mb-4 shadow-sm">{stat.icon}</div>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/40 dark:to-emerald-900/30 text-emerald-600 dark:text-emerald-400 mb-3 shadow-sm">{stat.icon}</div>
                   <AnimatedCounter value={stat.value} suffix={stat.suffix} />
-                  <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
+                  <p className="mt-1 text-xs font-medium text-gray-500 dark:text-gray-400">{stat.label}</p>
                 </motion.div>
               ))}
             </div>
@@ -301,7 +301,7 @@ export default function Home() {
         </section>
 
         {/* FAQ Section */}
-        <section className="border-t bg-white dark:bg-gray-900/50">
+        <section id="faq" className="border-t bg-white dark:bg-gray-900/50">
           <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8">
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-12">
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 sm:text-4xl">Preguntas frecuentes</h2>
@@ -370,17 +370,22 @@ export default function Home() {
                   <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-sky-100 hover:text-sky-500 dark:hover:bg-sky-900/30 dark:hover:text-sky-400 transition-all duration-200 hover:scale-110" aria-label="X (Twitter)">
                     <SiX className="h-4 w-4" />
                   </button>
-                  <button type="button" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/30 dark:hover:text-pink-400 transition-all duration-200 hover:scale-110" aria-label="Instagram">
+                  <a href="https://www.instagram.com/zoion.8/" target="_blank" rel="noopener noreferrer" className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-pink-100 hover:text-pink-600 dark:hover:bg-pink-900/30 dark:hover:text-pink-400 transition-all duration-200 hover:scale-110" aria-label="Instagram">
                     <SiInstagram className="h-4 w-4" />
-                  </button>
+                  </a>
                 </div>
               </div>
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Servicios</h3>
                 <ul className="space-y-2.5">
-                  {['Consultas', 'Cirugía', 'Vacunación', 'Urgencias'].map((service) => (
-                    <li key={service}>
-                      <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer">{service}</span>
+                  {[{label:'Consultas',cat:'consulta'},{label:'Cirugía',cat:'cirugia'},{label:'Vacunación',cat:'vacunacion'},{label:'Urgencias',cat:'urgencia'}].map((s) => (
+                    <li key={s.label}>
+                      <span
+                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
+                        onClick={() => router.visit(`/services?categoria=${s.cat}`)}
+                        role="button" tabIndex={0}
+                        onKeyDown={e => { if (e.key === 'Enter') router.visit(`/services?categoria=${s.cat}`); }}
+                      >{s.label}</span>
                     </li>
                   ))}
                 </ul>
@@ -388,23 +393,18 @@ export default function Home() {
               <div>
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4">Empresa</h3>
                 <ul className="space-y-2.5">
-                  {['Nosotros', 'Equipo', 'Contacto', 'FAQ'].map((link) => (
-                    <li key={link}>
-                      <span
-                        className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer"
-                        onClick={() => {
-                          if (link === 'Nosotros') router.visit('/about');
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && link === 'Nosotros') router.visit('/about');
-                        }}
-                        role="button"
-                        tabIndex={0}
-                      >
-                        {link}
-                      </span>
-                    </li>
-                  ))}
+                  <li>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" onClick={() => router.visit('/about')} role="button" tabIndex={0}>Nosotros</span>
+                  </li>
+                  <li>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" onClick={() => { router.visit('/about'); setTimeout(() => { document.getElementById('equipo')?.scrollIntoView({ behavior: 'smooth' }); }, 600); }} role="button" tabIndex={0}>Equipo</span>
+                  </li>
+                  <li>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" onClick={() => { router.visit('/about'); setTimeout(() => { document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' }); }, 600); }} role="button" tabIndex={0}>Contacto</span>
+                  </li>
+                  <li>
+                    <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors cursor-pointer" onClick={() => { document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth' }); }} role="button" tabIndex={0}>FAQ</span>
+                  </li>
                 </ul>
               </div>
               <div>

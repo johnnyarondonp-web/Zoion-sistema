@@ -61,6 +61,8 @@ const adminNavItems: NavItem[] = [
 
 const publicNavItems: { label: string; href: string }[] = [
   { label: 'Inicio', href: '/' },
+  { label: 'Servicios', href: '/services' },
+  { label: 'Urgencias', href: '/emergency' },
   { label: 'Nosotros', href: '/about' },
 ];
 

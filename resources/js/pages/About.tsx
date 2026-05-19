@@ -28,7 +28,7 @@ const clinicInfo = {
   email: 'contacto@zoionvet.com',
   hours: [
     { day: 'Lunes - Viernes', time: '9:00 AM - 7:00 PM' },
-    { day: 'Sábado', time: '9:00 AM - 3:00 PM' },
+    { day: 'Sábado', time: 'Cerrado' },
     { day: 'Domingo', time: 'Cerrado' },
   ],
 };
@@ -264,7 +264,7 @@ export default function About() {
         </div>
 
         {/* Team Section */}
-        <div>
+        <div id="equipo">
           <motion.div custom={9} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl flex items-center justify-center gap-2">
               👨‍⚕️ Nuestro Equipo
@@ -301,7 +301,7 @@ export default function About() {
         </div>
 
         {/* Contact & Hours */}
-        <div className="grid gap-6 md:grid-cols-2">
+        <div id="contacto" className="grid gap-6 md:grid-cols-2">
           {/* Contact Info */}
           <motion.div custom={14} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}>
             <Card className="h-full">

@@ -45,6 +45,12 @@ Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,60');
 Route::get('/about', fn () => Inertia::render('About'))->name('about');
+Route::get('/services', fn () => Inertia::render('Services'))->name('services');
+Route::get('/emergency', fn () => Inertia::render('Emergency'))->name('emergency');
+
+// API Pública (sin autenticación)
+Route::get('/api/services/public', [ServiceController::class, 'index']);
+
 
 // ── Rutas de Recuperación de Contraseña ───────────────────────────────
 Route::get('/forgot-password', [PasswordResetController::class, 'showLinkRequestForm'])->name('password.request');
