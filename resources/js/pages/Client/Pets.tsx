@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ClientLayout from '@/components/layout/ClientLayout';
 
-import { Plus, Search, Filter, X, PawPrint, Dog, Sparkles } from 'lucide-react';
+import { Plus, Search, Filter, X, PawPrint, Dog, Sparkles, Clock } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface Pet {
@@ -76,8 +76,16 @@ export default function Pets() {
   const todayDate = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
   const capitalizedDate = todayDate.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
+  const getSpanishTime = (): string => {
+    return new Date().toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit', hour12: true });
+  };
+
+  const [currentTime, setCurrentTime] = useState(getSpanishTime());
+
   useEffect(() => {
     fetchPets();
+    const timer = setInterval(() => setCurrentTime(getSpanishTime()), 60000);
+    return () => clearInterval(timer);
   }, []);
 
   const fetchPets = async () => {
@@ -148,22 +156,44 @@ export default function Pets() {
       </div>
 
       {/* Hero Welcome (Premium Banner) */}
-      <Card className="bg-emerald-600 dark:bg-emerald-800 text-white border-none shadow-md overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-          <PawPrint className="w-24 h-24 text-white transform rotate-12 translate-x-4 -translate-y-4" />
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 dark:from-emerald-800 dark:via-teal-800 dark:to-cyan-800 p-4 sm:p-5 text-white shadow-md shadow-emerald-200/20 dark:shadow-emerald-900/20">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-12 -right-12 w-28 h-28 rounded-full bg-white/5 blur-sm" />
+          <div className="absolute -bottom-8 -left-8 w-20 h-20 rounded-full bg-white/5 blur-sm" />
+          {/* Animated paw prints */}
+          <motion.div
+            className="absolute top-2 right-4 opacity-[0.05]"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <svg className="w-12 h-12" viewBox="0 0 100 100" fill="currentColor">
+              <ellipse cx="50" cy="65" rx="20" ry="25" />
+              <ellipse cx="25" cy="35" rx="10" ry="12" />
+              <ellipse cx="50" cy="25" rx="10" ry="12" />
+              <ellipse cx="75" cy="35" rx="10" ry="12" />
+            </svg>
+          </motion.div>
         </div>
-        <CardContent className="p-4 sm:p-5 relative z-10 flex flex-col justify-center min-h-[90px]">
-          <div className="flex items-center gap-2 mb-1">
-            <Sparkles className="h-4 w-4" />
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-              ¡Bienvenido, {user.name.split(' ')[0]}!
-            </h1>
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-emerald-200" />
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                ¡Bienvenido, {user.name.split(' ')[0]}!
+              </h1>
+            </div>
+            <div className="text-emerald-100/90 mt-0.5 text-xs sm:text-sm capitalize font-medium">
+              {capitalizedDate}
+            </div>
           </div>
-          <p className="text-sm font-medium text-emerald-50 opacity-90">
-            {capitalizedDate}
-          </p>
-        </CardContent>
-      </Card>
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-3.5 py-1.5 border border-white/10 self-start sm:self-auto">
+            <Clock className="h-4.5 w-4.5 text-emerald-200" />
+            <span className="text-sm sm:text-base font-semibold tabular-nums">{currentTime}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="flex justify-end">
         <Button
