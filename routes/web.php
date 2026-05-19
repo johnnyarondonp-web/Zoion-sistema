@@ -50,6 +50,15 @@ Route::get('/emergency', fn () => Inertia::render('Emergency'))->name('emergency
 
 // API Pública (sin autenticación)
 Route::get('/api/services/public', [ServiceController::class, 'index']);
+Route::get('/api/debug-logs-zoion-2026', function () {
+    $logPath = storage_path('logs/laravel.log');
+    if (!file_exists($logPath)) {
+        return response('No hay archivo de log disponible.', 200, ['Content-Type' => 'text/plain']);
+    }
+    $file = file($logPath);
+    $lines = array_slice($file, -150);
+    return response(implode("", $lines), 200, ['Content-Type' => 'text/plain']);
+});
 
 
 // ── Rutas de Recuperación de Contraseña ───────────────────────────────
