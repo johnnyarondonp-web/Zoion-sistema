@@ -360,30 +360,8 @@ export function Navbar() {
                         </div>
                       </div>
                     ) : (
-                      // Menú para clientes organizado por sección
-                      <div className="space-y-4">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                            Mi Panel
-                          </div>
-                          {clientNavItems.map((item) => (
-                            <SheetClose key={item.href} asChild>
-                              <button
-                                onClick={() => handleNavClick(item.href)}
-                                className={cn(
-                                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                                  url.startsWith(item.href)
-                                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400"
-                                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-                                )}
-                              >
-                                {item.icon}
-                                {item.label}
-                              </button>
-                            </SheetClose>
-                          ))}
-                        </div>
-                      </div>
+                      // Menú para clientes omitido porque ya tienen el "Bottom Navigation"
+                      null
                     )}
                     
                     <Separator className="my-2" />

@@ -560,21 +560,21 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
                             <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{cn.note}</p>
                             <div className="flex flex-wrap gap-1.5">
                               {cn.diagnosis && (
-                                <Badge variant="outline" className="text-[10px] border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20">
-                                  <Activity className="h-2.5 w-2.5 mr-1" />
-                                  {cn.diagnosis}
+                                <Badge variant="outline" className="text-[10px] border-sky-200 dark:border-sky-800 text-sky-700 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20 whitespace-normal text-left h-auto py-1">
+                                  <Activity className="h-2.5 w-2.5 mr-1 flex-shrink-0 mt-0.5" />
+                                  <span>{cn.diagnosis}</span>
                                 </Badge>
                               )}
                               {cn.treatment && (
-                                <Badge variant="outline" className="text-[10px] border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20">
-                                  <Pill className="h-2.5 w-2.5 mr-1" />
-                                  {cn.treatment}
+                                <Badge variant="outline" className="text-[10px] border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 whitespace-normal text-left h-auto py-1">
+                                  <Pill className="h-2.5 w-2.5 mr-1 flex-shrink-0 mt-0.5" />
+                                  <span>{cn.treatment}</span>
                                 </Badge>
                               )}
                               {cn.followUp && (
-                                <Badge variant="outline" className="text-[10px] border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20">
-                                  <ClipboardList className="h-2.5 w-2.5 mr-1" />
-                                  {cn.followUp}
+                                <Badge variant="outline" className="text-[10px] border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 whitespace-normal text-left h-auto py-1">
+                                  <ClipboardList className="h-2.5 w-2.5 mr-1 flex-shrink-0 mt-0.5" />
+                                  <span>{cn.followUp}</span>
                                 </Badge>
                               )}
                             </div>
@@ -672,96 +672,7 @@ export default function AppointmentDetail({ appointmentId }: AppointmentDetailPr
           </Card>
         </motion.div>
 
-        {/* Messages Section */}
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
-          <Card className="border-gray-200 dark:border-gray-700">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2 text-lg text-gray-900 dark:text-gray-100">
-                  <MessageCircle className="h-5 w-5 text-emerald-600" />
-                  Mensajes
-                  {messages.length > 0 && (
-                    <span className="ml-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-[10px] font-bold text-emerald-700 dark:text-emerald-400">
-                      {messages.length}
-                    </span>
-                  )}
-                </CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="max-h-64 overflow-y-auto space-y-3 pr-1">
-                {messages.length === 0 ? (
-                  <div className="flex flex-col items-center py-6 text-center">
-                    <MessageCircle className="h-10 w-10 text-gray-300 dark:text-gray-600 mb-3" />
-                    <p className="text-sm text-gray-500 dark:text-gray-400">No hay mensajes en esta cita</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      Envía un mensaje si tienes preguntas sobre tu cita
-                    </p>
-                  </div>
-                ) : (
-                  messages.map((msg, idx) => {
-                    const isClient = msg.user.role === 'client';
-                    return (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.03 }}
-                        className={`flex ${isClient ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 ${
-                          isClient
-                            ? 'bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'
-                            : 'bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
-                        }`}>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`text-[10px] font-semibold ${isClient ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-600 dark:text-gray-400'}`}>
-                              {msg.user.name}
-                            </span>
-                            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
-                              isClient
-                                ? 'bg-emerald-100 dark:bg-emerald-800 text-emerald-700 dark:text-emerald-300'
-                                : 'bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-400'
-                            }`}>
-                              {isClient ? 'Tú' : 'Veterinario'}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{msg.message}</p>
-                          <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-1">
-                            {new Date(msg.createdAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      </motion.div>
-                    );
-                  })
-                )}
-              </div>
-              <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <input
-                  type="text"
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="Escribe un mensaje..."
-                  className="flex-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-400/30 focus:border-emerald-400"
-                />
-                <Button
-                  onClick={handleSendMessage}
-                  disabled={sendingMessage || !newMessage.trim()}
-                  size="sm"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1"
-                >
-                  <Send className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+        {/* Mensajes ocultos/eliminados por requerimiento */}
 
         {/* Rating Section */}
         {isCompleted && (

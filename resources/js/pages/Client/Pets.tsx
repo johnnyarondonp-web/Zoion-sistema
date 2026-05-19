@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { router } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import ClientLayout from '@/components/layout/ClientLayout';
 
-import { Plus, Search, Filter, X, PawPrint, Dog } from 'lucide-react';
+import { Plus, Search, Filter, X, PawPrint, Dog, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 
 interface Pet {
@@ -71,6 +71,10 @@ export default function Pets() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  
+  const user = usePage().props.auth.user as { name: string; email: string };
+  const todayDate = new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const capitalizedDate = todayDate.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
   useEffect(() => {
     fetchPets();
@@ -117,7 +121,7 @@ export default function Pets() {
           <Skeleton className="h-8 w-40" />
           <Skeleton className="h-10 w-36" />
         </div>
-        <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6">
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Card key={i} className="overflow-hidden border-gray-200 dark:border-gray-700">
               <Skeleton className="aspect-square w-full rounded-t-xl" />
@@ -135,68 +139,68 @@ export default function Pets() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <Dog className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
-            Mis Mascotas
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona los perfiles de tus mascotas</p>
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+          <Dog className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+          Mis Mascotas
+        </h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Gestiona los perfiles de tus mascotas</p>
+      </div>
+
+      {/* Hero Welcome (Premium Banner) */}
+      <Card className="bg-emerald-600 dark:bg-emerald-800 text-white border-none shadow-md overflow-hidden relative">
+        <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+          <PawPrint className="w-24 h-24 text-white transform rotate-12 translate-x-4 -translate-y-4" />
         </div>
+        <CardContent className="p-4 sm:p-5 relative z-10 flex flex-col justify-center min-h-[90px]">
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles className="h-4 w-4" />
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+              ¡Bienvenido, {user.name.split(' ')[0]}!
+            </h1>
+          </div>
+          <p className="text-sm font-medium text-emerald-50 opacity-90">
+            {capitalizedDate}
+          </p>
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-end">
         <Button
           onClick={() => router.visit('/client/pets/new')}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm w-full sm:w-auto"
         >
           <Plus className="h-4 w-4 mr-2" />
           Agregar Mascota
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Filters (Compact) */}
       {pets.length > 0 && (
-        <Card className="border-gray-200 dark:border-gray-700">
-          <CardContent className="p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Filter className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Filtros</span>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-gray-500 dark:text-gray-400 h-7">
-                  Limpiar filtros
-                </Button>
-              )}
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              {/* Search */}
-              <div className="relative sm:col-span-2 lg:col-span-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar mascota..."
-                  className="pl-9 h-8 text-xs bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-emerald-400 focus:ring-emerald-400/20"
-                />
-                {search && (
-                  <button
-                    onClick={() => setSearch('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-
-              {/* Results count */}
-              <div className="flex items-center h-8 px-3">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {filteredPets.length} {filteredPets.length === 1 ? 'mascota' : 'mascotas'}
-                  {hasActiveFilters && (
-                    <span> de {pets.length}</span>
-                  )}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="flex flex-col sm:flex-row gap-2 bg-gray-50/50 dark:bg-gray-800/20 p-2 rounded-xl border border-gray-100 dark:border-gray-800 items-center">
+          <div className="relative flex-1 w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar mascota..."
+              className="pl-8 h-9 text-xs bg-white dark:bg-gray-900 border-none shadow-sm focus:ring-1 focus:ring-emerald-400/30"
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            )}
+          </div>
+          <div className="flex items-center px-2 w-full sm:w-auto justify-end">
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+              {filteredPets.length} {filteredPets.length === 1 ? 'mascota' : 'mascotas'}
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Empty State - No pets at all */}
@@ -272,7 +276,7 @@ export default function Pets() {
           variants={container}
           initial="hidden"
           animate="visible"
-          className="grid gap-3 grid-cols-3 sm:grid-cols-4 lg:grid-cols-6"
+          className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
         >
           {filteredPets.map((pet) => {
             const sp = pet.species.toLowerCase();
