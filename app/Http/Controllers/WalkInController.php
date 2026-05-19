@@ -184,7 +184,7 @@ class WalkInController extends Controller
         // En producción usamos Redis para locks si está disponible (REDIS_HOST no es nulo en configuración y el driver está cargado).
         // Si no, cae en el driver de cache configurado por defecto (database o array en tests).
         // Esto reduce significativamente la latencia de base de datos para bookings concurrentes.
-        $lockStore = (config('database.redis.default.host') && extension_loaded('redis') && !app()->environment('testing')) ? 'redis' : null;
+        $lockStore = (env('REDIS_HOST') && extension_loaded('redis') && !app()->environment('testing')) ? 'redis' : null;
         $lock = $lockStore ? Cache::store($lockStore)->lock($lockKey, 10) : Cache::lock($lockKey, 10);
 
         try {
