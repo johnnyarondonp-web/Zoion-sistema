@@ -1,10 +1,6 @@
 # Zoion — Sistema de Gestión Veterinaria
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Zoion Logo">
-</p>
-
-Zoion es una plataforma integral SaaS diseñada para optimizar la gestión operativa de clínicas veterinarias. Construida sobre una arquitectura robusta, ofrece una experiencia de usuario optimizada, control de acceso basado en roles (RBAC) y un diseño *mobile-first*.
+Zoion es una plataforma integral diseñada para optimizar la gestión operativa de clínicas veterinarias. Construida sobre una arquitectura robusta, ofrece una experiencia de usuario optimizada, control de acceso basado en roles (RBAC) y un diseño *mobile-first*.
 
 ---
 
