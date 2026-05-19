@@ -4,7 +4,7 @@
   <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="300" alt="Zoion Logo">
 </p>
 
-Zoion es una plataforma integral diseñada para optimizar la gestión de clínicas veterinarias. Construida con tecnologías de vanguardia, ofrece una experiencia de usuario fluida, segura y visualmente impactante tanto para administradores como para clientes.
+Zoion es una plataforma integral SaaS diseñada para optimizar la gestión operativa de clínicas veterinarias. Construida sobre una arquitectura robusta, ofrece una experiencia de usuario optimizada, control de acceso basado en roles (RBAC) y un diseño *mobile-first*.
 
 ---
 
@@ -25,28 +25,30 @@ Zoion es una plataforma integral diseñada para optimizar la gestión de clínic
 
 ## ✨ Módulos del Sistema
 
-### 👨‍⚕️ Panel de Administración
-- **Dashboard Inteligente:** Métricas en tiempo real de citas, ingresos, tasa de cancelación y mensajes.
-- **Calendario Avanzado:** Vista mensual/diaria con drag-and-drop y estados dinámicos.
-- **Equipo Médico:** Alta, edición y activación/desactivación de doctores con asignación de servicios.
-- **Recepcionistas:** Gestión de personal de recepción con roles y contraseñas.
-- **Reportes:** Gráficos de citas por estado, ingresos por periodo y distribución de servicios.
-- **Walk-in:** Registro de citas presenciales con asignación automática de médico por round-robin.
-- **Configuración:** Horarios, datos de clínica, fechas bloqueadas y preferencias de notificación.
+### 👨‍💻 Portal Público
+- **Directorio de Servicios:** Catálogo accesible sin autenticación (`/services`) con filtrado por categorías.
+- **Protocolo de Urgencias:** Panel público (`/emergency`) con instrucciones críticas de acción rápida.
+- **Navegación Dinámica:** Arquitectura de *navbar* híbrida que adapta sus rutas al estado de sesión del usuario.
+
+### 👨‍⚕️ Panel de Administración (Roles: Admin / Recepcionista)
+- **Control de Acceso (RBAC):** Vistas y acciones limitadas según permisos del usuario.
+- **Dashboard Inteligente:** Métricas financieras y operativas, visualización en tiempo real de citas mediante gráficos y tablas.
+- **Gestión de Personal:** CRUD completo para médicos y recepcionistas, incluyendo gestión de credenciales y activación de cuentas.
+- **Calendario Avanzado:** Sistema de *drag-and-drop*, gestión de fechas bloqueadas y aperturas especiales (override de disponibilidad).
+- **Módulo Walk-in:** Procesamiento de citas presenciales con facturación integrada y asignación de doctores mediante *round-robin*.
 
 ### 🐕 Portal del Cliente
-- **Mis Mascotas:** Galería visual con ficha médica completa, historial de pesos y vacunaciones.
-- **Wizard de Citas:** Agendamiento en 3 pasos con validación de disponibilidad en tiempo real.
-- **Historial de Citas:** Acceso a registros de visitas anteriores con notas del médico.
-- **Perfil:** Gestión de datos de contacto y seguridad de cuenta.
+- **Interfaz Mobile-First:** Navegación *Bottom-Nav* optimizada para dispositivos móviles, eliminando menús redundantes.
+- **Gestión de Mascotas:** Ficha clínica digital, registro de medidas (peso) e historial de vacunaciones.
+- **Booking Inteligente:** *Wizard* de 3 pasos con validación estricta de solapamientos e intervalos de bloqueo de 2 horas.
 
 ### 🩺 Portal del Médico
-- **Agenda:** Vista de citas asignadas del día con acceso a ficha de la mascota.
-- **Notas Clínicas:** Registro de observaciones por cita directamente desde la agenda.
+- **Agenda Adaptativa:** Grillas responsivas (hasta 3 columnas en móviles) con KPIs de citas confirmadas, pendientes y completadas.
+- **Notas Clínicas:** Sistema de registro médico persistente por mascota.
 
-### 💬 Comunicación
-- **Chat interno:** Mensajería entre cliente y clínica.
-- **Notificaciones:** Avisos de cambios de estado de citas y mensajes nuevos.
+### 💬 Comunicación Centralizada
+- **Mensajería Interna:** Chat en tiempo real vinculando clientes y staff (Recepcionistas/Médicos).
+- **Centro de Notificaciones:** Sistema de alertas para cambios de estado en citas (aprobaciones, pagos requeridos, finalización).
 
 ---
 
@@ -66,181 +68,94 @@ Zoion es una plataforma integral diseñada para optimizar la gestión de clínic
 git clone https://github.com/johnnyarondonp-web/Zoion-sistema.git
 cd Zoion-sistema
 
-# 2. Instalar dependencias PHP
+# 2. Instalar dependencias
 composer install
-
-# 3. Instalar dependencias JavaScript
 npm install
 
-# 4. Configurar el entorno
+# 3. Configurar el entorno
 cp .env.example .env
 ```
 
 ### Configuración del archivo `.env`
 
-Edita el `.env` generado con tus valores locales. Las variables críticas son:
-
 ```env
 APP_NAME="Zoion"
 APP_URL=http://localhost:8000
 
-# Base de Datos (PostgreSQL)
+# Base de Datos
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=zoion
-DB_USERNAME=tu_usuario
-DB_PASSWORD=tu_contraseña
+DB_USERNAME=usuario
+DB_PASSWORD=contraseña
 
-# Correo (Mailtrap para desarrollo, SMTP real para producción)
+# Correo (Mailtrap o SMTP local)
 MAIL_MAILER=smtp
 MAIL_HOST=sandbox.smtp.mailtrap.io
 MAIL_PORT=2525
-MAIL_USERNAME=tu_usuario_mailtrap
-MAIL_PASSWORD=tu_password_mailtrap
-
-# Sesiones (Para Producción)
-SESSION_DOMAIN=null # Al deployar: SESSION_DOMAIN=.tu-dominio.com para restringir cookies al dominio.
-MAIL_FROM_ADDRESS="noreply@zoion.app"
-MAIL_FROM_NAME="Zoion"
-
-# Caché y Colas (Redis opcional, cae a 'database' sin él)
-CACHE_DRIVER=database
-QUEUE_CONNECTION=sync
-SESSION_DRIVER=database
-
-# Redis (solo si está instalado)
-# REDIS_HOST=127.0.0.1
-# REDIS_PORT=6379
 ```
 
-### Finalizar la Instalación
+### Inicialización
 
 ```bash
-# 5. Generar la clave de aplicación
 php artisan key:generate
-
-# 6. Crear las tablas y poblar con datos de prueba
 php artisan migrate --seed
-
-# 7. Enlazar el storage público (para fotos de mascotas y médicos)
 php artisan storage:link
-
-# 8. Compilar los assets del frontend
 npm run build
-
-# 9. Iniciar el servidor de desarrollo
 php artisan serve
 ```
 
-El sistema estará disponible en `http://localhost:8000`.
-
-### Credenciales de Prueba (Seeder)
-
-| Rol | Email | Contraseña |
-|---|---|---|
-| Administrador | admin@zoion.app | password |
-| Cliente demo | cliente@zoion.app | password |
-| Doctor demo | doctor@zoion.app | password |
-
-> Las credenciales exactas dependen del contenido actual de `database/seeders/`.
-
 ---
 
-## 🧪 Ejecutar las Pruebas
+## 🧪 Pruebas Automatizadas
 
-El proyecto usa **PHPUnit** con una base de datos SQLite en memoria, lo que garantiza que los tests no afectan tu base de datos de desarrollo.
+El proyecto emplea **PHPUnit** interactuando con SQLite en memoria.
 
 ```bash
-# Ejecutar toda la suite de pruebas
 php artisan test
-
-# Alternativamente, con PHPUnit directamente
-vendor/bin/phpunit
-
-# Ejecutar un archivo de test específico
-php artisan test --filter ZoionBugFixesTest
 ```
 
-> La suite actual cubre: autenticación, ciclo de vida de citas, notificaciones, walk-in, asignación de médicos y protecciones de mass assignment. Los tests marcan como `skipped` los casos que dependen de infraestructura externa (Redis real).
+> La suite valida la integridad de: flujos de autenticación, ciclo de vida de transacciones (Walk-in), concurrencia (race conditions en asignación de citas) y permisos RBAC.
 
 ---
 
 ## 📡 Documentación de la API
 
-El sistema expone **~40 endpoints REST** bajo `/api/*`, protegidos con autenticación Sanctum + middleware de roles (`admin`, `receptionist`, `doctor`, `client`).
+La plataforma expone endpoints REST bajo el prefijo `/api/`, gestionados mediante Laravel Sanctum.
 
-Una colección de Postman con todos los endpoints, ejemplos de payload y variables de entorno está disponible en:
-
-```
-/docs/Zoion_API.postman_collection.json
-```
-
-Importa ese archivo en Postman y configura la variable `{{base_url}}` apuntando a tu instancia local (`http://localhost:8000`).
-
-### Grupos de Endpoints Principales
-
-| Prefijo | Descripción | Roles |
+| Prefijo | Descripción | Acceso |
 |---|---|---|
-| `POST /api/auth/*` | Registro, login, verificación de email, reset de contraseña | Público |
-| `GET/POST /api/pets` | CRUD de mascotas, historial de pesos y vacunaciones | client, admin |
-| `GET/POST /api/appointments` | Ciclo de vida de citas (crear, confirmar, cancelar, completar) | Todos autenticados |
-| `GET /api/availability` | Slots libres por fecha y servicio | Todos autenticados |
-| `GET/POST /api/admin/*` | Dashboard, clientes, médicos, recepcionistas, reportes, walk-in | admin, receptionist |
-| `GET /api/doctor/appointments` | Agenda del médico autenticado | doctor |
-| `POST /api/walk-in/*` | Citas presenciales y confirmación de pago | admin, receptionist |
-
----
-
-## 🏗️ Estructura del Proyecto
-
-```
-app/
-├── Http/
-│   ├── Controllers/        # Lógica HTTP segmentada por rol y dominio
-│   └── Middleware/         # RBAC: RoleMiddleware, EnsureEmailVerified
-├── Models/                 # Eloquent: Pet, User, Appointment, Doctor, Service…
-├── Services/               # AppointmentService: reglas de negocio centralizadas
-resources/
-├── js/
-│   ├── pages/
-│   │   ├── Admin/          # Componentes del panel de administración
-│   │   ├── Client/         # Portal del cliente (citas, mascotas, perfil)
-│   │   └── Doctor/         # Agenda y perfil del médico
-│   └── components/ui/      # Componentes reutilizables (shadcn/ui)
-routes/
-├── web.php                 # Rutas Inertia protegidas por rol
-└── api.php                 # Rutas REST de la API
-database/
-├── migrations/             # Historial completo del esquema
-└── seeders/                # Datos de prueba y rol inicial de admin
-```
+| `GET /api/services/public` | Catálogo JSON de servicios activos | Público |
+| `POST /api/auth/*` | Registro, verificación de sesión y tokens | Público |
+| `GET/POST /api/pets` | Gestión de expedientes de mascotas | `client`, `admin` |
+| `GET/POST /api/appointments` | Agendamiento, confirmación y cancelación | Autenticados |
+| `GET/POST /api/admin/*` | Reportes, personal y configuraciones del sistema | `admin`, `receptionist` |
+| `POST /api/walk-in/*` | Gestión de citas presenciales | `admin`, `receptionist` |
 
 ---
 
 ## ⚙️ Reglas de Negocio Clave
 
-| Regla | Implementación |
+| Regla | Descripción de Implementación |
 |---|---|
-| **Asignación de médico (round-robin)** | `AppointmentService::assignDoctor()` — elige el médico activo con menos citas confirmadas hoy para el servicio solicitado |
-| **Bloqueo de anticipación (2h)** | `AppointmentService` rechaza citas nuevas cuando quedan menos de 2 horas para el slot seleccionado |
-| **Prevención de doble-booking** | `Cache::lock($slotKey, 10)` serializa peticiones concurrentes al mismo slot; re-verifica capacidad dentro del lock |
-| **Walk-in sin cuenta** | `WalkInController::store()` hace upsert de `WalkInClient` por teléfono, garantizando que los datos del cliente se actualizan en visitas recurrentes sin duplicar registros |
-| **Verificación de email** | Los clientes no pueden agendar citas hasta verificar su correo electrónico post-registro |
+| **Restricciones de Unicidad Global** | La cédula, número de teléfono y correo electrónico deben ser estrictamente únicos en todo el ecosistema (Tabla `users`) para prevenir colisiones entre roles (Doctor/Cliente/Staff). |
+| **Horario Operativo** | Restricción lógica fijada de Lunes a Viernes (9:00 AM - 7:00 PM), inhabilitando transacciones automatizadas sábados y domingos. |
+| **Asignación Round-Robin** | `AppointmentService::assignDoctor()` equilibra la carga delegando la cita al médico disponible con menos consultas activas en el día. |
+| **Prevención de Double-Booking** | `Cache::lock($slotKey, 10)` garantiza la atomicidad de la transacción al momento de reservar un bloque de tiempo. |
+| **Integridad Referencial** | Restricción de borrado (Soft/Hard delete): No se puede eliminar a clientes ni médicos con citas activas o pendientes. |
 
 ---
 
 ## 🔒 Seguridad
 
-- **RBAC con Middleware:** Cada grupo de rutas está protegido por `RoleMiddleware` que verifica el campo `role` del usuario autenticado.
-- **Mass Assignment:** Todos los modelos declaran `$fillable` explícito. Ningún modelo usa `$guarded = []`.
-- **Sanitización de Entradas:** Validaciones Laravel (`FormRequest` + reglas inline) en todos los endpoints de escritura.
-- **ULID como Primary Key:** Todos los modelos usan ULIDs en lugar de IDs enteros secuenciales para evitar enumeración de recursos.
+- **Protección de Rutas (Middleware):** Control de acceso por niveles (`admin`, `receptionist`, `doctor`, `client`).
+- **Prevención Mass Assignment:** Uso riguroso de la propiedad `$fillable` en modelos de Eloquent.
+- **Llaves Primarias ULID:** Mitigación de enumeración de registros utilizando identificadores lexicográficamente ordenables.
+- **Sanitización Estricta:** Validación mediante `FormRequest` asegurando expresiones regulares en datos sensibles (e.g. `^\+58\d{9}$` para teléfonos).
 
 ---
 
 ## 📄 Licencia
 
 Este proyecto está bajo la licencia **MIT**.
-
-
