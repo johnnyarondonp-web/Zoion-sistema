@@ -10,7 +10,7 @@ class AdminUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $email = env('ADMIN_EMAIL', 'admin@zoion.com');
+        $email = env('ADMIN_EMAIL', 'admin@zoion.app');
         $user = User::where('email', $email)->first();
 
         if ($user) {

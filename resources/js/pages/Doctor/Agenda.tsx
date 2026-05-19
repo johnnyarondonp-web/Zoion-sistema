@@ -392,10 +392,17 @@ export default function DoctorAgenda({ selectedAppointmentId }: { selectedAppoin
     if (!birthdate) return 'N/A';
     const birth = new Date(birthdate);
     const now = new Date();
-    let years = now.getFullYear() - birth.getFullYear();
+    const totalDays = Math.floor((now.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+    if (totalDays < 0) return 'N/A';
+    const years = now.getFullYear() - birth.getFullYear();
     const m = now.getMonth() - birth.getMonth();
-    if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) years--;
-    return `${years} años`;
+    const ageYears = (m < 0 || (m === 0 && now.getDate() < birth.getDate())) ? years - 1 : years;
+    if (ageYears > 0) return `${ageYears} ${ageYears === 1 ? 'año' : 'años'}`;
+    const ageMonths = Math.floor(totalDays / 30);
+    if (ageMonths > 0) return `${ageMonths} ${ageMonths === 1 ? 'mes' : 'meses'}`;
+    const ageWeeks = Math.floor(totalDays / 7);
+    if (ageWeeks > 0) return `${ageWeeks} ${ageWeeks === 1 ? 'semana' : 'semanas'}`;
+    return `${totalDays} ${totalDays === 1 ? 'día' : 'días'}`;
   };
 
   const petAge = useMemo(() => {

@@ -201,18 +201,18 @@ function calculateAge(birthdate: string | null): string {
     const [y, m, d] = birthdate.split('-').map(Number);
     const birth = new Date(y, m - 1, d);
     const today = new Date();
-    let ageYears = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) ageYears--;
-    if (ageYears <= 0) {
-      const ageMonths = (today.getFullYear() - birth.getFullYear()) * 12 + today.getMonth() - birth.getMonth();
-      if (ageMonths <= 0) return '< 1 mes';
-      return `${ageMonths} ${ageMonths === 1 ? 'mes' : 'meses'}`;
-    }
-    return `${ageYears} ${ageYears === 1 ? 'año' : 'años'}`;
-  } catch {
-    return '—';
-  }
+    const totalDays = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+    if (totalDays < 0) return '—';
+    const years = today.getFullYear() - birth.getFullYear();
+    const mDiff = today.getMonth() - birth.getMonth();
+    const ageYears = (mDiff < 0 || (mDiff === 0 && today.getDate() < birth.getDate())) ? years - 1 : years;
+    if (ageYears > 0) return `${ageYears} ${ageYears === 1 ? 'año' : 'años'}`;
+    const ageMonths = Math.floor(totalDays / 30);
+    if (ageMonths > 0) return `${ageMonths} ${ageMonths === 1 ? 'mes' : 'meses'}`;
+    const ageWeeks = Math.floor(totalDays / 7);
+    if (ageWeeks > 0) return `${ageWeeks} ${ageWeeks === 1 ? 'semana' : 'semanas'}`;
+    return `${totalDays} ${totalDays === 1 ? 'día' : 'días'}`;
+  } catch { return '—'; }
 }
 
 function getWeightTrend(entries: WeightEntry[]): { direction: 'up' | 'down' | 'stable'; percent: number } {

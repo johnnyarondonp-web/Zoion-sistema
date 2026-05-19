@@ -135,7 +135,33 @@ La plataforma expone endpoints REST bajo el prefijo `/api/`, gestionados mediant
 
 ---
 
-## ⚙️ Reglas de Negocio Clave
+## ⚙️ Reglas de Negocio
+
+### Credenciales de Prueba (Seeder)
+
+Al ejecutar `php artisan migrate --seed`, el sistema crea automáticamente los siguientes usuarios demo completamente funcionales:
+
+| Rol | Email | Contraseña | Notas |
+|---|---|---|---|
+| Administrador | `admin@zoion.app` | `password` | Acceso total al panel de control |
+| Doctor Demo | `doctor@zoion.app` | `password` | Médico General Veterinario. Tiene los 7 servicios de la categoría "Consulta" asignados de forma predeterminada |
+| Recepcionista Demo | `recepcion@zoion.app` | `password` | Acceso a módulos de gestión de citas, Walk-in y clientes |
+| Cliente Demo | `cliente@zoion.app` | `password` | Portal de mascota y agendamiento |
+
+> Las contraseñas de los doctores pueden configurarse vía el `.env` (`ADMIN_EMAIL`, `ADMIN_PASSWORD`). El resto de credenciales demo son fijas dentro del `DemoStaffSeeder`.
+
+### Catálogo de Servicios Pre-cargado
+
+El `ServiceSeeder` inicializa el sistema con **17 servicios clínicos reales** distribuidos en 4 categorías:
+
+| Categoría | Servicios incluidos |
+|---|---|
+| `consulta` | Consulta General, Seguimiento, Cardiológica, Dermatológica, Oftalmológica, Extracción cuerpo extraño, Tratamiento Ocular |
+| `cirugia` | Esterilización, Castración, Cirugía de Tejidos Blandos, Extracción Dental |
+| `diagnostico` | Revisión Pre-quirúrgica, Electrocardiograma, Tratamiento de Piel |
+| `prevencion` | Vacunación, Desparasitación, Limpieza Dental |
+
+### Reglas Operativas del Sistema
 
 | Regla | Descripción de Implementación |
 |---|---|
