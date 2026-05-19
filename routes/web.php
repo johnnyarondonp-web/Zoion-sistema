@@ -59,6 +59,35 @@ Route::get('/api/debug-logs-zoion-2026', function () {
     $lines = array_slice($file, -150);
     return response(implode("", $lines), 200, ['Content-Type' => 'text/plain']);
 });
+Route::get('/api/test-appointments-list', function () {
+    try {
+        $controller = app(\App\Http\Controllers\AppointmentController::class);
+        $request = \Illuminate\Http\Request::create('/api/appointments', 'GET', [
+            'status' => 'pending',
+            'limit' => 50
+        ]);
+        $user = auth()->user() ?? \App\Models\User::first();
+        if ($user) {
+            auth()->login($user);
+            $request->setUserResolver(fn() => $user);
+        }
+        $response = $controller->index($request);
+        return response()->json([
+            'success' => true,
+            'message' => 'La peticion no arrojo ningun error',
+            'data' => json_decode($response->getContent(), true)
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'error_class' => get_class($e),
+            'error_message' => $e->getMessage(),
+            'error_file' => $e->getFile(),
+            'error_line' => $e->getLine(),
+            'error_trace' => array_slice(explode("\n", $e->getTraceAsString()), 0, 15)
+        ], 200, [], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+    }
+});
 
 
 // ── Rutas de Recuperación de Contraseña ───────────────────────────────
