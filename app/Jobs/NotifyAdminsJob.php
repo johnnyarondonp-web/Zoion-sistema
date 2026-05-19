@@ -37,6 +37,28 @@ class NotifyAdminsJob implements ShouldQueue
     }
 
     /**
+     * Intenta despachar el Job de forma asíncrona en la cola de trabajo.
+     * Si falla debido a problemas con la conexión del driver de colas (ej. Redis offline),
+     * captura el error, registra un aviso y ejecuta la lógica de forma síncrona/inmediata.
+     */
+    public static function dispatchSafe(string $title, string $message, string $type, array $data = []): void
+    {
+        try {
+            // Intentamos despachar normalmente a la cola
+            self::dispatch($title, $message, $type, $data);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("No se pudo despachar NotifyAdminsJob a la cola (" . $e->getMessage() . "). Ejecutando de forma síncrona.");
+            try {
+                // Caída segura síncrona
+                $job = new self($title, $message, $type, $data);
+                $job->handle();
+            } catch (\Throwable $innerException) {
+                \Illuminate\Support\Facades\Log::error("Fallo catastrófico al procesar notificación de forma síncrona: " . $innerException->getMessage());
+            }
+        }
+    }
+
+    /**
      * Ejecuta el Job.
      * Consulta todos los usuarios con rol 'admin' y realiza las inserciones en la tabla de notificaciones.
      * Al ejecutarse de forma asíncrona, elimina el cuello de botella del loop síncrono en el request HTTP principal.
@@ -62,3 +84,4 @@ class NotifyAdminsJob implements ShouldQueue
         Notification::insert($notifications);
     }
 }
+

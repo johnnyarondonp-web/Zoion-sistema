@@ -265,7 +265,7 @@ class AppointmentController extends Controller
 
         // 1. Notificación al completarse una cita por el médico (va para admin y recepcionista)
         if ($request->has('status') && $request->status === 'completed' && $user->role === 'doctor' && $originalStatus !== 'completed') {
-            \App\Jobs\NotifyAdminsJob::dispatch(
+            \App\Jobs\NotifyAdminsJob::dispatchSafe(
                 'Cita completada por el médico',
                 "El médico {$user->name} completó la cita de {$appointment->pet->name} programada para el {$appointment->date}.",
                 'appointment_completed',

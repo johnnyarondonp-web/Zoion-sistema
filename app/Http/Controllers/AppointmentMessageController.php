@@ -62,7 +62,7 @@ class AppointmentMessageController extends Controller
         if ($user->role === 'client') {
             // Delegamos el envío de notificaciones de nuevos mensajes a administradores a la cola de trabajos.
             // Esto elimina la latencia de inserciones secuenciales durante el chat interactivo del cliente.
-            \App\Jobs\NotifyAdminsJob::dispatch(
+            \App\Jobs\NotifyAdminsJob::dispatchSafe(
                 'Nuevo mensaje de cliente',
                 "{$user->name} ha enviado un mensaje en la cita.",
                 'new_message',

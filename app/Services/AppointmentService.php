@@ -170,7 +170,7 @@ class AppointmentService
                 'data'    => ['appointment_id' => $appointment->id],
             ]);
         } else {
-            NotifyAdminsJob::dispatch(
+            NotifyAdminsJob::dispatchSafe(
                 'Nueva cita solicitada',
                 "{$user->name} solicitó una cita para {$pet->name} el {$appointment->date} a las {$appointment->start_time}.",
                 'new_appointment',
