@@ -1,6 +1,37 @@
+<div align="center">
+
 # Zoion — Sistema de Gestión Veterinaria
 
-Zoion es una plataforma integral diseñada para optimizar la gestión operativa de clínicas veterinarias. Construida sobre una arquitectura robusta, ofrece una experiencia de usuario optimizada, control de acceso basado en roles (RBAC) y un diseño *mobile-first*.
+**Plataforma de gestión veterinaria con booking inteligente, mensajería en tiempo real y control de acceso por roles.**
+
+[![PHP](https://img.shields.io/badge/PHP-8.3-777BB4?style=flat-square&logo=php&logoColor=white)](https://php.net)
+[![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?style=flat-square&logo=laravel&logoColor=white)](https://laravel.com)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)](LICENSE)
+
+</div>
+
+---
+
+> **El problema que resuelve:** Las clínicas veterinarias pequeñas y medianas gestionan citas por WhatsApp, llevan el historial de pacientes en papel y pierden horas coordinando entre recepción y médicos. Zoion centraliza el flujo completo: el cliente agenda en línea, el sistema asigna médico automáticamente, envía confirmaciones y recordatorios, y el médico accede al historial clínico desde su portal. Todo en un solo lugar.
+
+---
+
+## Vista previa
+
+<div align="center">
+
+  <img src=".github/assets/zoion-preview.png" width="80%" alt="Landing page"/>
+  <br/><br/>
+  <img src=".github/assets/zoion-admin.png" width="80%" alt="Panel de administración"/>
+  <br/><br/>
+  <img src=".github/assets/zoion-mobile-1.webp" width="30%" alt="Portal cliente — Mascotas"/>
+  &nbsp;&nbsp;&nbsp;
+  <img src=".github/assets/zoion-mobile-2.webp" width="30%" alt="Portal cliente — Calendario"/>
+
+</div>
 
 ---
 
